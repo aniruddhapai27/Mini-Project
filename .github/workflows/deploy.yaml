@@ -27,20 +27,22 @@ jobs:
           node-version: 18
 
       - name: Install Frontend Dependencies
-        working-directory: ./client
-        run: npm install
+        run: |
+          cd ./client
+          npm install
 
       - name: Build React App
-        working-directory: ./client
-        run: npm run build
+        run: |
+          cd ./client
+          npm run build
 
       - name: Install Vercel CLI
         run: npm install -g vercel
 
       - name: Deploy React App to Vercel
         run: |
+          cd ./client
           vercel deploy \
-            --cwd ./client \
             --prod \
             --token ${{ secrets.VERCEL_TOKEN }} \
-            --confirm
+            --yes
