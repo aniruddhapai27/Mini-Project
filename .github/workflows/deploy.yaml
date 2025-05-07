@@ -39,7 +39,6 @@ jobs:
         run: npm install -g vercel
 
       - name: Deploy React App to Vercel
-        working-directory: ./client
         run: |
           vercel deploy \
             --prod \
