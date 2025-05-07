@@ -1,0 +1,46 @@
+name: Deploy MERN App (Frontend to Vercel & Backend to Render)
+
+on:
+  push:
+    branches:
+      - main # Trigger only on main branch push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # ─────────────── BACKEND DEPLOYMENT ───────────────
+      - name: Trigger Backend Deploy to Render
+        run: |
+          echo "Triggering backend deployment to Render..."
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
+
+      # ─────────────── FRONTEND DEPLOYMENT ───────────────
+      - name: Setup Node.js for Frontend
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Frontend Dependencies
+        working-directory: ./client
+        run: npm install
+
+      - name: Build React App
+        working-directory: ./client
+        run: npm run build
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy React App to Vercel
+        run: |
+          vercel deploy \
+            --cwd ./client \
+            --prod \
+            --token ${{ secrets.VERCEL_TOKEN }} \
+            --confirm
