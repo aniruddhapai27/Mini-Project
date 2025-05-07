@@ -26,16 +26,20 @@ jobs:
         with:
           node-version: 18
 
+      # Change working directory to client
       - name: Install Frontend Dependencies
+        working-directory: ./client
         run: npm install
 
       - name: Build React App
+        working-directory: ./client
         run: npm run build
 
       - name: Install Vercel CLI
         run: npm install -g vercel
 
       - name: Deploy React App to Vercel
+        working-directory: ./client
         run: |
           vercel deploy \
             --prod \
