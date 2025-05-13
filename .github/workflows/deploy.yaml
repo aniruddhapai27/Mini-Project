@@ -20,6 +20,12 @@ jobs:
           echo "Triggering backend deployment to Render..."
           curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
 
+      # ─────────────── FASTAPI DEPLOYMENT ───────────────
+      - name: Trigger FastAPI Deploy to Render
+        run: |
+          echo "Triggering FastAPI service deployment to Render..."
+          curl -X POST ${{ secrets.RENDER_FASTAPI_DEPLOY_HOOK }}
+
       # ─────────────── FRONTEND DEPLOYMENT ───────────────
       - name: Setup Node.js for Frontend
         uses: actions/setup-node@v3
