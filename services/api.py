@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-api = FastAPI()
+api = FastAPI(root_path ="/services")
 
 # Allow CORS for all origins    
 api.add_middleware(
