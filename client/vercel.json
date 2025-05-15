@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/services",
+      "destination": "https://mini-project-fastapi-g9kp.onrender.com/"
+    },
+    {
       "source": "/services/(.*)",
       "destination": "https://mini-project-fastapi-g9kp.onrender.com/$1"
     }
