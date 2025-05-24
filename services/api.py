@@ -1,10 +1,5 @@
 import os
 import tensorflow as tf
-
-# Suppress TensorFlow warnings
-tf.get_logger().setLevel('ERROR')
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # 0=all, 1=info, 2=warning, 3=error
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.interview_routes import interview_router
