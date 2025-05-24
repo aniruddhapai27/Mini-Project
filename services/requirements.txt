@@ -3,3 +3,5 @@ tensorflow
 fastapi
 uvicorn
 numpy 
+opencv-python
+pydantic

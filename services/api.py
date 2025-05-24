@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from routes.interview_routes import interview_router
 
 api = FastAPI(root_path ="/services")
 
@@ -18,3 +19,6 @@ api.add_middleware(
 @api.get("/")   
 def root():
     return {"message": "Hello World"}
+
+api.include_router(interview_router, prefix = "/api/v1/interview", tags=["interview"])
+
