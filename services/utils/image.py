@@ -2,8 +2,13 @@ import numpy as np
 import cv2
 from tensorflow.keras.models import load_model
 import io
+import os
 
-model = load_model('../models/mobilenet_emotion_final.h5')
+# Get the absolute path to the model file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(os.path.dirname(current_dir), 'models', 'emotion_model_checkpoint.keras')
+model = load_model(model_path)
+
 
 def process_image(image_bytes):
     nparr = np.frombuffer(image_bytes, np.uint8)
