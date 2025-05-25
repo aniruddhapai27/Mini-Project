@@ -1,5 +1,4 @@
 import os
-import tensorflow as tf
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.interview_routes import interview_router

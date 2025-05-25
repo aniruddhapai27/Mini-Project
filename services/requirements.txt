@@ -1,8 +1,9 @@
 langchain
-tensorflow
 fastapi
 uvicorn
 numpy 
-opencv-python
 pydantic
 python-multipart
+langchain_groq
+python-dotenv
+groq
