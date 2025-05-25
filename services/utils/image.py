@@ -5,15 +5,13 @@ import os
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-# Set TensorFlow logging level to hide the messages
 tf.get_logger().setLevel('ERROR')
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # 0=all, 1=info, 2=warning, 3=error
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(os.path.dirname(current_dir), 'models', 'mobilenet_emotion_final.keras')
 model = load_model(model_path)
 
-# Load the face cascade classifier
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 

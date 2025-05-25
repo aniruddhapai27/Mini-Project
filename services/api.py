@@ -15,7 +15,7 @@ api = FastAPI(
 # Allow CORS for all origins    
 api.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # More permissive for testing
+    allow_origins=["http://localhost:3000", "https://my-project.tech"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
