@@ -1,6 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from models.response_model import voiceTranscript
 from controllers.interview_controller import transcript, text_to_speech_controller
+from models.request_models import TextToSpeechRequest
+
 
 interview_router = APIRouter()
 
@@ -16,12 +18,12 @@ async def voice_to_text(file: UploadFile = File(...)):
 
 
 @interview_router.post("/text-to-speech")
-async def text_to_speech(text: str, voice: str = Form("Aaliyah-PlayAI")):
+async def text_to_speech(VoiceRequest: TextToSpeechRequest):
     try:
-        if not text:
+        if not VoiceRequest.text:
             raise ValueError("Text cannot be empty.")
-        if not voice:
+        if not VoiceRequest.voice:
             raise ValueError("Voice cannot be empty.")
-        return await text_to_speech_controller(text, voice)
+        return await text_to_speech_controller(VoiceRequest.text, VoiceRequest.voice)
     except Exception as e:  
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
