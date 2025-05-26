@@ -1,10 +1,11 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Response
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
 import os
+import uuid
+from pathlib import Path
 from models.response_model import voiceTranscript
-from models.request_models import TextToSpeechRequest
-from controllers.interview_controller import transcript, text2speech
+from controllers.interview_controller import transcript, text_to_speech_controller
 
 interview_router = APIRouter()
 
@@ -20,18 +21,12 @@ async def voice_to_text(file: UploadFile = File(...)):
 
 
 @interview_router.post("/text-to-speech")
-async def text_to_speech(request: TextToSpeechRequest):
+async def text_to_speech(text: str, voice: str = Form("Aaliyah-PlayAI")):
     try:
-        if not request.text:
+        if not text:
             raise ValueError("Text cannot be empty.")
-        if not request.voice:
-            request.voice = "Mitch-PlayAI"  # Default voice
-        speech_file_path = await text2speech(request.text, request.voice)
-        return FileResponse(
-            path=speech_file_path,
-            media_type="audio/wav",
-            filename=f"speech_{os.path.basename(speech_file_path)}",
-            background=BackgroundTask(lambda: os.remove(speech_file_path) if os.path.exists(speech_file_path) else None)
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing text to speech: {str(e)}")
+        if not voice:
+            raise ValueError("Voice cannot be empty.")
+        return await text_to_speech_controller(text, voice)
+    except Exception as e:  
+        raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
