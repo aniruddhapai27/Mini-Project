@@ -3,7 +3,6 @@ import os
 from groq import Groq
 from pathlib import Path
 from fastapi import HTTPException, UploadFile
-import pyttsx3
 load_dotenv()
 
 groq_api_audio = os.getenv("GROQ_API_AUDIO")

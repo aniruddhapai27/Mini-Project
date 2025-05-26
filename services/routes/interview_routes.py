@@ -1,9 +1,4 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
-from fastapi.responses import FileResponse
-from starlette.background import BackgroundTask
-import os
-import uuid
-from pathlib import Path
 from models.response_model import voiceTranscript
 from controllers.interview_controller import transcript, text_to_speech_controller
 
