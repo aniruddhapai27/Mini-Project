@@ -12,7 +12,7 @@ async def get_database():
     try:
         if not db_url:
             raise ValueError("DB_URL environment variable is not set.")
-        client = AsyncIOMotorClient(db_url, tlsCAFile=certifi.where()) # Modified to include tlsCAFile for SSL certificate handling
+        client = AsyncIOMotorClient(db_url, tls=True, tlsCAFile=certifi.where()) # Explicitly set tls=True
         db = client['mini_project']
         return db
     except Exception as e:
