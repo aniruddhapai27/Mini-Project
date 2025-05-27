@@ -3,6 +3,7 @@ import os
 from pymongo import MongoClient
 import traceback
 from motor.motor_asyncio import AsyncIOMotorClient
+import certifi # Added import
 
 load_dotenv()
 db_url = os.getenv("DB_URL")
@@ -11,7 +12,7 @@ async def get_database():
     try:
         if not db_url:
             raise ValueError("DB_URL environment variable is not set.")
-        client = AsyncIOMotorClient(db_url)
+        client = AsyncIOMotorClient(db_url, tlsCAFile=certifi.where()) # Modified to include tlsCAFile for SSL certificate handling
         db = client['mini_project']
         return db
     except Exception as e:
