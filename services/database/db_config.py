@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 import os
 from pymongo import MongoClient
 import traceback
-import ssl
 
 # Load environment variables but use hardcoded connection string as backup
 load_dotenv()
@@ -14,8 +13,9 @@ def get_database():
         if not db_url:
             raise ValueError("DB_URL environment variable is not set and no default connection string available.")
         
-        # Simpler connection approach - the connection string already has necessary options
-        client = MongoClient(db_url, ssl_cert_reqs=ssl.CERT_NONE)
+        # Using the correct TLS parameters for PyMongo
+        # tlsInsecure=True will skip certificate validation
+        client = MongoClient(db_url, tlsInsecure=True)
         
         # Test connection to ensure it works
         client.admin.command('ping')
