@@ -11,10 +11,8 @@ def get_database(): # Removed async
     try:
         if not db_url:
             raise ValueError("DB_URL environment variable is not set.")
-        # Changed AsyncIOMotorClient to MongoClient and removed tls/tlsCAFile,
-        # assuming db_url contains necessary SSL/TLS config or pymongo handles it.
-        # If issues arise, specific tls options for pymongo might be needed.
-        client = MongoClient(db_url)
+        # Explicitly set tls=True and tlsCAFile for MongoClient
+        client = MongoClient(db_url, tls=True, tlsCAFile=certifi.where())
         db = client['mini_project']
         return db
     except Exception as e:
