@@ -84,3 +84,7 @@ async def text_to_speech_controller(text: str, voice: str = "Aaliyah-PlayAI"):
         print(f"Error generating speech: {str(e)}\n{error_details}") 
         from fastapi import HTTPException
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
+    
+    
+    
+    

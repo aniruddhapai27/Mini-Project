@@ -1,3 +1,4 @@
 minenv
 __pycache__/
 archive/
+.env

@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.interview_routes import interview_router
+from routes.assistant_routes import assistant_router
 
 api = FastAPI(
     root_path="/services",
@@ -26,3 +27,4 @@ def root():
 
 api.include_router(interview_router, prefix = "/api/v1/interview", tags=["interview"])
 
+api.include_router(assistant_router, prefix = "/api/v1/assistant", tags=["assistant"])

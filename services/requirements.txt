@@ -7,3 +7,5 @@ python-multipart
 langchain_groq
 python-dotenv
 groq
+pymongo
+motor
