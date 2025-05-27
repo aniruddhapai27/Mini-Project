@@ -7,6 +7,6 @@ python-multipart
 langchain_groq
 python-dotenv
 groq
-pymongo
-motor
+pymongo>=4.0.0
+motor>=3.0.0
 regex
