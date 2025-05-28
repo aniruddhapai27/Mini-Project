@@ -7,15 +7,17 @@ import traceback
 from database.db_config import get_database
 import datetime
 from bson import ObjectId
+from utils.helper import extract_json_objects
 
 load_dotenv()
 
 groq_api_audio = os.getenv("GROQ_API_AUDIO")
-client = Groq(api_key=groq_api_audio)
 groq_api_key_interviewer = os.getenv("GROQ_API_KEY_DQ")
+groq_api_key_feedback = os.getenv("GROQ_API_KEY_DQ")
 
 interviewer = Groq(api_key = groq_api_key_interviewer)
-
+client = Groq(api_key=groq_api_audio)
+feedback_client = Groq(api_key=groq_api_key_feedback)
 
 interviewer_prompt = (
     'You are a human interviewer for {domain} at {difficulty} level. '
@@ -28,6 +30,33 @@ interviewer_prompt = (
     'Context: {history}\n'
     'Ask your next question in a natural human way based on this context.'
 )
+
+feedback_prompt = ('Analyze this {domain} interview ({difficulty} level) between interviewer and candidate. '
+'Tasks: ' 
+'1. Identify strengths and weaknesses '
+'2. Give feedback on: technical knowledge, communication, confidence, problem-solving '
+'3. Score each category (0-10) '
+'4. Calculate overall score (0-100) '
+'5. Return JSON only '
+'Transcript: '
+'{conversation} '
+
+'JSON Format: '
+'{{'
+  '"feedback": {{ '
+    '"technical_knowledge": "brief assessment", '
+    '"communication_skills": "brief assessment", '
+    '"confidence": "brief assessment", '
+    '"problem_solving": "brief assessment" '
+  '}}, '
+  '"scores": {{ '
+    '"technical_knowledge": 0-10, '
+    '"communication_skills": 0-10, '
+    '"confidence": 0-10, '
+    '"problem_solving": 0-10 '
+  '}}, '
+  '"overall_score": 0-100 '
+'}} ') 
 
 async def transcript(file: UploadFile):
     try:
@@ -150,7 +179,6 @@ async def ai_interview(domain, difficulty, user_response, session):
             ]
         )
         question = response.choices[0].message.content.strip()
-        # We ensure session is already converted to ObjectId before this point
         await collection.update_one({"_id": session}, {"$push": {"Qna": {
             "question": question,
             "answer": user_response,
@@ -164,12 +192,44 @@ async def ai_interview(domain, difficulty, user_response, session):
         error_details = traceback.format_exc()
         print(f"Error processing AI interview: {str(e)}\n{error_details}")
         raise HTTPException(status_code=500, detail=f"Error processing AI interview: {str(e)}")  
+    
 
-
-async def get_feedback(session_id : str):
+async def get_interview_feedback(session_id: str):
     try:
-        pass
+        db = await get_database()
+        collection = db['Interviewer']
+        session = await collection.find_one({"_id": ObjectId(session_id)})
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found.")
+        chat_history = session.get('Qna', [])
+        if not chat_history:
+            raise HTTPException(status_code=404, detail="No interview questions found in the session.")
+        domain = session.get('domain', 'General')
+        difficulty = session.get('difficulty', 'General')
+        conversation = ""
+        for idx, qna in enumerate(chat_history):
+            question = qna.get("question", "")
+            answer = qna.get("answer", "")
+            conversation += f"Q{idx+1}: {question}\nA{idx+1}: {answer}\n"
+        
+
+        response = feedback_client.chat.completions.create(
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            messages=[
+                {"role": "system", "content": "You are an expert interview feedback assistant."},
+                {"role": "user", "content":  feedback_prompt.format(
+                    domain=domain,
+                    difficulty=difficulty,
+                    conversation=conversation
+                )}
+            ]
+        )
+
+        feedback = response.choices[0].message.content.strip()
+        feedback_data = extract_json_objects(feedback)
+        return {"feedback": feedback_data}
+        
     except Exception as e:
         error_details = traceback.format_exc()
-        print(f"Error processing feedback: {str(e)}\n{error_details}")
-        raise HTTPException(status_code=500, detail=f"Error processing feedback: {str(e)}")
+        print(f"Error processing interview feedback: {str(e)}\n{error_details}")
+        raise HTTPException(status_code=500, detail=f"Error processing interview feedback: {str(e)}")

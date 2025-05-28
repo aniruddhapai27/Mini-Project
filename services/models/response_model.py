@@ -28,4 +28,5 @@ class FeedBackResponse(BaseModel):
     session: str
     feedback: str
     score: int
+    overall_score: int
     

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
 from models.response_model import voiceTranscript, InterviewResponse, FeedBackResponse
-from controllers.interview_controller import transcript, text_to_speech_controller, ai_interview, get_feedback
+from controllers.interview_controller import transcript, text_to_speech_controller, ai_interview, get_interview_feedback
 from models.request_models import TextToSpeechRequest, InterviewRequest, FeedbackRequest
 
 interview_router = APIRouter()
@@ -56,7 +56,7 @@ async def feedback(feedbackRequest: FeedbackRequest):
         if not feedbackRequest.session or not feedbackRequest.user:
             raise ValueError("Session ID and feedback are required fields.")
         
-        response = await get_feedback(
+        response = await get_interview_feedback(
             session = feedbackRequest.session
         )
         if not response:
@@ -64,7 +64,8 @@ async def feedback(feedbackRequest: FeedbackRequest):
         return {
             "session": response.get('session_id', ''),
             "feedback": response.get('feedback', ''),
-            "score": response.get('score', 0)
+            "scores": response.get('scores', 0),
+            "overall_score": response.get('overall_score', '')  
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing feedback request: {str(e)}")
