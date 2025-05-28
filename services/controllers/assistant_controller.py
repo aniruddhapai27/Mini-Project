@@ -29,15 +29,14 @@ prompt = (
     'Return only JSON, no extra text.'
 )
 
-def get_daily_questions():
+async def get_daily_questions():
     try:
         subjects = ["Data Structures"]
         daily_questions = []
-        db = get_database()
+        db = await get_database()
         for subject in subjects:
             collection = db['Daily_Questions']
-            existing_questions_cursor = collection.find({'subject': subject})
-            existing_questions = list(existing_questions_cursor)
+            existing_questions = await collection.find({'subject': subject}).to_list(length=None)
             existing_questions_list = [q['question'] for q in existing_questions]
             response  = client.chat.completions.create(
                 model = "meta-llama/llama-4-scout-17b-16e-instruct",
@@ -56,7 +55,7 @@ def get_daily_questions():
                 daily_questions.append(question)
         if not daily_questions:
             raise HTTPException(status_code=404, detail="No daily questions generated.")    
-        collection.insert_many(daily_questions)
+        await collection.insert_many(daily_questions)
         return {"message": "Daily questions successfully stored  in the database."}
     except Exception as e:
         error_details = traceback.format_exc()

@@ -1,23 +1,18 @@
 from dotenv import load_dotenv
-import os
+import os 
 from pymongo import MongoClient
 import traceback
+from motor.motor_asyncio import AsyncIOMotorClient
 
 load_dotenv()
-
 db_url = os.getenv("DB_URL")
 
-def get_database():
+async def get_database():
     try:
         if not db_url:
-            raise ValueError("DB_URL environment variable is not set and no default connection string available.")
-        client = MongoClient(db_url, tlsInsecure=True)
-        
-        client.admin.command('ping')
-        print("Successfully connected to MongoDB!")
+            raise ValueError("DB_URL environment variable is not set.")
+        client = AsyncIOMotorClient(db_url)
         db = client['mini_project']
-        if db is None:
-            raise Exception("Database connection failed. Please check your connection string.")
         return db
     except Exception as e:
         error_details = traceback.format_exc()
