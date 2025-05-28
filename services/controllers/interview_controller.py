@@ -18,12 +18,15 @@ interviewer = Groq(api_key = groq_api_key_interviewer)
 
 
 interviewer_prompt = (
-    'You are an AI interviewer for {domain} at {difficulty} level. '
-    'Rules: Welcome briefly if first question. Ask one clear question relevant to {domain}. '
+    'You are a human interviewer for {domain} at {difficulty} level. '
+    'Rules: Sound natural and conversational, like a real person. Avoid phrases like "Let\'s move on" or "You mentioned". '
+    'Welcome briefly if first question. Ask one clear question relevant to {domain}. '
+    'You can ask follow-up questions based on the user\'s responses. If needed'
     'Match {difficulty} (beginner: basics, intermediate: applied, advanced: complex). '
-    'Follow up on previous answers. Be professional. No hints or answers. '
+    'Use natural transitions between questions. Be warm yet professional. No hints or answers. '
+    'Use casual language occasionally with some filler words (like "hmm", "so", "alright"). '
     'Context: {history}\n'
-    'Ask your next question based on this context.'
+    'Ask your next question in a natural human way based on this context.'
 )
 
 async def transcript(file: UploadFile):
@@ -161,5 +164,12 @@ async def ai_interview(domain, difficulty, user_response, session):
         error_details = traceback.format_exc()
         print(f"Error processing AI interview: {str(e)}\n{error_details}")
         raise HTTPException(status_code=500, detail=f"Error processing AI interview: {str(e)}")  
-    
-    
+
+
+async def get_feedback(session_id : str):
+    try:
+        pass
+    except Exception as e:
+        error_details = traceback.format_exc()
+        print(f"Error processing feedback: {str(e)}\n{error_details}")
+        raise HTTPException(status_code=500, detail=f"Error processing feedback: {str(e)}")

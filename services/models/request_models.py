@@ -12,4 +12,6 @@ class InterviewRequest(BaseModel):
     user: str = Field(..., description="The answer to the interview question")
     session: str = Field(Optional,description="The session ID for the interview")
     
-    
+
+class FeedbackRequest(BaseModel):
+    session: str = Field(..., description="The session ID for the interview")

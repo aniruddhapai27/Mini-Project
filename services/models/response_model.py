@@ -23,3 +23,9 @@ class DailyQuestionsResponse(BaseModel):
 class InterviewResponse(BaseModel):
     ai: str
     session: Optional[str] = None
+    
+class FeedBackResponse(BaseModel):
+    session: str
+    feedback: str
+    score: int
+    
