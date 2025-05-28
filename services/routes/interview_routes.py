@@ -28,7 +28,7 @@ async def text_to_speech(VoiceRequest: TextToSpeechRequest):
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
     
 
-@interview_router.post("/interview", response_model=InterviewResponse)
+@interview_router.post("/get-interview", response_model=InterviewResponse)
 async def interview(InterviewRequest: InterviewRequest):
     try:
         if not InterviewRequest.domain or not InterviewRequest.difficulty or not InterviewRequest.user:
