@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
-from models.response_model import voiceTranscript
-from controllers.interview_controller import transcript, text_to_speech_controller
-from models.request_models import TextToSpeechRequest
+from models.response_model import voiceTranscript, InterviewResponse
+from controllers.interview_controller import transcript, text_to_speech_controller, ai_interview
+from models.request_models import TextToSpeechRequest, InterviewRequest
 
 
 interview_router = APIRouter()
@@ -27,3 +27,25 @@ async def text_to_speech(VoiceRequest: TextToSpeechRequest):
         return await text_to_speech_controller(VoiceRequest.text, VoiceRequest.voice)
     except Exception as e:  
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
+    
+
+@interview_router.post("/interview", response_model=InterviewResponse)
+async def interview(InterviewRequest: InterviewRequest):
+    try:
+        if not InterviewRequest.domain or not InterviewRequest.difficulty or not InterviewRequest.user:
+            raise ValueError("Domain, difficulty, and user response are required fields.")
+        
+        response = await ai_interview(
+            domain = InterviewRequest.domain,
+            difficulty= InterviewRequest.difficulty,
+            user_response = InterviewRequest.user,
+            session = InterviewRequest.session or None
+        )
+        if not response:
+            raise HTTPException(status_code=404, detail="No interview response generated.")
+        return InterviewResponse(
+            ai = response.get('ai', ''),
+            session= response.get('session_id', ''),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing interview request: {str(e)}")

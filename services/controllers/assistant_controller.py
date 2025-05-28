@@ -8,10 +8,13 @@ from database.db_config import get_database
 from utils.helper import extract_json_objects
 
 load_dotenv()
-groq_api_key = os.getenv("GROQ_API_KEY_DQ")
-client = Groq(api_key = groq_api_key)
+groq_api_key_dq = os.getenv("GROQ_API_KEY_DQ")
+client = Groq(api_key = groq_api_key_dq)
+interviewer = Groq(api_key = groq_api_key_dq)
 
-prompt = (
+
+
+daily_questions_prompt = (
     'You are an expert in creating daily interview questions for engineering students. '
     'Generate 10 easy to medium questions for the subject: {subject}. '
     'Recent questions: {list}. '
@@ -43,7 +46,7 @@ async def get_daily_questions():
                 messages = [
                     {
                         "role" : "system",
-                        "content" : prompt.format(subject=subject, list=existing_questions_list)
+                        "content" : daily_questions_prompt.format(subject=subject, list=existing_questions_list)
                         
                     },
                 ]
@@ -61,3 +64,6 @@ async def get_daily_questions():
         error_details = traceback.format_exc()
         print(f"Error fetching daily questions: {str(e)}\n{error_details}")
         raise HTTPException(status_code=500, detail=f"Error fetching daily questions: {str(e)}")
+
+
+

@@ -19,3 +19,7 @@ class DailyQuestionItem(BaseModel):
 
 class DailyQuestionsResponse(BaseModel):
     questions: List[DailyQuestionItem]
+
+class InterviewResponse(BaseModel):
+    ai: str
+    session: Optional[str] = None

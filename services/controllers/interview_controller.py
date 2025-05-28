@@ -3,10 +3,28 @@ import os
 from groq import Groq
 from pathlib import Path
 from fastapi import HTTPException, UploadFile
+import traceback
+from database.db_config import get_database
+import datetime
+from bson import ObjectId
+
 load_dotenv()
 
 groq_api_audio = os.getenv("GROQ_API_AUDIO")
 client = Groq(api_key=groq_api_audio)
+groq_api_key_interviewer = os.getenv("GROQ_API_KEY_DQ")
+
+interviewer = Groq(api_key = groq_api_key_interviewer)
+
+
+interviewer_prompt = (
+    'You are an AI interviewer for {domain} at {difficulty} level. '
+    'Rules: Welcome briefly if first question. Ask one clear question relevant to {domain}. '
+    'Match {difficulty} (beginner: basics, intermediate: applied, advanced: complex). '
+    'Follow up on previous answers. Be professional. No hints or answers. '
+    'Context: {history}\n'
+    'Ask your next question based on this context.'
+)
 
 async def transcript(file: UploadFile):
     try:
@@ -30,7 +48,6 @@ async def transcript(file: UploadFile):
         os.remove(temp_filename)
         return transcription.text
     except Exception as e:
-        import traceback
         error_details = traceback.format_exc()
         print(f"Error processing audio file: {str(e)}\n{error_details}")
         raise HTTPException(status_code=500, detail=f"Error processing audio file: {str(e)}")
@@ -79,12 +96,70 @@ async def text_to_speech_controller(text: str, voice: str = "Aaliyah-PlayAI"):
         )
         
     except Exception as e:
-        import traceback
+        
         error_details = traceback.format_exc()
         print(f"Error generating speech: {str(e)}\n{error_details}") 
         from fastapi import HTTPException
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
     
     
+async def ai_interview(domain, difficulty, user_response, session):
+    try:
+        db = await get_database()
+        collection  = db['Interviewer']
+        if not session:
+            new_session = {
+                "domain": domain,
+                "difficulty": difficulty,
+                "created_at": str(datetime.datetime.now()),
+                "Qna": [
+                    {
+                        "question": "Welcome to the AI interview. Please introduce yourself.",
+                        "answer": user_response,
+                        "created_at": str(datetime.datetime.now())
+                    }
+                ]
+            }
+            result = await collection.insert_one(new_session)
+            session = result.inserted_id
+        else:
+            # Convert string ID to ObjectId if it's a string
+            try:
+                if isinstance(session, str):
+                    session = ObjectId(session)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid session ID format: {str(e)}")
+                
+        session_data = await collection.find_one({"_id":session})
+        if not session_data:
+            raise HTTPException(status_code=404, detail="Session not found.")
+        history = session_data.get('Qna', [])
+        response = interviewer.chat.completions.create(
+            model = "meta-llama/llama-4-scout-17b-16e-instruct",
+            messages = [
+                {
+                    "role": "system",
+                    "content": interviewer_prompt.format(domain=domain, difficulty=difficulty, history=history[-5:]) 
+                },
+                {
+                    "role": "user",
+                    "content": user_response                }
+            ]
+        )
+        question = response.choices[0].message.content.strip()
+        # We ensure session is already converted to ObjectId before this point
+        await collection.update_one({"_id": session}, {"$push": {"Qna": {
+            "question": question,
+            "answer": user_response,
+            "created_at": str(datetime.datetime.now())
+        }}})
+        return {
+            "session_id": str(session),
+            "ai": question
+        }
+    except Exception as e:
+        error_details = traceback.format_exc()
+        print(f"Error processing AI interview: {str(e)}\n{error_details}")
+        raise HTTPException(status_code=500, detail=f"Error processing AI interview: {str(e)}")  
     
     
