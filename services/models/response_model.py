@@ -24,9 +24,20 @@ class InterviewResponse(BaseModel):
     ai: str
     session: Optional[str] = None
     
+class FeedbackSuggestions(BaseModel):
+    technical_knowledge: str
+    communication_skills: str
+    confidence: str
+    problem_solving: str
+
+class FeedbackDetail(BaseModel):
+    technical_knowledge: str
+    communication_skills: str
+    confidence: str
+    problem_solving: str
+    suggestions: FeedbackSuggestions
+
 class FeedBackResponse(BaseModel):
-    session: str
-    feedback: str
-    score: int
+    feedback: FeedbackDetail
     overall_score: int
-    
+

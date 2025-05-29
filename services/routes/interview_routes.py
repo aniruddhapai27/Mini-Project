@@ -53,19 +53,14 @@ async def interview(InterviewRequest: InterviewRequest):
 @interview_router.post("/feedback", response_model=FeedBackResponse)
 async def feedback(feedbackRequest: FeedbackRequest):
     try:
-        if not feedbackRequest.session or not feedbackRequest.user:
+        if not feedbackRequest.session:
             raise ValueError("Session ID and feedback are required fields.")
         
         response = await get_interview_feedback(
-            session = feedbackRequest.session
+            session_id = feedbackRequest.session
         )
         if not response:
             raise HTTPException(status_code=404, detail="No feedback response generated.")
-        return {
-            "session": response.get('session_id', ''),
-            "feedback": response.get('feedback', ''),
-            "scores": response.get('scores', 0),
-            "overall_score": response.get('overall_score', '')  
-        }
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing feedback request: {str(e)}")

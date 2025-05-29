@@ -8,6 +8,7 @@ from database.db_config import get_database
 import datetime
 from bson import ObjectId
 from utils.helper import extract_json_objects
+import json
 
 load_dotenv()
 
@@ -31,32 +32,33 @@ interviewer_prompt = (
     'Ask your next question in a natural human way based on this context.'
 )
 
-feedback_prompt = ('Analyze this {domain} interview ({difficulty} level) between interviewer and candidate. '
-'Tasks: ' 
-'1. Identify strengths and weaknesses '
-'2. Give feedback on: technical knowledge, communication, confidence, problem-solving '
-'3. Score each category (0-10) '
-'4. Calculate overall score (0-100) '
-'5. Return JSON only '
-'Transcript: '
-'{conversation} '
-
-'JSON Format: '
-'{{'
-  '"feedback": {{ '
-    '"technical_knowledge": "brief assessment", '
-    '"communication_skills": "brief assessment", '
-    '"confidence": "brief assessment", '
-    '"problem_solving": "brief assessment" '
-  '}}, '
-  '"scores": {{ '
-    '"technical_knowledge": 0-10, '
-    '"communication_skills": 0-10, '
-    '"confidence": 0-10, '
-    '"problem_solving": 0-10 '
-  '}}, '
-  '"overall_score": 0-100 '
-'}} ') 
+feedback_prompt = (
+    'Analyze this {domain} interview ({difficulty} level) between interviewer and candidate. '
+    'Tasks: '
+    '1. Identify strengths and weaknesses. '
+    '2. Give feedback on: technical knowledge, communication, confidence, problem-solving. '
+    '3. Calculate an overall_score (0-100) based on the entire interview. '
+    '4. Suggest concrete ways the candidate can improve in each area. '
+    '5. Return JSON only. Ensure the JSON is a single, valid object. '
+    'Transcript: '
+    '{conversation} '
+    'JSON Format: '
+    '{{'
+    '  "feedback": {{ '
+    '    "technical_knowledge": "brief assessment", '
+    '    "communication_skills": "brief assessment", '
+    '    "confidence": "brief assessment", '
+    '    "problem_solving": "brief assessment", '
+    '    "suggestions": {{'
+    '      "technical_knowledge": "how to improve", '
+    '      "communication_skills": "how to improve", '
+    '      "confidence": "how to improve", '
+    '      "problem_solving": "how to improve" '
+    '    }} '
+    '  }}, '
+    '  "overall_score": 0-100 '
+    '}} '
+) 
 
 async def transcript(file: UploadFile):
     try:
@@ -198,25 +200,26 @@ async def get_interview_feedback(session_id: str):
     try:
         db = await get_database()
         collection = db['Interviewer']
-        session = await collection.find_one({"_id": ObjectId(session_id)})
-        if not session:
+        session_data_db = await collection.find_one({"_id": ObjectId(session_id)})
+        if not session_data_db:
             raise HTTPException(status_code=404, detail="Session not found.")
-        chat_history = session.get('Qna', [])
+
+        chat_history = session_data_db.get('Qna', [])
         if not chat_history:
             raise HTTPException(status_code=404, detail="No interview questions found in the session.")
-        domain = session.get('domain', 'General')
-        difficulty = session.get('difficulty', 'General')
+
+        domain = session_data_db.get('domain', 'General')
+        difficulty = session_data_db.get('difficulty', 'General')
         conversation = ""
         for idx, qna in enumerate(chat_history):
             question = qna.get("question", "")
             answer = qna.get("answer", "")
-            conversation += f"Q{idx+1}: {question}\nA{idx+1}: {answer}\n"
+            conversation += f"Q{idx+1}: {question}\\nA{idx+1}: {answer}\\n"
         
-
         response = feedback_client.chat.completions.create(
             model="meta-llama/llama-4-scout-17b-16e-instruct",
             messages=[
-                {"role": "system", "content": "You are an expert interview feedback assistant."},
+                {"role": "system", "content": "You are an expert interview feedback assistant. Ensure your output is a single, valid JSON object matching the specified format."},
                 {"role": "user", "content":  feedback_prompt.format(
                     domain=domain,
                     difficulty=difficulty,
@@ -224,12 +227,16 @@ async def get_interview_feedback(session_id: str):
                 )}
             ]
         )
-
         feedback = response.choices[0].message.content.strip()
         feedback_data = extract_json_objects(feedback)
-        return {"feedback": feedback_data}
+        # Ensure feedback_data is a dict, not a list
+        if isinstance(feedback_data, list) and len(feedback_data) > 0:
+            feedback_data = feedback_data[0]
+        return feedback_data
         
     except Exception as e:
         error_details = traceback.format_exc()
-        print(f"Error processing interview feedback: {str(e)}\n{error_details}")
+        print(f"Error processing interview feedback: {str(e)}\\n{error_details}")
+        if isinstance(e, HTTPException):
+            raise
         raise HTTPException(status_code=500, detail=f"Error processing interview feedback: {str(e)}")
