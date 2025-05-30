@@ -1,6 +1,7 @@
 import json
 import regex as re
-
+from PyPDF2 import PdfReader
+from docx import Document
 
 def extract_json_objects(text: str):
     """
@@ -17,3 +18,21 @@ def extract_json_objects(text: str):
         except json.JSONDecodeError:
             continue
     return json_objects
+
+
+def extract_text(file):
+    if file.filename.endswith('.pdf'):
+        reader = PdfReader(file.file)
+        text = ''
+        for page in reader.pages:
+            text += page.extract_text() or ''
+        return text
+    elif file.filename.endswith('.docx'):
+        doc = Document(file.file)
+        text = ''
+        for para in doc.paragraphs:
+            text += para.text + '\n'
+        return text
+    
+
+    

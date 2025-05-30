@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from bson import ObjectId
 import traceback
 from database.db_config import get_database
-from utils.helper import extract_json_objects
+from utils.helper import extract_json_objects, extract_text
 
 load_dotenv()
 groq_api_key_dq = os.getenv("GROQ_API_KEY_DQ")
@@ -38,6 +38,23 @@ daily_questions_prompt = (
     '  "subject": "subject name"'
     '}}. '
     'Return only JSON, no extra text.'
+)
+
+resume_prompt = (
+    'You are an expert in resume analysis. '
+    'Analyze the provided resume and do some strict resume analysis for the engineering student. '
+    'Identify any grammatical mistakes and provide corrections. '
+    'Give suggestions for improving the resume. '
+    'Evaluate the resume for ATS (Applicant Tracking System) compatibility and provide an ATS score out of 100. '
+    'Return a structured JSON object with the following fields: '
+    '{{'
+    '"grammatical_mistakes": "In the markdown format beautifully, dont list give in markdomn list",'
+    '"improvement_suggestions": "In the markdown format paragraph beautifully",'
+    '"ats_score": 0'
+    '}}. '
+    'Return only JSON, no extra text. '
+    'you Can give output in as many lines as you want, but it should be a single JSON object and markdown format. '
+    'provided resume: {text}'
 )
 
 study_assistant_prompt = (
@@ -144,4 +161,37 @@ async def study_assistant(user_query: str, subject: str, session_id: str = None)
         error_details = traceback.format_exc()  
         print(f"Error processing study assistant request: {str(e)}\n{error_details}")
         raise HTTPException(status_code=500, detail=f"Error processing study assistant request: {str(e)}")
-            
+        
+async def analyse_resume(file):
+    try:
+        if not file.filename.endswith(('.pdf', '.docx', '.txt')):
+            raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a text-based document.")
+        text = extract_text(file)
+        if not text:
+            raise HTTPException(status_code=400, detail="The file is empty or could not be read.")
+        response = client.chat.completions.create(
+            model = "meta-llama/llama-4-scout-17b-16e-instruct",
+            messages = [
+                {
+                    "role": "system",
+                    "content": resume_prompt.format(text=text)
+                }
+            ]
+        )
+        resume_analysis = extract_json_objects(response.choices[0].message.content)
+        if not resume_analysis:
+            raise HTTPException(status_code=400, detail="Failed to analyze the resume. Please check the content.")
+        if len(resume_analysis) > 1:
+            raise HTTPException(status_code=400, detail="Multiple JSON objects found in the response. Expected a single object.")
+        db = await get_database()
+        collection = db['Resume_Analysis']
+        await collection.insert_one({
+            "file_name": file.filename,
+            "analysis": resume_analysis[0],
+            "created_at": str(datetime.datetime.now())
+        })
+        return resume_analysis
+    except Exception as e:
+        error_details = traceback.format_exc()
+        print(f"Error processing resume file: {str(e)}\n{error_details}")
+        raise HTTPException(status_code=500, detail=f"Error processing resume file: {str(e)}")
