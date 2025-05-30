@@ -67,7 +67,7 @@ async def get_daily_questions():
 async def chat_with_ai(user_query: str, subject: str, session_id: str = None):
     try:
         db = await get_database()
-        collection = db['Interviewer']
+        collection = db['Chat_Sessions']
         session = session_id
         if not session:
             new_session = {
