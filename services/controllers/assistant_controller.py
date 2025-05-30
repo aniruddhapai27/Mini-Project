@@ -7,6 +7,7 @@ from bson import ObjectId
 import traceback
 from database.db_config import get_database
 from utils.helper import extract_json_objects, extract_text
+from models.prompts import daily_questions_prompt, resume_prompt, study_assistant_prompt
 
 load_dotenv()
 groq_api_key_dq = os.getenv("GROQ_API_KEY_DQ")
@@ -21,51 +22,6 @@ textbook = {
     "SE":"Software Enginnering, A Practitioner's Approach, by Roger S. Pressman and Bruce R. Maxim",
     "DS":"Data Structures and Algorithms in Java, by Robert Lafore", 
 }
-
-daily_questions_prompt = (
-    'You are an expert in creating daily interview questions for engineering students. '
-    'Generate 10 easy to medium questions for the subject: {subject}. '
-    'Recent questions: {list}. '
-    'Do not repeat any questions from the list. '
-    'Format each question as JSON: '
-    '{{'
-    '  "question": "Your question text here",'
-    '  "option1": "Option 1",'
-    '  "option2": "Option 2",'
-    '  "option3": "Option 3",'
-    '  "option4": "Option 4",'
-    '  "answer": "correct option",'
-    '  "subject": "subject name"'
-    '}}. '
-    'Return only JSON, no extra text.'
-)
-
-resume_prompt = (
-    'You are an expert in resume analysis. '
-    'Analyze the provided resume and do some strict resume analysis for the engineering student. '
-    'Identify any grammatical mistakes and provide corrections. '
-    'Give suggestions for improving the resume. '
-    'Evaluate the resume for ATS (Applicant Tracking System) compatibility and provide an ATS score out of 100. '
-    'Return a structured JSON object with the following fields: '
-    '{{'
-    '"grammatical_mistakes": "In the markdown format beautifully, dont list give in markdomn list",'
-    '"improvement_suggestions": "In the markdown format paragraph beautifully",'
-    '"ats_score": 0'
-    '}}. '
-    'Return only JSON, no extra text. '
-    'you Can give output in as many lines as you want, but it should be a single JSON object and markdown format. '
-    'provided resume: {text}'
-)
-
-study_assistant_prompt = (
-    'You are a study assistant for {subject}, using "{textbook}" as your only reference. '
-    'Dont answer like according to the textbook, instead, answer like you are a human expert in the subject. but dont answer questions from other than the texboks'
-    'Answer only questions related to the textbook; otherwise, reply: "I cannot answer this question as it is not related to the textbook." '
-    'Give clear, concise answers without asking for clarification or follow-ups. '
-    'Dont answr irrelevant questions. you can use the textbook to answer questions. '
-    'Use simple diagrams or code if needed. '
-    'Chat History: {history}'
-)
 
 async def get_daily_questions():
     try:
