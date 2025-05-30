@@ -11,7 +11,6 @@ from utils.helper import extract_json_objects, init_retriever, init_rag_chain, g
 load_dotenv()
 groq_api_key_dq = os.getenv("GROQ_API_KEY_DQ")
 client = Groq(api_key = groq_api_key_dq)
-chat, embeddings = get_model()
 
 daily_questions_prompt = (
     'You are an expert in creating daily interview questions for engineering students. '
@@ -68,7 +67,7 @@ async def get_daily_questions():
 async def chat_with_ai(user_query: str, subject: str, session_id: str = None):
     try:
         db = await get_database()
-        collection = db['Chat_Sessions']
+        collection = db['Interviewer']
         session = session_id
         if not session:
             new_session = {
@@ -88,6 +87,7 @@ async def chat_with_ai(user_query: str, subject: str, session_id: str = None):
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found.")
         history = session_data.get('Qna', [])
+        chat, embeddings = get_model()
         _, retriever = init_retriever(chat, embeddings, subject)
         rag_chain = init_rag_chain(chat, retriever, subject)
         rag_history = [(q['user_query'], q['ai']) for q in history]
