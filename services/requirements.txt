@@ -16,3 +16,6 @@ regex
 certifi
 faiss-cpu
 langchain_huggingface
+pypdf2
+python-docx
+docx
