@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from controllers.assistant_controller import get_daily_questions, study_assistant, analyse_resume
 from models.response_model import ChatResponse
 from models.request_models import ChatRequest
+from utils.helper import extract_text 
 
 assistant_router = APIRouter()
 
@@ -40,3 +41,13 @@ async def resume_chat(file: UploadFile = File(...)):
         return {"message": "Resume processed successfully", "content": resume_content}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing resume file: {str(e)}")
+    
+@assistant_router.post( "/parser")
+def parse_resume(file: UploadFile = File(...)):
+    try:
+        if not file.filename.endswith(('.pdf', '.docx', '.txt')):
+            raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a text-based document.")
+        resume_content = extract_text(file)
+        return {"message": "Resume parsed successfully", "content": resume_content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error parsing resume file: {str(e)}")
