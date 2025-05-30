@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from controllers.assistant_controller import get_daily_questions, chat_with_ai
+from controllers.assistant_controller import get_daily_questions, study_assistant
 from models.response_model import ChatResponse
 from models.request_models import ChatRequest
 
@@ -18,7 +18,7 @@ async def chat(chatRequest: ChatRequest):
     try:
         if not chatRequest.user_query or not chatRequest.subject:
             raise HTTPException(status_code=400, detail="Query and subject are required fields.")
-        response = await chat_with_ai(
+        response = await study_assistant(
             user_query=chatRequest.user_query,
             subject=chatRequest.subject,
             session_id=chatRequest.session_id

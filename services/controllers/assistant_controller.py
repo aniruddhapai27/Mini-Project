@@ -6,11 +6,21 @@ from fastapi import HTTPException
 from bson import ObjectId
 import traceback
 from database.db_config import get_database
-from utils.helper import extract_json_objects, init_retriever, init_rag_chain, get_model
+from utils.helper import extract_json_objects
 
 load_dotenv()
 groq_api_key_dq = os.getenv("GROQ_API_KEY_DQ")
 client = Groq(api_key = groq_api_key_dq)
+study = Groq(api_key=groq_api_key_dq)
+
+textbook = {
+    "ADA":"The Design and Analysis of Algorithms, by Anany Levitan",
+    "CN":"Computer Networking : A Top-Down Approach, by James Kurose and Keith Ross",
+    "DBMS":"Database Management Systems, by Raghu Ramakrishnan and Johannes Gehrke",
+    "OS":"Operating System Concepts, by Abraham Silberschatz, Peter B. Galvin, and Greg Gagne",
+    "SE":"Software Enginnering, A Practitioner's Approach, by Roger S. Pressman and Bruce R. Maxim",
+    "DS":"Data Structures and Algorithms in Java, by Robert Lafore", 
+}
 
 daily_questions_prompt = (
     'You are an expert in creating daily interview questions for engineering students. '
@@ -28,6 +38,16 @@ daily_questions_prompt = (
     '  "subject": "subject name"'
     '}}. '
     'Return only JSON, no extra text.'
+)
+
+study_assistant_prompt = (
+    'You are a study assistant for {subject}, using "{textbook}" as your only reference. '
+    'Dont answer like according to the textbook, instead, answer like you are a human expert in the subject. but dont answer questions from other than the texboks'
+    'Answer only questions related to the textbook; otherwise, reply: "I cannot answer this question as it is not related to the textbook." '
+    'Give clear, concise answers without asking for clarification or follow-ups. '
+    'Dont answr irrelevant questions. you can use the textbook to answer questions. '
+    'Use simple diagrams or code if needed. '
+    'Chat History: {history}'
 )
 
 async def get_daily_questions():
@@ -62,16 +82,16 @@ async def get_daily_questions():
         error_details = traceback.format_exc()
         print(f"Error fetching daily questions: {str(e)}\n{error_details}")
         raise HTTPException(status_code=500, detail=f"Error fetching daily questions: {str(e)}")
-
-
-async def chat_with_ai(user_query: str, subject: str, session_id: str = None):
+ 
+    
+async def study_assistant(user_query: str, subject: str, session_id: str = None):
     try:
         db = await get_database()
         collection = db['Chat_Sessions']
         session = session_id
         if not session:
-            new_session = {
-                "domain": subject,
+            new_session ={
+                "subject" :subject,
                 "created_at": str(datetime.datetime.now()),
                 "Qna": []
             }
@@ -85,25 +105,43 @@ async def chat_with_ai(user_query: str, subject: str, session_id: str = None):
                 raise HTTPException(status_code=400, detail=f"Invalid session ID format: {str(e)}")
         session_data = await collection.find_one({"_id": session})
         if not session_data:
-            raise HTTPException(status_code=404, detail="Session not found.")
+                raise HTTPException(status_code=404, detail="Session not found.")
         history = session_data.get('Qna', [])
-        chat, embeddings = get_model()
-        _, retriever = init_retriever(chat, embeddings, subject)
-        rag_chain = init_rag_chain(chat, retriever, subject)
-        rag_history = [(q['user_query'], q['ai']) for q in history]
-        rag_input = {"input": user_query, "chat_history": rag_history}
-        rag_response = rag_chain.invoke(rag_input)
-        answer = rag_response["answer"] if isinstance(rag_response, dict) and "answer" in rag_response else rag_response
-        await collection.update_one({"_id": session}, {"$push": {"Qna": {
-            "user_query": user_query,
-            "ai": answer,
-            "created_at": str(datetime.datetime.now())
-        }}})
+        chat_history = [(q['user_query'], q['ai']) for q in history]
+        textbook_name = textbook.get(subject, "Unknown Subject")
+        response = study.chat.completions.create(
+            model = "meta-llama/llama-4-scout-17b-16e-instruct",
+            messages = [
+                {
+                    "role": "system",
+                    "content": study_assistant_prompt.format(
+                        subject=subject, 
+                        textbook=textbook_name, 
+                        history=chat_history[-5:]
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": user_query
+                },
+            ]
+        )
+        response_text = response.choices[0].message.content.strip()
+        await collection.update_one(
+            {"_id": session}, 
+            {"$push": {"Qna": {
+                "user_query": user_query,
+                "ai": response_text,
+                "created_at": str(datetime.datetime.now())
+            }}}
+        )
         return {
-            "session_id": str(session),
-            "ai": answer
-        }
+                "session_id": str(session),
+                "ai": response_text,
+                "subject": subject
+            }
     except Exception as e:
-        error_details = traceback.format_exc()
-        print(f"Error processing RAG AI chat: {str(e)}\n{error_details}")
-        raise HTTPException(status_code=500, detail=f"Error processing RAG AI chat: {str(e)}")
+        error_details = traceback.format_exc()  
+        print(f"Error processing study assistant request: {str(e)}\n{error_details}")
+        raise HTTPException(status_code=500, detail=f"Error processing study assistant request: {str(e)}")
+            
