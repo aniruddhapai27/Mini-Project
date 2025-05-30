@@ -41,3 +41,7 @@ class FeedBackResponse(BaseModel):
     feedback: FeedbackDetail
     overall_score: int
 
+class ChatResponse(BaseModel):
+    response: str
+    subject: str
+    session_id: str

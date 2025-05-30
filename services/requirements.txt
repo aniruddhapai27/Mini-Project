@@ -5,9 +5,14 @@ numpy
 pydantic
 python-multipart
 langchain_groq
+langchain_core
+langchain_community
+huggingface
 python-dotenv
 groq
 pymongo>=4.0.0
 motor>=3.0.0
 regex
 certifi
+faiss-cpu
+langchain_huggingface

@@ -3,16 +3,15 @@ from dotenv import load_dotenv
 import os
 import datetime
 from fastapi import HTTPException
+from bson import ObjectId
 import traceback
 from database.db_config import get_database
-from utils.helper import extract_json_objects
+from utils.helper import extract_json_objects, init_retriever, init_rag_chain, get_model
 
 load_dotenv()
 groq_api_key_dq = os.getenv("GROQ_API_KEY_DQ")
 client = Groq(api_key = groq_api_key_dq)
-interviewer = Groq(api_key = groq_api_key_dq)
-
-
+chat, embeddings = get_model()
 
 daily_questions_prompt = (
     'You are an expert in creating daily interview questions for engineering students. '
@@ -66,4 +65,45 @@ async def get_daily_questions():
         raise HTTPException(status_code=500, detail=f"Error fetching daily questions: {str(e)}")
 
 
-
+async def chat_with_ai(user_query: str, subject: str, session_id: str = None):
+    try:
+        db = await get_database()
+        collection = db['Interviewer']
+        session = session_id
+        if not session:
+            new_session = {
+                "domain": subject,
+                "created_at": str(datetime.datetime.now()),
+                "Qna": []
+            }
+            result = await collection.insert_one(new_session)
+            session = result.inserted_id
+        else:
+            try:
+                if isinstance(session, str):
+                    session = ObjectId(session)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid session ID format: {str(e)}")
+        session_data = await collection.find_one({"_id": session})
+        if not session_data:
+            raise HTTPException(status_code=404, detail="Session not found.")
+        history = session_data.get('Qna', [])
+        _, retriever = init_retriever(chat, embeddings, subject)
+        rag_chain = init_rag_chain(chat, retriever, subject)
+        rag_history = [(q['user_query'], q['ai']) for q in history]
+        rag_input = {"input": user_query, "chat_history": rag_history}
+        rag_response = rag_chain.invoke(rag_input)
+        answer = rag_response["answer"] if isinstance(rag_response, dict) and "answer" in rag_response else rag_response
+        await collection.update_one({"_id": session}, {"$push": {"Qna": {
+            "user_query": user_query,
+            "ai": answer,
+            "created_at": str(datetime.datetime.now())
+        }}})
+        return {
+            "session_id": str(session),
+            "ai": answer
+        }
+    except Exception as e:
+        error_details = traceback.format_exc()
+        print(f"Error processing RAG AI chat: {str(e)}\n{error_details}")
+        raise HTTPException(status_code=500, detail=f"Error processing RAG AI chat: {str(e)}")

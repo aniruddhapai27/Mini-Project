@@ -15,3 +15,10 @@ class InterviewRequest(BaseModel):
 
 class FeedbackRequest(BaseModel):
     session: str = Field(..., description="The session ID for the interview")
+    
+    
+class ChatRequest(BaseModel):
+    user_query: str = Field(..., description="The user's query for the chat")
+    subject: str = Field(default='ADA', description="The subject of the chat")
+    session_id: str = Field(..., description="The session ID for the chat")
+    
