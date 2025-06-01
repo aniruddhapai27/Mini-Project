@@ -1,6 +1,6 @@
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const multer = require("multer");
-const cloudinary = require("./CloudinaryConfig");
+const cloudinary = require("./cloudinaryConfig");
 
 const folderSelector = (req, file) => {
   if (file.fieldname === "resume") {
