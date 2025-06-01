@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/email");
 const generateAuthToken = require("../jwt/jsonWebToken");
 const crypto = require("crypto");
+const path = require("path");
 const upload = require("../config/cloudinaryStorage");
 
 exports.register = [
