@@ -1,9 +1,9 @@
-const upload = require("../config/cloudinaryStorage");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/email");
 const generateAuthToken = require("../jwt/jsonWebToken");
 const crypto = require("crypto");
+const upload = require("../config/cloudinaryStorage");
 
 exports.register = [
   upload.fields([
