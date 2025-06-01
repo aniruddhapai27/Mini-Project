@@ -23,6 +23,17 @@ const userSchema = mongoose.Schema(
     resume: {
       type: String,
     },
+    currentStreak: {
+      type: Number, 
+      default: 0,
+    },
+    maxStreak: {
+      type: Number,
+      default: 0,
+    },
+    lastActivity:{
+      type: Date,
+    },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
