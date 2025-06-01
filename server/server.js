@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const authRouter = require("./routes/authRoutes");
+const userRouter = require("./routes/userRoutes");
 
 dotenv.config();
 const app = express();
@@ -29,6 +30,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/auth", authRouter);
+
+app.use("/api/v1/user", userRouter);
+
 
 // Start server
 const PORT = process.env.PORT || 5000;
