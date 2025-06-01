@@ -4,7 +4,12 @@ const sendEmail = require("../utils/email");
 const generateAuthToken = require("../jwt/jsonWebToken");
 const crypto = require("crypto");
 const path = require("path");
-const upload = require("../config/cloudinaryStorage");
+const upload = require(path.join(
+  __dirname,
+  "..",
+  "config",
+  "cloudinaryStorage"
+));
 
 exports.register = [
   upload.fields([
