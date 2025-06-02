@@ -93,6 +93,16 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  to="/profile"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                    isActive("/profile")
+                      ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                  }`}
+                >
+                  Profile
+                </Link>
                 <button
                   className="px-4 py-2 rounded-md text-sm font-medium border border-red-500 text-red-400 hover:bg-red-500 hover:text-gray-900 transition-all duration-300 shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_20px_rgba(239,68,68,0.6)]"
                   onClick={handleLogout}
@@ -194,6 +204,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
+                {" "}
                 <Link
                   to="/dashboard"
                   className={`block px-3 py-2 rounded-md text-base font-medium ${
@@ -204,6 +215,17 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  to="/profile"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive("/profile")
+                      ? "text-cyan-400 bg-cyan-500/10"
+                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Profile
                 </Link>
                 <button
                   className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300"

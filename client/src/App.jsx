@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import { Route, Routes } from "react-router-dom";
 import { getMe } from "./redux/slices/authSlice";
 import Loading from "./components/Loading";
@@ -28,12 +29,20 @@ const App = () => {
       <Route path="/" element={<AuthLayout />}>
         <Route index element={<Home />} />
         <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
+        <Route path="register" element={<Register />} />{" "}
         <Route
           path="dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

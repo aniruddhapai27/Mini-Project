@@ -22,11 +22,9 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-    console.log(name, value, type, files);
 
     if (type === "file") {
       const file = files[0];
-      console.log(files);
       setFormData((prev) => ({
         ...prev,
         [name]: file,

@@ -1,15 +1,16 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
-  // TODO: integrate user data from backend
-  const [userData] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
+  const { user } = useSelector((state) => state.auth);
+
+  // For displaying user data
+  const userData = user || {
+    name: "User",
+    email: "user@example.com",
     profilePic: null,
-    practiceCount: 15,
-    averageScore: 87,
-    totalTime: "45 hours",
-  });
+  };
 
   const [recentSessions] = useState([
     {
@@ -306,16 +307,13 @@ const Dashboard = () => {
                   <p className="font-semibold text-white">{userData.name}</p>
                   <p className="text-gray-400 text-sm">{userData.email}</p>
                 </div>
-              </div>
-              <button
-                className="w-full py-2 px-4 border border-gray-600 text-gray-300 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-all duration-300"
-                onClick={() => {
-                  // TODO: integrate profile edit functionality
-                  console.log("Edit profile clicked");
-                }}
+              </div>{" "}
+              <Link
+                to="/profile"
+                className="w-full py-2 px-4 border border-gray-600 text-gray-300 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-all duration-300 block text-center"
               >
                 Edit Profile
-              </button>
+              </Link>
             </div>
 
             {/* Recent Sessions */}

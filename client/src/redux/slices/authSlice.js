@@ -10,7 +10,6 @@ export const registerUser = createAsyncThunk(
           "Content-Type": "multipart/form-data",
         },
       });
-      console.log("Registration response:", res.data);
       return res.data;
     } catch (error) {
       console.error("Registration error:", error);
@@ -26,7 +25,6 @@ export const loginUser = createAsyncThunk(
   async ({ email, password }, { rejectWithValue }) => {
     try {
       const res = await api.post("/api/v1/auth/login", { email, password });
-      console.log(res.data);
       return res.data;
     } catch (error) {
       return rejectWithValue(error.response.data.message);
@@ -39,7 +37,6 @@ export const logoutUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await api.get("/api/v1/auth/logout");
-      console.log(res.data);
       return res.data;
     } catch (error) {
       return rejectWithValue(error.response.data.message);
@@ -52,7 +49,6 @@ export const forgotPassword = createAsyncThunk(
   async (email, { rejectWithValue }) => {
     try {
       const res = await api.post("/api/v1/auth/forgot-password", { email });
-      console.log(res.data);
       return res.data;
     } catch (error) {
       return rejectWithValue(error.response.data.message);
@@ -67,7 +63,6 @@ export const resetPassword = createAsyncThunk(
       const res = await api.post(`/api/v1/auth/reset-password/${token}`, {
         password,
       });
-      console.log(res.data);
       return res.data;
     } catch (error) {
       return rejectWithValue(error.response.data.message);
@@ -83,7 +78,6 @@ export const updatePassword = createAsyncThunk(
         currentPassword,
         newPassword,
       });
-      console.log(res.data);
       return res.data;
     } catch (error) {
       return rejectWithValue(error.response.data.message);
@@ -95,8 +89,11 @@ export const updateProfile = createAsyncThunk(
   "auth/updateProfile",
   async (formData, { rejectWithValue }) => {
     try {
-      const res = await api.put("/api/v1/auth/update-profile", formData);
-      console.log(res.data);
+      const res = await api.patch("/api/v1/auth/update-profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       return res.data;
     } catch (error) {
       return rejectWithValue(error.response.data.message);
@@ -314,7 +311,7 @@ const authSlice = createSlice({
       })
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.loading.updateProfile = false;
-        state.user = action.payload.user;
+        state.user = action.payload.data;
         state.success.updateProfile = true;
         state.error.updateProfile = null;
       })
@@ -331,7 +328,7 @@ const authSlice = createSlice({
       })
       .addCase(getMe.fulfilled, (state, action) => {
         state.loading.me = false;
-        state.user = action.payload.user;
+        state.user = action.payload.data;
         state.isAuthenticated = true;
         state.error.me = null;
       })

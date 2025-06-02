@@ -3,10 +3,8 @@ const jwt = require("jsonwebtoken");
 
 exports.isLogin = async (req, res, next) => {
   try {
-    console.log(req.cookies);
     // Get the token from cookies only
     const token = req.cookies.jwt;
-    console.log(token);
     if (!token) {
       return res.status(401).json({
         success: false,
