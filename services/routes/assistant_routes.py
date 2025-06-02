@@ -8,7 +8,7 @@ from auth import require_auth
 assistant_router = APIRouter()
 
 @assistant_router.post("/daily-questions")
-async def daily_questions(current_user: dict = Depends(require_auth)):
+async def daily_questions():
     try:
         message = await get_daily_questions()
         return message
