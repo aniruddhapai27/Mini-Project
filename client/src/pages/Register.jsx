@@ -1,7 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-hot-toast";
+import { registerUser } from "../redux/slices/authSlice";
 
 const Register = () => {
+  const { loading } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -9,17 +16,17 @@ const Register = () => {
     confirmPassword: "",
     profilePic: null,
     resume: null,
-    agreeToTerms: false,
   });
 
-  const [isLoading, setIsLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
+    const { name, value, type, files } = e.target;
+    console.log(name, value, type, files);
 
     if (type === "file") {
       const file = files[0];
+      console.log(files);
       setFormData((prev) => ({
         ...prev,
         [name]: file,
@@ -34,7 +41,7 @@ const Register = () => {
     } else {
       setFormData((prev) => ({
         ...prev,
-        [name]: type === "checkbox" ? checked : value,
+        [name]: value,
       }));
     }
   };
@@ -43,36 +50,52 @@ const Register = () => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      toast.error("Passwords do not match!");
       return;
     }
 
-    if (!formData.agreeToTerms) {
-      alert("Please agree to the terms and conditions!");
-      return;
+    // Show loading toast
+    const loadingToast = toast.loading("Creating your account...");
+
+    try {
+      // Create FormData for file uploads
+      const submitData = new FormData();
+      submitData.append("name", formData.name);
+      submitData.append("email", formData.email);
+      submitData.append("password", formData.password);
+      if (formData.profilePic) {
+        submitData.append("profilePic", formData.profilePic);
+      }
+      if (formData.resume) {
+        submitData.append("resume", formData.resume);
+      }
+
+      // Dispatch register action
+      const resultAction = await dispatch(registerUser(submitData));
+
+      // Check if registration was successful
+      if (registerUser.fulfilled.match(resultAction)) {
+        // Dismiss loading toast and show success toast
+        toast.dismiss(loadingToast);
+        toast.success("Registration successful! Redirecting to dashboard...");
+
+        // Navigate to dashboard after successful registration
+        navigate("/dashboard");
+      } else {
+        // If rejected, get the error message
+        const errorMessage =
+          resultAction.payload || "Registration failed. Please try again.";
+
+        // Dismiss loading toast and show error toast
+        toast.dismiss(loadingToast);
+        toast.error(errorMessage);
+      }
+    } catch (err) {
+      // Dismiss loading toast and show error toast for unexpected errors
+      toast.dismiss(loadingToast);
+      toast.error("An unexpected error occurred. Please try again.");
+      console.error("Registration failed:", err);
     }
-
-    setIsLoading(true);
-
-    // TODO: integrate registration API with FormData for file uploads
-    const submitData = new FormData();
-    submitData.append("name", formData.name);
-    submitData.append("email", formData.email);
-    submitData.append("password", formData.password);
-    if (formData.profilePic) {
-      submitData.append("profilePic", formData.profilePic);
-    }
-    if (formData.resume) {
-      submitData.append("resume", formData.resume);
-    }
-
-    console.log("Registration attempt:", formData);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // TODO: handle successful registration / redirect to login or dashboard
-    }, 2000);
   };
 
   return (
@@ -235,44 +258,31 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Terms Agreement */}
-            <div className="flex items-start">
-              <input
-                id="agreeToTerms"
-                name="agreeToTerms"
-                type="checkbox"
-                checked={formData.agreeToTerms}
-                onChange={handleChange}
-                className="h-4 w-4 text-cyan-500 focus:ring-cyan-500 border-gray-600 rounded bg-gray-900 mt-1"
-              />
-              <label
-                htmlFor="agreeToTerms"
-                className="ml-3 block text-sm text-gray-300"
+            {/* Terms and Policy */}
+            <div className="text-center text-sm text-gray-400 mt-2">
+              By creating an account, you agree to the{" "}
+              <Link
+                to="/terms"
+                className="text-cyan-400 hover:text-cyan-300 transition-colors duration-300"
               >
-                I agree to the{" "}
-                <Link
-                  to="/terms"
-                  className="text-cyan-400 hover:text-cyan-300 transition-colors duration-300"
-                >
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link
-                  to="/privacy"
-                  className="text-cyan-400 hover:text-cyan-300 transition-colors duration-300"
-                >
-                  Privacy Policy
-                </Link>
-              </label>
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                to="/privacy"
+                className="text-cyan-400 hover:text-cyan-300 transition-colors duration-300"
+              >
+                Privacy Policy
+              </Link>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loading.signup}
               className="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] transform hover:scale-[1.02]"
             >
-              {isLoading ? (
+              {loading.signup ? (
                 <div className="flex items-center justify-center">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                   Creating Account...
