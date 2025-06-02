@@ -29,9 +29,9 @@ async def get_daily_questions():
         daily_questions = []
         db = await get_database()
         for subject in subjects:
-            collection = db['Daily_Questions']
+            collection = db['dqs']  # Changed to match Node.js DQ model
             existing_questions = await collection.find({'subject': subject}).to_list(length=None)
-            existing_questions_list = [q['question'] for q in existing_questions]
+            existing_questions_list = [q['questions'] for q in existing_questions]  # Updated field name
             response  = client.chat.completions.create(
                 model = "meta-llama/llama-4-scout-17b-16e-instruct",
                 messages = [
@@ -42,10 +42,10 @@ async def get_daily_questions():
                     },
                 ]
             )
-            questions = extract_json_objects(response.choices[0].message.content)
+            questions = extract_json_objects(response.choices[0].message.content)            
             for question in questions:
                 question['subject'] = subject
-                question['created'] = str(datetime.date.today())
+                question['date'] = str(datetime.date.today())  # Changed to match Node.js field name
                 daily_questions.append(question)
         if not daily_questions:
             raise HTTPException(status_code=404, detail="No daily questions generated.")    
@@ -57,16 +57,17 @@ async def get_daily_questions():
         raise HTTPException(status_code=500, detail=f"Error fetching daily questions: {str(e)}")
  
     
-async def study_assistant(user_query: str, subject: str, session_id: str = None):
+async def study_assistant(user_query: str, subject: str, session_id: str = None, user_id: str = None):
     try:
         db = await get_database()
-        collection = db['Chat_Sessions']
+        collection = db['assistants'] 
         session = session_id
         if not session:
-            new_session ={
-                "subject" :subject,
+            new_session = {
+                "subject": subject,
+                "user": ObjectId(user_id) if user_id else None,  # Add user reference
                 "created_at": str(datetime.datetime.now()),
-                "Qna": []
+                "QnA": []  # Changed to match Node.js field name
             }
             result = await collection.insert_one(new_session)
             session = result.inserted_id
@@ -78,9 +79,9 @@ async def study_assistant(user_query: str, subject: str, session_id: str = None)
                 raise HTTPException(status_code=400, detail=f"Invalid session ID format: {str(e)}")
         session_data = await collection.find_one({"_id": session})
         if not session_data:
-                raise HTTPException(status_code=404, detail="Session not found.")
-        history = session_data.get('Qna', [])
-        chat_history = [(q['user_query'], q['ai']) for q in history]
+            raise HTTPException(status_code=404, detail="Session not found.")
+        history = session_data.get('QnA', [])  # Changed to match Node.js field name
+        chat_history = [(q['user'], q['bot']) for q in history]  # Updated field names
         textbook_name = textbook.get(subject, "Unknown Subject")
         response = study.chat.completions.create(
             model = "meta-llama/llama-4-scout-17b-16e-instruct",
@@ -99,26 +100,26 @@ async def study_assistant(user_query: str, subject: str, session_id: str = None)
                 },
             ]
         )
-        response_text = response.choices[0].message.content.strip()
+        response_text = response.choices[0].message.content.strip()        
         await collection.update_one(
             {"_id": session}, 
-            {"$push": {"Qna": {
-                "user_query": user_query,
-                "ai": response_text,
-                "created_at": str(datetime.datetime.now())
+            {"$push": {"QnA": {  # Changed to match Node.js field name
+                "user": user_query,  # Changed from "user_query" to "user"
+                "bot": response_text,  # Changed from "ai" to "bot"
+                "createdAt": str(datetime.datetime.now())  # Changed field name to match Node.js
             }}}
-        )
+        )        
         return {
-                "session_id": str(session),
-                "ai": response_text,
-                "subject": subject
-            }
+            "session_id": str(session),
+            "response": response_text,  # Changed from "ai" to "response" to match response model
+            "subject": subject
+        }
     except Exception as e:
         error_details = traceback.format_exc()  
         print(f"Error processing study assistant request: {str(e)}\n{error_details}")
         raise HTTPException(status_code=500, detail=f"Error processing study assistant request: {str(e)}")
         
-async def analyse_resume(file):
+async def analyse_resume(file, user_id: str = None):
     try:
         if not file.filename.endswith(('.pdf', '.docx', '.txt')):
             raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a text-based document.")
@@ -139,13 +140,31 @@ async def analyse_resume(file):
             raise HTTPException(status_code=400, detail="Failed to analyze the resume. Please check the content.")
         if len(resume_analysis) > 1:
             raise HTTPException(status_code=400, detail="Multiple JSON objects found in the response. Expected a single object.")
+        
+        # Extract analysis data to match resumeModel.js schema
+        analysis_data = resume_analysis[0]
+        
         db = await get_database()
-        collection = db['Resume_Analysis']
-        await collection.insert_one({
-            "file_name": file.filename,
-            "analysis": resume_analysis[0],
-            "created_at": str(datetime.datetime.now())
-        })
+        collection = db['resumes']  # Changed to match Node.js Resume model
+        
+        # Structure data according to resumeModel.js schema
+        resume_document = {
+            "fileName": file.filename,
+            "grammaticalMistakes": analysis_data.get("grammatical_mistakes", ""),
+            "suggestions": analysis_data.get("suggestions", ""),
+            "ATS": analysis_data.get("ats_score", 0),
+            "createdAt": datetime.datetime.now(),
+            "updatedAt": datetime.datetime.now()
+        }
+        
+        # Add user reference if provided
+        if user_id:
+            try:
+                resume_document["user"] = ObjectId(user_id)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid user ID format: {str(e)}")
+        
+        await collection.insert_one(resume_document)
         return resume_analysis
     except Exception as e:
         error_details = traceback.format_exc()

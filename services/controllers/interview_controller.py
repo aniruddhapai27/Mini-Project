@@ -97,20 +97,21 @@ async def text_to_speech_controller(text: str, voice: str = "Aaliyah-PlayAI"):
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
     
     
-async def ai_interview(domain, difficulty, user_response, session):
+async def ai_interview(domain, difficulty, user_response, session, user_id=None):
     try:
         db = await get_database()
-        collection  = db['Interviewer']
+        collection = db['interviews']  # Changed to match Node.js Interview model
         if not session:
             new_session = {
                 "domain": domain,
                 "difficulty": difficulty,
+                "user": ObjectId(user_id) if user_id else None,  # Add user reference
                 "created_at": str(datetime.datetime.now()),
-                "Qna": [
+                "QnA": [  # Changed to match Node.js schema field name
                     {
-                        "question": "Welcome to the AI interview. Please introduce yourself.",
-                        "answer": user_response,
-                        "created_at": str(datetime.datetime.now())
+                        "bot": "Welcome to the AI interview. Please introduce yourself.",  # Changed from "question" to "bot"
+                        "user": user_response,  # Changed from "answer" to "user"
+                        "createdAt": str(datetime.datetime.now())  # Changed to match Node.js field name
                     }
                 ]
             }
@@ -127,7 +128,7 @@ async def ai_interview(domain, difficulty, user_response, session):
         session_data = await collection.find_one({"_id":session})
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found.")
-        history = session_data.get('Qna', [])
+        history = session_data.get('QnA', [])  # Changed to match Node.js field name
         response = interviewer.chat.completions.create(
             model = "meta-llama/llama-4-scout-17b-16e-instruct",
             messages = [
@@ -137,14 +138,15 @@ async def ai_interview(domain, difficulty, user_response, session):
                 },
                 {
                     "role": "user",
-                    "content": user_response                }
+                    "content": user_response
+                }
             ]
         )
         question = response.choices[0].message.content.strip()
-        await collection.update_one({"_id": session}, {"$push": {"Qna": {
-            "question": question,
-            "answer": user_response,
-            "created_at": str(datetime.datetime.now())
+        await collection.update_one({"_id": session}, {"$push": {"QnA": {  # Changed field name to match Node.js
+            "bot": question,  # Changed from "question" to "bot"
+            "user": user_response,  # Changed from "answer" to "user"
+            "createdAt": str(datetime.datetime.now())  # Changed field name to match Node.js
         }}})
         return {
             "session_id": str(session),
@@ -159,12 +161,12 @@ async def ai_interview(domain, difficulty, user_response, session):
 async def get_interview_feedback(session_id: str):
     try:
         db = await get_database()
-        collection = db['Interviewer']
+        collection = db['interviews']  # Changed to match Node.js Interview model
         session_data_db = await collection.find_one({"_id": ObjectId(session_id)})
         if not session_data_db:
             raise HTTPException(status_code=404, detail="Session not found.")
 
-        chat_history = session_data_db.get('Qna', [])
+        chat_history = session_data_db.get('QnA', [])  # Changed to match Node.js field name
         if not chat_history:
             raise HTTPException(status_code=404, detail="No interview questions found in the session.")
 
@@ -172,8 +174,8 @@ async def get_interview_feedback(session_id: str):
         difficulty = session_data_db.get('difficulty', 'General')
         conversation = ""
         for idx, qna in enumerate(chat_history):
-            question = qna.get("question", "")
-            answer = qna.get("answer", "")
+            question = qna.get("bot", "")  # Changed from "question" to "bot"
+            answer = qna.get("user", "")  # Changed from "answer" to "user"
             conversation += f"Q{idx+1}: {question}\\nA{idx+1}: {answer}\\n"
         
         response = feedback_client.chat.completions.create(
