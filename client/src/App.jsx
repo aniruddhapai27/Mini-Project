@@ -1,24 +1,30 @@
-import { useEffect } from "react";
-import axios from "axios";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import AuthLayout from "./components/AuthLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
 
 const App = () => {
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await axios.get("/services/");
-        console.log(res.data);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-    fetchUser();
-  }, []);
-
   return (
-    <div className="flex flex-col items-center justify-center h-screen text-9xl text-blue-500">
-      MINI PROJECT
-      <p className="text-3xl text-gray-900">Deployed with git actions</p>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<AuthLayout />}>
+          <Route index element={<Home />} />
+          <Route path="login" element={<Login />} />
+          <Route path="register" element={<Register />} />
+          <Route
+            path="dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+      </Routes>
+    </Router>
   );
 };
 
