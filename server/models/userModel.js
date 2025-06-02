@@ -37,6 +37,23 @@ const userSchema = mongoose.Schema(
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
+    scores: [
+      {
+          dq: {
+              type: mongoose.Schema.Types.ObjectId,
+              ref: 'DQ',
+              required: true
+          },
+          score: {
+              type: Number,
+              required: true
+          },
+          date: {
+              type: Date,
+              default: Date.now
+          },
+      }
+    ]
   },
   {
     timestamps: true,
