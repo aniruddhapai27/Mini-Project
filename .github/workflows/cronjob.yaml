@@ -2,14 +2,41 @@ name: Daily API Trigger
 
 on:
   schedule:
-    - cron: '40 7 * * *'
-  workflow_dispatch:  
+    - cron: '50 8 * * *'  # 2:20 PM IST = 8:50 AM UTC
+  workflow_dispatch:
 
 jobs:
   call-api:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Call daily questions endpoint
+      - name: Call daily questions endpoint with retry logic
         run: |
-          curl -X POST https://my-project.tech/services/api/v1/assistant/daily-questions 
+          echo "Starting daily questions API call at $(date)"
+          MAX_RETRIES=10
+          RETRY_DELAY=60  # 60 seconds between retries
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i of $MAX_RETRIES..."
+            
+            if curl -X POST \
+              --connect-timeout 30 \
+              --max-time 120 \
+              --silent \
+              --show-error \
+              --fail \
+              --write-out "HTTP Status: %{http_code}\n" \
+              https://my-project.tech/services/api/v1/assistant/daily-questions; then
+              echo "✅ API call successful on attempt $i at $(date)"
+              exit 0
+            else
+              echo "❌ API call failed on attempt $i"
+              if [ $i -lt $MAX_RETRIES ]; then
+                echo "⏳ Waiting $RETRY_DELAY seconds before retry..."
+                sleep $RETRY_DELAY
+              fi
+            fi
+          done
+          
+          echo "🚨 All $MAX_RETRIES attempts failed. API may be down."
+          exit 1
