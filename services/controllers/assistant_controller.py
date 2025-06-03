@@ -31,7 +31,7 @@ async def get_daily_questions():
         for subject in subjects:
             collection = db['dqs']  # Changed to match Node.js DQ model
             existing_questions = await collection.find({'subject': subject}).to_list(length=None)
-            existing_questions_list = [q['questions'] for q in existing_questions]  # Updated field name
+            existing_questions_list = [q['question'] for q in existing_questions]  # Updated field name
             response  = client.chat.completions.create(
                 model = "meta-llama/llama-4-scout-17b-16e-instruct",
                 messages = [
@@ -65,9 +65,9 @@ async def study_assistant(user_query: str, subject: str, session_id: str = None,
         if not session:
             new_session = {
                 "subject": subject,
-                "user": ObjectId(user_id) if user_id else None,  # Add user reference
+                "user": ObjectId(user_id) if user_id else None, 
                 "created_at": str(datetime.datetime.now()),
-                "QnA": []  # Changed to match Node.js field name
+                "QnA": [] 
             }
             result = await collection.insert_one(new_session)
             session = result.inserted_id
@@ -80,8 +80,8 @@ async def study_assistant(user_query: str, subject: str, session_id: str = None,
         session_data = await collection.find_one({"_id": session})
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found.")
-        history = session_data.get('QnA', [])  # Changed to match Node.js field name
-        chat_history = [(q['user'], q['bot']) for q in history]  # Updated field names
+        history = session_data.get('QnA', []) 
+        chat_history = [(q['user'], q['bot']) for q in history]  
         textbook_name = textbook.get(subject, "Unknown Subject")
         response = study.chat.completions.create(
             model = "meta-llama/llama-4-scout-17b-16e-instruct",
@@ -103,15 +103,15 @@ async def study_assistant(user_query: str, subject: str, session_id: str = None,
         response_text = response.choices[0].message.content.strip()        
         await collection.update_one(
             {"_id": session}, 
-            {"$push": {"QnA": {  # Changed to match Node.js field name
-                "user": user_query,  # Changed from "user_query" to "user"
-                "bot": response_text,  # Changed from "ai" to "bot"
-                "createdAt": str(datetime.datetime.now())  # Changed field name to match Node.js
+            {"$push": {"QnA": { 
+                "user": user_query,  
+                "bot": response_text,  
+                "createdAt": str(datetime.datetime.now())  
             }}}
         )        
         return {
             "session_id": str(session),
-            "response": response_text,  # Changed from "ai" to "response" to match response model
+            "response": response_text,  
             "subject": subject
         }
     except Exception as e:
@@ -141,13 +141,12 @@ async def analyse_resume(file, user_id: str = None):
         if len(resume_analysis) > 1:
             raise HTTPException(status_code=400, detail="Multiple JSON objects found in the response. Expected a single object.")
         
-        # Extract analysis data to match resumeModel.js schema
+        
         analysis_data = resume_analysis[0]
         
         db = await get_database()
-        collection = db['resumes']  # Changed to match Node.js Resume model
+        collection = db['resumes'] 
         
-        # Structure data according to resumeModel.js schema
         resume_document = {
             "fileName": file.filename,
             "grammaticalMistakes": analysis_data.get("grammatical_mistakes", ""),
@@ -157,7 +156,7 @@ async def analyse_resume(file, user_id: str = None):
             "updatedAt": datetime.datetime.now()
         }
         
-        # Add user reference if provided
+    
         if user_id:
             try:
                 resume_document["user"] = ObjectId(user_id)

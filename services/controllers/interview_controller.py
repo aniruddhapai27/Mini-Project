@@ -100,25 +100,25 @@ async def text_to_speech_controller(text: str, voice: str = "Aaliyah-PlayAI"):
 async def ai_interview(domain, difficulty, user_response, session, user_id=None):
     try:
         db = await get_database()
-        collection = db['interviews']  # Changed to match Node.js Interview model
+        collection = db['interviews']  
         if not session:
             new_session = {
                 "domain": domain,
                 "difficulty": difficulty,
-                "user": ObjectId(user_id) if user_id else None,  # Add user reference
+                "user": ObjectId(user_id) if user_id else None,  
                 "created_at": str(datetime.datetime.now()),
-                "QnA": [  # Changed to match Node.js schema field name
+                "QnA": [ 
                     {
-                        "bot": "Welcome to the AI interview. Please introduce yourself.",  # Changed from "question" to "bot"
-                        "user": user_response,  # Changed from "answer" to "user"
-                        "createdAt": str(datetime.datetime.now())  # Changed to match Node.js field name
+                        "bot": "Welcome to the AI interview. Please introduce yourself.",
+                        "user": user_response, 
+                        "createdAt": str(datetime.datetime.now())  
                     }
                 ]
             }
             result = await collection.insert_one(new_session)
             session = result.inserted_id
         else:
-            # Convert string ID to ObjectId if it's a string
+
             try:
                 if isinstance(session, str):
                     session = ObjectId(session)
@@ -128,7 +128,7 @@ async def ai_interview(domain, difficulty, user_response, session, user_id=None)
         session_data = await collection.find_one({"_id":session})
         if not session_data:
             raise HTTPException(status_code=404, detail="Session not found.")
-        history = session_data.get('QnA', [])  # Changed to match Node.js field name
+        history = session_data.get('QnA', [])  
         response = interviewer.chat.completions.create(
             model = "meta-llama/llama-4-scout-17b-16e-instruct",
             messages = [
@@ -143,10 +143,10 @@ async def ai_interview(domain, difficulty, user_response, session, user_id=None)
             ]
         )
         question = response.choices[0].message.content.strip()
-        await collection.update_one({"_id": session}, {"$push": {"QnA": {  # Changed field name to match Node.js
-            "bot": question,  # Changed from "question" to "bot"
-            "user": user_response,  # Changed from "answer" to "user"
-            "createdAt": str(datetime.datetime.now())  # Changed field name to match Node.js
+        await collection.update_one({"_id": session}, {"$push": {"QnA": {  
+            "bot": question, 
+            "user": user_response,
+            "createdAt": str(datetime.datetime.now())  
         }}})
         return {
             "session_id": str(session),
@@ -161,12 +161,12 @@ async def ai_interview(domain, difficulty, user_response, session, user_id=None)
 async def get_interview_feedback(session_id: str):
     try:
         db = await get_database()
-        collection = db['interviews']  # Changed to match Node.js Interview model
+        collection = db['interviews']  
         session_data_db = await collection.find_one({"_id": ObjectId(session_id)})
         if not session_data_db:
             raise HTTPException(status_code=404, detail="Session not found.")
 
-        chat_history = session_data_db.get('QnA', [])  # Changed to match Node.js field name
+        chat_history = session_data_db.get('QnA', []) 
         if not chat_history:
             raise HTTPException(status_code=404, detail="No interview questions found in the session.")
 
@@ -174,8 +174,8 @@ async def get_interview_feedback(session_id: str):
         difficulty = session_data_db.get('difficulty', 'General')
         conversation = ""
         for idx, qna in enumerate(chat_history):
-            question = qna.get("bot", "")  # Changed from "question" to "bot"
-            answer = qna.get("user", "")  # Changed from "answer" to "user"
+            question = qna.get("bot", "")  
+            answer = qna.get("user", "")  
             conversation += f"Q{idx+1}: {question}\\nA{idx+1}: {answer}\\n"
         
         response = feedback_client.chat.completions.create(
@@ -191,7 +191,6 @@ async def get_interview_feedback(session_id: str):
         )
         feedback = response.choices[0].message.content.strip()
         feedback_data = extract_json_objects(feedback)
-        # Ensure feedback_data is a dict, not a list
         if isinstance(feedback_data, list) and len(feedback_data) > 0:
             feedback_data = feedback_data[0]
         return feedback_data

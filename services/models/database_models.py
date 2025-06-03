@@ -114,9 +114,9 @@ class Resume(BaseModel):
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
-# Collection name mappings to align with Node.js models
+
 COLLECTION_MAPPINGS = {
-    "users": "users",  # matches User model
+    "users": "users",  
     "dqs": "dqs",      # matches DQ model  
     "interviews": "interviews",  # matches Interview model
     "assistants": "assistants",  # matches Assistant model
