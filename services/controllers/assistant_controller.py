@@ -25,13 +25,13 @@ textbook = {
 
 async def get_daily_questions():
     try:
-        subjects = ["Data Structures"]
+        subjects = ["Data Structures", "operating systems", "computer networks", "database management systems", "software engineering", "algorithm design and analysis"]
         daily_questions = []
         db = await get_database()
         for subject in subjects:
-            collection = db['dqs']  # Changed to match Node.js DQ model
-            existing_questions = await collection.find({'subject': subject}).to_list(length=None)
-            existing_questions_list = [q['question'] for q in existing_questions]  # Updated field name
+            collection = db['dqs']
+            existing_questions = await collection.find({'subject': subject}).to_list(length=30)
+            existing_questions_list = [q['question'] for q in existing_questions]  
             response  = client.chat.completions.create(
                 model = "meta-llama/llama-4-scout-17b-16e-instruct",
                 messages = [
