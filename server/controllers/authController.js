@@ -164,9 +164,7 @@ exports.forgotPassword = async (req, res) => {
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
-    const resetURL = `${process.env.FRONTEND_URL}://${req.get(
-      "host"
-    )}/auth/reset-password/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     const message = `Password reset token: ${resetURL}. It is valid for 10 minutes.`;
 
