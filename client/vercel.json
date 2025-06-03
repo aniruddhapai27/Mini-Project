@@ -7,6 +7,10 @@
     {
       "source": "/services/(.*)",
       "destination": "https://mini-project-fastapi-g9kp.onrender.com/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
