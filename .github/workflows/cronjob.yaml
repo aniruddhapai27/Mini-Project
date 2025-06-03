@@ -12,4 +12,4 @@ jobs:
     steps:
       - name: Call daily questions endpoint
         run: |
-          curl -X POST https://your-backend-url.com/api/v1/assistant/daily-questions 
+          curl -X POST https://my-project.tech/services/api/v1/assistant/daily-questions 
