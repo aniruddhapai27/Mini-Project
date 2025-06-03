@@ -1,0 +1,15 @@
+name: Daily API Trigger
+
+on:
+  schedule:
+    - cron: '30 7 * * *'
+  workflow_dispatch:  
+
+jobs:
+  call-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call daily questions endpoint
+        run: |
+          curl -X POST https://your-backend-url.com/api/v1/assistant/daily-questions 
