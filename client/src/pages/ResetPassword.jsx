@@ -44,7 +44,7 @@ const ResetPassword = () => {
       toast.success("Password successfully reset!");
       dispatch(clearSuccess());
       // Redirect to login page after successful password reset
-      setTimeout(() => navigate("/login"), 2000);
+      navigate("/login");
     }
 
     if (error.resetPassword) {
