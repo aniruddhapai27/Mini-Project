@@ -97,7 +97,6 @@ const Login = () => {
                 placeholder="Enter your email"
               />
             </div>
-
             {/* Password Input */}
             <div>
               <label
@@ -116,18 +115,32 @@ const Login = () => {
                 className="w-full px-4 py-3 bg-gray-900/50 border border-gray-600 rounded-lg focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 text-white placeholder-gray-400 transition-all duration-300"
                 placeholder="Enter your password"
               />
-            </div>
-
+            </div>{" "}
             {/* Forgot Password */}
             <div className="flex justify-end">
               <Link
                 to="/forgot-password"
-                className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-300"
+                className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-300 inline-flex items-center group"
               >
-                Forgot password?
+                <span className="relative">
+                  Forgot password?
+                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cyan-400 to-purple-400 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                </span>
+                <svg
+                  className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
               </Link>
             </div>
-
             {/* Submit Button */}
             <button
               type="submit"

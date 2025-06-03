@@ -51,7 +51,10 @@ export const forgotPassword = createAsyncThunk(
       const res = await api.post("/api/v1/auth/forgot-password", { email });
       return res.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.message);
+      return rejectWithValue(
+        error.response?.data?.message ||
+          "Failed to process forgot password request"
+      );
     }
   }
 );
@@ -65,7 +68,9 @@ export const resetPassword = createAsyncThunk(
       });
       return res.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.message);
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to reset password"
+      );
     }
   }
 );
@@ -74,13 +79,15 @@ export const updatePassword = createAsyncThunk(
   "auth/updatePassword",
   async ({ currentPassword, newPassword }, { rejectWithValue }) => {
     try {
-      const res = await api.put("/api/v1/auth/update-password", {
+      const res = await api.patch("/api/v1/auth/update-password", {
         currentPassword,
         newPassword,
       });
       return res.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.message);
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update password"
+      );
     }
   }
 );

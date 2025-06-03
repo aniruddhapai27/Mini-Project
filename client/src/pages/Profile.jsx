@@ -7,10 +7,12 @@ import {
   clearErrors,
   getMe,
 } from "../redux/slices/authSlice";
+import ChangePasswordModal from "../components/ChangePasswordModal";
 
 const Profile = () => {
   const dispatch = useDispatch();
   const { user, loading, error, success } = useSelector((state) => state.auth);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   // Effect to fetch user data if not available
   useEffect(() => {
@@ -268,7 +270,6 @@ const Profile = () => {
                       )}
                     </div>
                   </div>
-
                   {/* User Info */}
                   <div className="text-center">
                     {isEditing ? (
@@ -313,7 +314,6 @@ const Profile = () => {
                       </span>
                     </div>
                   </div>
-
                   {/* Resume Section - Compact */}
                   <div className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 border border-cyan-500/30 rounded-xl p-3 mb-5 w-full">
                     <div className="flex items-center justify-between mb-2">
@@ -328,7 +328,7 @@ const Profile = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
                           />
                         </svg>
                         Resume
@@ -399,40 +399,51 @@ const Profile = () => {
                         )}
                       </div>
                     )}
-                  </div>
-
+                  </div>{" "}
                   {/* Action Buttons */}
-                  <div className="flex justify-center gap-3 w-full">
-                    {isEditing ? (
-                      <>
+                  <div className="flex flex-col gap-3 w-full">
+                    <div className="flex justify-center gap-3 w-full">
+                      {isEditing ? (
+                        <>
+                          <button
+                            onClick={handleSave}
+                            disabled={loading.updateProfile}
+                            className="px-4 py-1.5 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-cyan-600 transition-all duration-300 disabled:opacity-50 shadow-lg text-xs flex-1"
+                          >
+                            {loading.updateProfile ? (
+                              <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                <span>Saving...</span>
+                              </div>
+                            ) : (
+                              "Save Changes"
+                            )}
+                          </button>
+                          <button
+                            onClick={handleCancel}
+                            disabled={loading.updateProfile}
+                            className="px-4 py-1.5 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-medium rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-300 disabled:opacity-50 shadow-lg text-xs flex-1"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={handleSave}
-                          disabled={loading.updateProfile}
-                          className="px-4 py-1.5 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-cyan-600 transition-all duration-300 disabled:opacity-50 shadow-lg text-xs flex-1"
+                          onClick={() => setIsEditing(true)}
+                          className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg text-xs w-full"
                         >
-                          {loading.updateProfile ? (
-                            <div className="flex items-center justify-center">
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                              <span>Saving...</span>
-                            </div>
-                          ) : (
-                            "Save Changes"
-                          )}
+                          ✏️ Edit Profile
                         </button>
-                        <button
-                          onClick={handleCancel}
-                          disabled={loading.updateProfile}
-                          className="px-4 py-1.5 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-medium rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-300 disabled:opacity-50 shadow-lg text-xs flex-1"
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
+                      )}
+                    </div>
+
+                    {/* Change Password Button */}
+                    {!isEditing && (
                       <button
-                        onClick={() => setIsEditing(true)}
-                        className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg text-xs w-full"
+                        onClick={() => setIsPasswordModalOpen(true)}
+                        className="px-4 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg text-xs w-full flex items-center justify-center"
                       >
-                        ✏️ Edit Profile
+                        🔒 Change Password
                       </button>
                     )}
                   </div>
@@ -440,7 +451,6 @@ const Profile = () => {
               </div>
             </div>
           </div>
-
           {/* Right Column: Stats and Performance */}
           <div className="lg:col-span-2">
             {/* Metrics Cards */}
@@ -467,7 +477,6 @@ const Profile = () => {
                 <div className="text-gray-400 text-xs">Average Score</div>
               </div>
             </div>
-
             {/* Performance Graph */}
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-4 mb-4">
               <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
@@ -525,7 +534,6 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-
             {/* Recent Performance */}
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-4">
               <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
@@ -578,7 +586,6 @@ const Profile = () => {
                 ))}
               </div>
             </div>
-
             {/* User Insights */}
             <div className="mt-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-4">
               <h3 className="text-sm font-semibold text-white mb-1 flex items-center">
@@ -616,10 +623,16 @@ const Profile = () => {
                 </span>{" "}
                 to improve your interview skills!
               </p>
-            </div>
-          </div>
+            </div>{" "}
+          </div>{" "}
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+      />
     </div>
   );
 };

@@ -7,6 +7,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { Route, Routes } from "react-router-dom";
 import { getMe } from "./redux/slices/authSlice";
 import Loading from "./components/Loading";
@@ -23,13 +25,14 @@ const App = () => {
   if (loading.me) {
     return <Loading message="Initializing..." />;
   }
-
   return (
     <Routes>
       <Route path="/" element={<AuthLayout />}>
         <Route index element={<Home />} />
         <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />{" "}
+        <Route path="register" element={<Register />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password/:token" element={<ResetPassword />} />
         <Route
           path="dashboard"
           element={
