@@ -11,7 +11,12 @@ dotenv.config();
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: [process.env.FRONTEND_URL, "http://localhost:5173"], // Allow requests from the frontend URL
+    credentials: true, // Allow cookies to be sent
+  })
+);
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(cookieParser());
@@ -32,7 +37,6 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authRouter);
 
 app.use("/api/v1/user", userRouter);
-
 
 // Start server
 const PORT = process.env.PORT || 5000;
