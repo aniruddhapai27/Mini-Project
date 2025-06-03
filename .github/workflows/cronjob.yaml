@@ -2,7 +2,7 @@ name: Daily API Trigger
 
 on:
   schedule:
-    - cron: '30 7 * * *'
+    - cron: '40 7 * * *'
   workflow_dispatch:  
 
 jobs:
