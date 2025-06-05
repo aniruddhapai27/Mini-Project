@@ -2,6 +2,7 @@ from groq import Groq
 from dotenv import load_dotenv
 import os
 import datetime
+from datetime import timezone, timedelta
 from fastapi import HTTPException
 from bson import ObjectId
 import traceback
@@ -42,10 +43,13 @@ async def get_daily_questions():
                     },
                 ]
             )
-            questions = extract_json_objects(response.choices[0].message.content)            
+            questions = extract_json_objects(response.choices[0].message.content)              
             for question in questions:
                 question['subject'] = subject
-                question['date'] = str(datetime.date.today())  # Changed to match Node.js field name
+                # Get current date in IST (UTC+5:30)
+                ist_timezone = timezone(timedelta(hours=5, minutes=30))
+                ist_date = datetime.datetime.now(ist_timezone).date()
+                question['date'] = str(ist_date)
                 daily_questions.append(question)
         if not daily_questions:
             raise HTTPException(status_code=404, detail="No daily questions generated.")    
