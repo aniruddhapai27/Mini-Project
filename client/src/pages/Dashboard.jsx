@@ -53,7 +53,6 @@ const Dashboard = () => {
             Ready to ace your next interview?
           </p>
         </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-6 hover:border-cyan-500/40 transition-all duration-300">
@@ -133,8 +132,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>
-
+        </div>{" "}
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Practice Types */}
@@ -142,6 +140,44 @@ const Dashboard = () => {
             <h2 className="text-2xl font-bold text-white mb-6">
               Start New Practice Session
             </h2>
+
+            {/* Daily Questions Banner */}
+            <div className="mb-8 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/30 to-purple-500/30 rounded-lg flex items-center justify-center mr-4">
+                    <svg
+                      className="w-6 h-6 text-cyan-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">
+                      Daily Quiz Challenge
+                    </h3>
+                    <p className="text-gray-400 text-sm">
+                      Test your knowledge with today's practice questions
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/quiz-selection"
+                  className="py-2 px-6 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300"
+                >
+                  Take Quiz
+                </Link>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Technical Interview */}
               <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 group">

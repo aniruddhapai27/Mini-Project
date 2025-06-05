@@ -9,6 +9,9 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import QuizSelection from "./pages/QuizSelection";
+import Quiz from "./pages/Quiz";
+import QuizResults from "./pages/QuizResults";
 import { Route, Routes } from "react-router-dom";
 import { getMe } from "./redux/slices/authSlice";
 import Loading from "./components/Loading";
@@ -40,12 +43,36 @@ const App = () => {
               <Dashboard />
             </ProtectedRoute>
           }
-        />
+        />{" "}
         <Route
           path="profile"
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="quiz-selection"
+          element={
+            <ProtectedRoute>
+              <QuizSelection />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="quiz/:subject"
+          element={
+            <ProtectedRoute>
+              <Quiz />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="quiz-results"
+          element={
+            <ProtectedRoute>
+              <QuizResults />
             </ProtectedRoute>
           }
         />
