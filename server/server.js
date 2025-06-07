@@ -24,7 +24,7 @@ app.use(cookieParser());
 
 // Connect to MongoDB
 try {
-  mongoose.connect(process.env.REAL_MONGO_URL);
+  mongoose.connect(process.env.MONGO_URL);
   console.log("✅ MongoDB Connected");
 } catch (error) {
   console.log("❌ MongoDB Connection Error:", error);
