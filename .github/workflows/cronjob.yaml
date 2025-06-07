@@ -2,7 +2,7 @@ name: Daily API Trigger
 
 on:
   schedule:
-    - cron: '50 8 * * *'  # 2:20 PM IST = 8:50 AM UTC
+    - cron: '30 18 * * *'  # 12:30 AM IST = 6:30 PM UTC (previous day)
   workflow_dispatch:
 
 jobs:
