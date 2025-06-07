@@ -113,11 +113,13 @@ exports.submitQuizAnswers = async (req, res) => {
       });
     }
 
-    // Calculate score
+    // Calculate score and prepare detailed results
     let correctAnswers = 0;
     let totalQuestions = answers.length;
+    const detailedResults = [];
+
     for (const answer of answers) {
-      const { questionId, selectedOption } = answer;
+      const { questionId, selectedOption, questionIndex } = answer;
 
       if (!questionId || selectedOption === undefined) {
         continue; // Skip invalid answers
@@ -128,17 +130,64 @@ exports.submitQuizAnswers = async (req, res) => {
 
       if (question) {
         // Convert option index to option key (0->option1, 1->option2, etc.)
-        const optionKey = `option${selectedOption + 1}`;
+        const selectedOptionKey = `option${selectedOption + 1}`;
+        const isCorrect = selectedOptionKey === question.answer;
 
-        // Check if the selected option key matches the correct answer field
-        if (optionKey === question.answer) {
+        if (isCorrect) {
           correctAnswers++;
         }
+
+        // Get the correct answer index (option1->0, option2->1, etc.)
+        const correctAnswerIndex =
+          parseInt(question.answer.replace("option", "")) - 1;
+
+        // Prepare detailed result for this question
+        detailedResults.push({
+          questionId: question._id,
+          questionIndex: questionIndex || detailedResults.length,
+          question: question.question,
+          options: [
+            question.option1,
+            question.option2,
+            question.option3,
+            question.option4,
+          ],
+          userSelectedOption: selectedOption,
+          userSelectedText: question[selectedOptionKey],
+          correctOption: correctAnswerIndex,
+          correctOptionText: question[question.answer],
+          isCorrect,
+          subject: question.subject,
+        });
       }
     }
 
+    // Sort detailed results by question index to maintain order
+    detailedResults.sort((a, b) => a.questionIndex - b.questionIndex);
+
     // Calculate percentage score
     const score = Math.round((correctAnswers / totalQuestions) * 100);
+
+    // Determine grade/performance level
+    let grade = "F";
+    let performance = "Poor";
+
+    if (score >= 90) {
+      grade = "A+";
+      performance = "Excellent";
+    } else if (score >= 80) {
+      grade = "A";
+      performance = "Very Good";
+    } else if (score >= 70) {
+      grade = "B";
+      performance = "Good";
+    } else if (score >= 60) {
+      grade = "C";
+      performance = "Average";
+    } else if (score >= 50) {
+      grade = "D";
+      performance = "Below Average";
+    }
 
     // Update user's score record if needed (this would be in a real implementation)
     // await User.findByIdAndUpdate(userId, {
@@ -151,6 +200,19 @@ exports.submitQuizAnswers = async (req, res) => {
       score,
       correctAnswers,
       totalQuestions,
+      grade,
+      performance,
+      subject,
+      completedAt: new Date().toISOString(),
+      detailedResults,
+      summary: {
+        percentage: score,
+        questionsCorrect: correctAnswers,
+        questionsIncorrect: totalQuestions - correctAnswers,
+        totalQuestions,
+        timeTaken: null, // Can be added if tracking time
+        averageTimePerQuestion: null, // Can be calculated if tracking time
+      },
     });
   } catch (error) {
     res.status(500).json({

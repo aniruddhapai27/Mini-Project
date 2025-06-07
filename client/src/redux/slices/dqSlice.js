@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import api from "../../utils/api";
 
 // Async thunk for fetching all daily questions grouped by subject
@@ -12,6 +11,21 @@ export const fetchDailyQuestions = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch daily questions"
+      );
+    }
+  }
+);
+
+// Async thunk for fetching available subjects
+export const fetchSubjects = createAsyncThunk(
+  "dq/fetchSubjects",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get("/api/v1/dq/subjects");
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch subjects"
       );
     }
   }
@@ -34,9 +48,7 @@ export const fetchQuestionsBySubject = createAsyncThunk(
       );
     }
   }
-);
-
-// Async thunk for submitting quiz answers
+); // Async thunk for submitting quiz answers
 export const submitQuizAnswers = createAsyncThunk(
   "dq/submitQuizAnswers",
   async ({ answers, subject, questions }, { rejectWithValue }) => {
@@ -45,13 +57,26 @@ export const submitQuizAnswers = createAsyncThunk(
         answers,
         subject,
       });
+
+      // Verify that the response contains the necessary data
+      if (!response.data || response.data.success === false) {
+        return rejectWithValue(
+          response.data?.message || "Failed to process quiz answers"
+        );
+      }
+
+      // Return a complete result object
       return {
         ...response.data,
+        success: true,
         subject,
         answers,
         questions,
+        totalQuestions: questions.length,
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
+      console.error("Quiz submission error:", error);
       return rejectWithValue(
         error.response?.data?.message || "Failed to submit quiz answers"
       );
@@ -65,6 +90,11 @@ const initialState = {
   dailyQuestions: {},
   dailyQuestionsLoading: false,
   dailyQuestionsError: null,
+
+  // Available subjects
+  subjects: [],
+  subjectsLoading: false,
+  subjectsError: null,
 
   // Subject-specific questions
   subjectQuestions: [],
@@ -133,7 +163,6 @@ const dqSlice = createSlice({
         state.currentQuiz.currentIndex = index;
       }
     },
-
     selectAnswer: (state, action) => {
       const { questionIndex, selectedOption } = action.payload;
       const question = state.currentQuiz.questions[questionIndex];
@@ -167,11 +196,13 @@ const dqSlice = createSlice({
       };
       state.quizResults = null;
       state.submissionError = null;
-    },
-
-    // Clear errors
+    }, // Clear errors
     clearDailyQuestionsError: (state) => {
       state.dailyQuestionsError = null;
+    },
+
+    clearSubjectsError: (state) => {
+      state.subjectsError = null;
     },
 
     clearSubjectQuestionsError: (state) => {
@@ -199,6 +230,21 @@ const dqSlice = createSlice({
         state.dailyQuestionsError = action.payload;
       })
 
+      // Fetch subjects
+      .addCase(fetchSubjects.pending, (state) => {
+        state.subjectsLoading = true;
+        state.subjectsError = null;
+      })
+      .addCase(fetchSubjects.fulfilled, (state, action) => {
+        state.subjectsLoading = false;
+        state.subjects = action.payload;
+        state.subjectsError = null;
+      })
+      .addCase(fetchSubjects.rejected, (state, action) => {
+        state.subjectsLoading = false;
+        state.subjectsError = action.payload;
+      })
+
       // Fetch questions by subject
       .addCase(fetchQuestionsBySubject.pending, (state) => {
         state.subjectQuestionsLoading = true;
@@ -213,30 +259,38 @@ const dqSlice = createSlice({
       .addCase(fetchQuestionsBySubject.rejected, (state, action) => {
         state.subjectQuestionsLoading = false;
         state.subjectQuestionsError = action.payload;
-      })
-
-      // Submit quiz answers
+      }) // Submit quiz answers
       .addCase(submitQuizAnswers.pending, (state) => {
         state.submissionLoading = true;
         state.submissionError = null;
       })
       .addCase(submitQuizAnswers.fulfilled, (state, action) => {
         state.submissionLoading = false;
-        state.quizResults = action.payload;
-        state.submissionError = null;
 
-        // Add to completed quizzes
-        state.completedQuizzes.push({
-          ...action.payload,
-          completedAt: new Date().toISOString(),
-        });
+        // Check if we received valid results from the API
+        if (action.payload && action.payload.success !== false) {
+          state.quizResults = action.payload;
+          state.submissionError = null;
+
+          // Add to completed quizzes
+          state.completedQuizzes.push({
+            ...action.payload,
+            completedAt: new Date().toISOString(),
+          });
+        } else {
+          // Handle the case where the API returned an error response but the request itself succeeded
+          state.submissionError =
+            action.payload?.message || "Failed to process quiz results";
+        }
 
         // Finish the current quiz
         state.currentQuiz.isActive = false;
       })
       .addCase(submitQuizAnswers.rejected, (state, action) => {
         state.submissionLoading = false;
-        state.submissionError = action.payload;
+        state.submissionError =
+          action.payload || "Failed to submit quiz answers";
+        console.error("Quiz submission rejected:", action.payload);
       });
   },
 });
@@ -251,6 +305,7 @@ export const {
   finishQuiz,
   resetQuiz,
   clearDailyQuestionsError,
+  clearSubjectsError,
   clearSubjectQuestionsError,
   clearSubmissionError,
 } = dqSlice.actions;
@@ -261,6 +316,10 @@ export const selectDailyQuestionsLoading = (state) =>
   state.dq.dailyQuestionsLoading;
 export const selectDailyQuestionsError = (state) =>
   state.dq.dailyQuestionsError;
+
+export const selectSubjects = (state) => state.dq.subjects;
+export const selectSubjectsLoading = (state) => state.dq.subjectsLoading;
+export const selectSubjectsError = (state) => state.dq.subjectsError;
 
 export const selectSubjectQuestions = (state) => state.dq.subjectQuestions;
 export const selectCurrentSubject = (state) => state.dq.currentSubject;
