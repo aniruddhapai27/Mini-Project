@@ -42,7 +42,7 @@ const Navbar = () => {
             to="/"
             className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent hover:from-purple-400 hover:to-pink-400 transition-all duration-300"
           >
-            InterviewAI
+            SkillWise-AI
           </Link>
 
           {/* Navigation Links */}
