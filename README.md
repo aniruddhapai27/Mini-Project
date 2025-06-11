@@ -1,8 +1,8 @@
-# InterviewAI 🚀
+# SkillWise-AI 🚀
 
 > **Master your interview skills with AI-powered practice sessions**
 
-InterviewAI is a comprehensive web application that helps engineering students and professionals prepare for technical interviews using advanced AI technology. The platform provides personalized interview practice, daily quiz challenges, study assistance, and resume analysis.
+SkillWise-AI is a comprehensive web application that helps engineering students and professionals prepare for technical interviews using advanced AI technology. The platform provides personalized interview practice, daily quiz challenges, study assistance, and resume analysis.
 
 🌐 **Live Demo**: [https://my-project.tech](https://my-project.tech)
 
@@ -20,7 +20,7 @@ InterviewAI is a comprehensive web application that helps engineering students a
 
 ## 🎯 Project Objective
 
-The primary objective of InterviewAI is to bridge the gap between academic knowledge and interview readiness for engineering students. By leveraging AI technology, the platform provides:
+The primary objective of SkillWise-AI is to bridge the gap between academic knowledge and interview readiness for engineering students. By leveraging AI technology, the platform provides:
 
 - **Personalized Interview Practice**: AI-powered mock interviews tailored to specific domains and difficulty levels
 - **Skill Assessment**: Comprehensive evaluation and feedback on technical and soft skills
@@ -185,7 +185,7 @@ Mini-Project/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/InterviewAI.git
+git clone https://github.com/yourusername/SkillWise-AI.git
 cd Mini-Project
 ```
 
@@ -216,7 +216,7 @@ Create `.env` files in each directory:
 #### Server/.env
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/interviewai
+MONGODB_URI=mongodb://localhost:27017/SkillWise-AI
 JWT_SECRET=your_jwt_secret_key
 JWT_EXPIRES_IN=7d
 CLOUDINARY_CLOUD_NAME=your_cloudinary_name
@@ -230,7 +230,7 @@ EMAIL_PASSWORD=your_app_password
 ```env
 GROQ_API_KEY_DQ=your_groq_api_key
 GROQ_API_AUDIO=your_groq_audio_key
-MONGODB_URI=mongodb://localhost:27017/interviewai
+MONGODB_URI=mongodb://localhost:27017/SkillWise-AI
 ```
 
 #### Client/.env
