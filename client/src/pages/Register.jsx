@@ -102,7 +102,7 @@ const Register = () => {
         {/* Header */}
         <div className="text-center">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-            Join InterviewAI
+            Join SkillWise-AI
           </h2>
           <p className="mt-2 text-gray-400">
             Create your account and start practicing today

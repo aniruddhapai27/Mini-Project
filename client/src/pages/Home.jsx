@@ -8,7 +8,7 @@ const Home = () => {
         {/* Main Title */}
         <h1 className="text-6xl md:text-8xl font-bold mb-8 relative">
           <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-pulse">
-            InterviewAI
+            SkillWise-AI
           </span>
           <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400/20 via-purple-400/20 to-pink-400/20 blur-2xl rounded-lg"></div>
         </h1>
