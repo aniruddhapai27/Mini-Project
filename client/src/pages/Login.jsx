@@ -61,20 +61,29 @@ const Login = () => {
       console.error("Login failed:", err);
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-black border-2 border-black/10 dark:border-white/10 rounded-2xl shadow-xl">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-black dark:text-white">
-            Login
-          </h1>
+      <div className="w-full max-w-md p-8 space-y-8 bg-gray-800/50 dark:bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl shadow-xl relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-4 left-4 w-12 h-12 bg-cyan-500/10 rounded-full blur-xl animate-pulse"></div>
+          <div
+            className="absolute bottom-4 right-4 w-16 h-16 bg-purple-500/10 rounded-full blur-xl animate-pulse"
+            style={{ animationDelay: "1s" }}
+          ></div>
         </div>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div>
+
+        <div className="relative z-10">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Welcome Back
+            </h1>
+            <p className="text-gray-300 text-sm">Sign in to your account</p>
+          </div>
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">          <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-black dark:text-white"
+              className="block text-sm font-medium text-gray-300"
             >
               Email address
             </label>
@@ -86,13 +95,14 @@ const Login = () => {
               required
               value={formData.email}
               onChange={handleChange}
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-black/20 dark:border-white/20 bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+              className="appearance-none rounded-lg relative block w-full px-4 py-3 mt-2 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent backdrop-blur-sm"
+              placeholder="Enter your email"
             />
           </div>
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-black dark:text-white"
+              className="block text-sm font-medium text-gray-300"
             >
               Password
             </label>
@@ -104,30 +114,38 @@ const Login = () => {
               required
               value={formData.password}
               onChange={handleChange}
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-black/20 dark:border-white/20 bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+              className="appearance-none rounded-lg relative block w-full px-4 py-3 mt-2 border border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent backdrop-blur-sm"
+              placeholder="Enter your password"
             />
           </div>
           <button
             type="submit"
             disabled={loading.login}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-black dark:bg-white text-white dark:text-black hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-200"
+            className="w-full flex justify-center py-3 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50 shadow-lg border border-cyan-500/30 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
           >
-            {loading.login ? "Signing in..." : "Sign In"}
+            {loading.login ? (
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <span>Signing in...</span>
+              </div>
+            ) : (
+              "Sign In"
+            )}
           </button>
-        </form>
-        <div className="flex justify-between mt-4">
+        </form>        <div className="flex justify-between mt-6">
           <Link
             to="/forgot-password"
-            className="text-xs text-black dark:text-white hover:underline"
+            className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-200"
           >
             Forgot password?
           </Link>
           <Link
             to="/register"
-            className="text-xs text-black dark:text-white hover:underline"
+            className="text-sm text-purple-400 hover:text-purple-300 transition-colors duration-200"
           >
             Don't have an account? Sign Up
           </Link>
+        </div>
         </div>
       </div>
     </div>

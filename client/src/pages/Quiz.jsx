@@ -186,11 +186,13 @@ const Quiz = () => {
     dispatch(resetQuiz());
     navigate("/quiz-selection");
   };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black dark:border-white"></div>
+        <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-8 shadow-xl">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+          <p className="text-white">Loading quiz...</p>
+        </div>
       </div>
     );
   }
@@ -198,15 +200,28 @@ const Quiz = () => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-white dark:bg-black">
-        <h1 className="text-2xl font-bold text-red-500">Error Loading Questions</h1>
-        <p className="text-black/70 dark:text-white/70">{error}</p>
-        <button
-          onClick={() => navigate("/quiz-selection")}
-          className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
-        >
-          Back to Quiz Selection
-        </button>
-      </div>
+        <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-red-500/30 rounded-2xl p-8 shadow-xl max-w-md">
+          <svg
+            className="w-12 h-12 text-red-400 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <p className="text-white mb-4">{error}</p>
+          <button
+            onClick={handleExitQuiz}
+            className="py-2 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 border border-cyan-500/30 shadow-lg"
+          >
+            Back to Quiz Selection
+          </button>
+        </div>      </div>
     );
   }
 
@@ -214,14 +229,29 @@ const Quiz = () => {
   if (!currentQuestion) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-white dark:bg-black">
-        <h1 className="text-2xl font-bold">No Questions Available</h1>
-        <p className="text-black/70 dark:text-white/70">Please select a different subject.</p>
-        <button
-          onClick={() => navigate("/quiz-selection")}
-          className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
-        >
-          Back to Quiz Selection
-        </button>
+        <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-yellow-500/30 rounded-2xl p-8 shadow-xl max-w-md">
+          <svg
+            className="w-12 h-12 text-yellow-400 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+            />
+          </svg>
+          <h1 className="text-xl font-bold text-white mb-2">No Questions Available</h1>
+          <p className="text-gray-300 mb-4">Please select a different subject.</p>
+          <button
+            onClick={() => navigate("/quiz-selection")}
+            className="py-2 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 border border-cyan-500/30 shadow-lg"
+          >
+            Back to Quiz Selection
+          </button>
+        </div>
       </div>
     );
   }

@@ -170,12 +170,11 @@ const Profile = () => {
       return "Behavioral";
     return "System Design";
   };
-
   return (
-    <div className="min-h-screen py-8 bg-white dark:bg-black">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-black dark:text-white">
+    <div className="min-h-screen py-4 bg-white dark:bg-black">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-black dark:text-white">
             Profile
           </h1>
           <p className="mt-2 text-black/70 dark:text-white/70">
@@ -187,21 +186,21 @@ const Profile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Left Column: Profile Info */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-5 shadow-xl relative overflow-hidden h-full">
+            <div className="bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-4 shadow-xl relative overflow-hidden h-full">
               {/* Animated background elements - smaller size */}
               <div className="absolute top-0 left-0 w-full h-full">
-                <div className="absolute top-5 left-5 w-12 h-12 bg-cyan-500/10 rounded-full blur-xl animate-pulse"></div>
+                <div className="absolute top-3 left-3 w-8 h-8 bg-cyan-500/10 rounded-full blur-xl animate-pulse"></div>
                 <div
-                  className="absolute bottom-5 right-5 w-16 h-16 bg-purple-500/10 rounded-full blur-xl animate-pulse"
+                  className="absolute bottom-3 right-3 w-10 h-10 bg-purple-500/10 rounded-full blur-xl animate-pulse"
                   style={{ animationDelay: "1s" }}
                 ></div>
               </div>
 
               <div className="relative z-10">
                 {/* Profile Picture and Info Section */}
-                <div className="flex flex-col items-center mb-5">
-                  <div className="relative group mb-4">
-                    <div className="w-24 h-24 relative">
+                <div className="flex flex-col items-center mb-4">
+                  <div className="relative group mb-3">
+                    <div className="w-20 h-20 relative">
                       {/* Neon border */}
                       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full p-0.5 animate-spin-slow">
                         <div className="w-full h-full bg-gray-900 rounded-full"></div>
@@ -303,13 +302,12 @@ const Profile = () => {
                         🚀 Interview Ready
                       </span>
                     </div>
-                  </div>
-                  {/* Resume Section - Compact */}
-                  <div className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 border border-cyan-500/30 rounded-xl p-3 mb-5 w-full">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-sm font-semibold text-white flex items-center">
+                  </div>                  {/* Resume Section - Compact */}
+                  <div className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 border border-cyan-500/30 rounded-xl p-2 mb-3 w-full">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-white flex items-center">
                         <svg
-                          className="w-4 h-4 mr-2 text-cyan-500"
+                          className="w-3 h-3 mr-1 text-cyan-500"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -326,7 +324,7 @@ const Profile = () => {
                       {user.resume && !isEditing && (
                         <button
                           onClick={openResumeInNewTab}
-                          className="px-2 py-1 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-300 text-xs font-medium"
+                          className="px-2 py-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-300 text-[10px] font-medium"
                         >
                           View
                         </button>
@@ -389,20 +387,19 @@ const Profile = () => {
                         )}
                       </div>
                     )}
-                  </div>{" "}
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-3 w-full">
-                    <div className="flex justify-center gap-3 w-full">
+                  </div>{" "}                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-2 w-full">
+                    <div className="flex justify-center gap-2 w-full">
                       {isEditing ? (
                         <>
                           <button
                             onClick={handleSave}
                             disabled={loading.updateProfile}
-                            className="px-4 py-1.5 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-cyan-600 transition-all duration-300 disabled:opacity-50 shadow-lg text-xs flex-1"
+                            className="px-3 py-1 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-cyan-600 transition-all duration-300 disabled:opacity-50 shadow-lg text-[10px] flex-1"
                           >
                             {loading.updateProfile ? (
                               <div className="flex items-center justify-center">
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white mr-1"></div>
                                 <span>Saving...</span>
                               </div>
                             ) : (
@@ -412,7 +409,7 @@ const Profile = () => {
                           <button
                             onClick={handleCancel}
                             disabled={loading.updateProfile}
-                            className="px-4 py-1.5 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-medium rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-300 disabled:opacity-50 shadow-lg text-xs flex-1"
+                            className="px-3 py-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-medium rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-300 disabled:opacity-50 shadow-lg text-[10px] flex-1"
                           >
                             Cancel
                           </button>
@@ -420,7 +417,7 @@ const Profile = () => {
                       ) : (
                         <button
                           onClick={() => setIsEditing(true)}
-                          className="px-4 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg text-xs w-full"
+                          className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg text-[10px] w-full"
                         >
                           ✏️ Edit Profile
                         </button>
@@ -431,7 +428,7 @@ const Profile = () => {
                     {!isEditing && (
                       <button
                         onClick={() => setIsPasswordModalOpen(true)}
-                        className="px-4 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg text-xs w-full flex items-center justify-center"
+                        className="px-3 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg text-[10px] w-full flex items-center justify-center"
                       >
                         🔒 Change Password
                       </button>
@@ -440,38 +437,37 @@ const Profile = () => {
                 </div>
               </div>
             </div>
-          </div>
-          {/* Right Column: Stats and Performance */}
+          </div>          {/* Right Column: Stats and Performance */}
           <div className="lg:col-span-2">
             {/* Metrics Cards */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-3 text-center">
-                <div className="text-xl mb-1">🔥</div>
-                <div className="text-xl font-bold text-cyan-400">
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-2 text-center">
+                <div className="text-lg mb-1">🔥</div>
+                <div className="text-lg font-bold text-cyan-400">
                   {stats.currentStreak}
                 </div>
-                <div className="text-gray-400 text-xs">Current Streak</div>
+                <div className="text-gray-400 text-[10px]">Current Streak</div>
               </div>
-              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-3 text-center">
-                <div className="text-xl mb-1">🏆</div>
-                <div className="text-xl font-bold text-purple-400">
+              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-2 text-center">
+                <div className="text-lg mb-1">🏆</div>
+                <div className="text-lg font-bold text-purple-400">
                   {stats.totalSessions}
                 </div>
-                <div className="text-gray-400 text-xs">Total Sessions</div>
+                <div className="text-gray-400 text-[10px]">Total Sessions</div>
               </div>
-              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-3 text-center">
-                <div className="text-xl mb-1">⭐</div>
-                <div className="text-xl font-bold text-green-400">
+              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-2 text-center">
+                <div className="text-lg mb-1">⭐</div>
+                <div className="text-lg font-bold text-green-400">
                   {stats.averageScore}%
                 </div>
-                <div className="text-gray-400 text-xs">Average Score</div>
+                <div className="text-gray-400 text-[10px]">Average Score</div>
               </div>
             </div>
             {/* Performance Graph */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-4 mb-4">
-              <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 mb-3">
+              <h3 className="text-xs font-semibold text-white mb-2 flex items-center">
                 <svg
-                  className="w-4 h-4 mr-2 text-cyan-500"
+                  className="w-3 h-3 mr-1 text-cyan-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -485,7 +481,7 @@ const Profile = () => {
                 </svg>
                 Performance by Category
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs text-gray-400">
                     <span>Technical</span>
@@ -523,12 +519,11 @@ const Profile = () => {
                   </div>
                 </div>
               </div>
-            </div>
-            {/* Recent Performance */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-white mb-3 flex items-center">
+            </div>            {/* Recent Performance */}
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 mb-3">
+              <h3 className="text-xs font-semibold text-white mb-2 flex items-center">
                 <svg
-                  className="w-4 h-4 mr-2 text-cyan-500"
+                  className="w-3 h-3 mr-1 text-cyan-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -542,26 +537,26 @@ const Profile = () => {
                 </svg>
                 Recent Sessions
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {stats.recentPerformances.map((performance, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-2 bg-gray-700/30 rounded-lg"
+                    className="flex items-center justify-between p-1.5 bg-gray-700/30 rounded-lg"
                   >
                     <div>
-                      <p className="text-white text-xs font-medium">
+                      <p className="text-white text-[10px] font-medium">
                         {performance.session}
-                        <span className="ml-2 px-2 py-0.5 bg-gray-600 rounded-full text-gray-300 text-[10px]">
+                        <span className="ml-1 px-1 py-0.5 bg-gray-600 rounded-full text-gray-300 text-[8px]">
                           {performance.level}
                         </span>
                       </p>
-                      <p className="text-gray-400 text-[10px]">
+                      <p className="text-gray-400 text-[8px]">
                         {performance.date}
                       </p>
                     </div>
                     <div className="text-right">
                       <p
-                        className={`text-xs font-semibold ${
+                        className={`text-[10px] font-semibold ${
                           performance.score >= 90
                             ? "text-green-400"
                             : performance.score >= 80
@@ -577,10 +572,10 @@ const Profile = () => {
               </div>
             </div>
             {/* User Insights */}
-            <div className="mt-4 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-white mb-1 flex items-center">
+            <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-3">
+              <h3 className="text-xs font-semibold text-white mb-1 flex items-center">
                 <svg
-                  className="w-4 h-4 mr-2 text-cyan-500"
+                  className="w-3 h-3 mr-1 text-cyan-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -594,7 +589,7 @@ const Profile = () => {
                 </svg>
                 Your Insights
               </h3>
-              <p className="text-gray-300 text-xs">
+              <p className="text-gray-300 text-[10px]">
                 Your strongest area is{" "}
                 <span className="text-cyan-400 font-medium">
                   {getBestCategory()}

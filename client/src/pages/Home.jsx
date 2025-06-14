@@ -18,14 +18,12 @@ const Home = () => {
         <p className="text-lg text-black/70 dark:text-white/70 mb-12 max-w-2xl mx-auto">
           Get personalized feedback, practice with real interview questions, and
           boost your confidence with our cutting-edge AI assistant.
-        </p>
-
-        {/* Feature highlights */}
+        </p>        {/* Feature highlights */}
         <div className="grid md:grid-cols-3 gap-8 mb-12 max-w-4xl mx-auto">
-          <div className="p-6 rounded-lg bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 transition-all duration-300 group">
-            <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center mb-4 mx-auto">
+          <div className="p-6 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 backdrop-blur-sm transition-all duration-300 group hover:scale-105 hover:shadow-xl">
+            <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center mb-4 mx-auto shadow-lg">
               <svg
-                className="w-6 h-6 text-black dark:text-white"
+                className="w-6 h-6 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -46,10 +44,10 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="p-6 rounded-lg bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 transition-all duration-300 group">
-            <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center mb-4 mx-auto">
+          <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 backdrop-blur-sm transition-all duration-300 group hover:scale-105 hover:shadow-xl">
+            <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4 mx-auto shadow-lg">
               <svg
-                className="w-6 h-6 text-black dark:text-white"
+                className="w-6 h-6 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -70,10 +68,10 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="p-6 rounded-lg bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 transition-all duration-300 group">
-            <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center mb-4 mx-auto">
+          <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 backdrop-blur-sm transition-all duration-300 group hover:scale-105 hover:shadow-xl">
+            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mb-4 mx-auto shadow-lg">
               <svg
-                className="w-6 h-6 text-black dark:text-white"
+                className="w-6 h-6 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -93,47 +91,43 @@ const Home = () => {
               Monitor your improvement with detailed analytics and insights
             </p>
           </div>
-        </div>
-
-        {/* CTA Buttons */}
+        </div>        {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
           <Link
             to="/register"
-            className="px-8 py-4 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-lg border-2 border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-300 shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 animate-fadeIn"
+            className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 animate-fadeIn border border-purple-500/30"
           >
             Start Practicing Now
           </Link>
           <Link
             to="/login"
-            className="px-8 py-4 border-2 border-black dark:border-white text-black dark:text-white font-semibold rounded-lg hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all duration-300 shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 animate-fadeIn"
+            className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 animate-fadeIn border border-cyan-500/30"
           >
             Sign In
           </Link>
-        </div>
-
-        {/* Stats Section */}
+        </div>        {/* Stats Section */}
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-black dark:text-white">
+          <div className="text-center p-6 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 backdrop-blur-sm">
+            <div className="text-3xl font-bold text-cyan-400 mb-2">
               10K+
             </div>
-            <div className="text-black/70 dark:text-white/70 text-sm mt-1">
+            <div className="text-black/70 dark:text-white/70 text-sm">
               Practice Sessions
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-black dark:text-white">
+          <div className="text-center p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 backdrop-blur-sm">
+            <div className="text-3xl font-bold text-purple-400 mb-2">
               95%
             </div>
-            <div className="text-black/70 dark:text-white/70 text-sm mt-1">
+            <div className="text-black/70 dark:text-white/70 text-sm">
               Success Rate
             </div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-black dark:text-white">
+          <div className="text-center p-6 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 backdrop-blur-sm">
+            <div className="text-3xl font-bold text-green-400 mb-2">
               24/7
             </div>
-            <div className="text-black/70 dark:text-white/70 text-sm mt-1">
+            <div className="text-black/70 dark:text-white/70 text-sm">
               AI Availability
             </div>
           </div>

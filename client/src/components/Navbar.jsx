@@ -51,9 +51,8 @@ const Navbar = () => {
   };
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
-
   return (
-    <nav className="bg-white dark:bg-black border-b border-black/10 dark:border-white/10 sticky top-0 z-50 transition-colors duration-300 shadow-md">
+    <nav className="bg-white dark:bg-black border-b border-cyan-500/20 dark:border-cyan-500/20 sticky top-0 z-50 transition-colors duration-300 shadow-lg backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-16">
         <div className="flex items-center justify-between h-16 w-full">
           {/* Logo on the extreme left */}
@@ -67,24 +66,22 @@ const Navbar = () => {
             </Link>
           </div>
           {/* Right side: Theme toggle and nav links */}
-          <div className="flex items-center space-x-4 ml-auto">
-            {/* Theme Toggle */}
+          <div className="flex items-center space-x-4 ml-auto">            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="px-3 py-2 rounded-md border border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5 text-black dark:text-white hover:bg-black/10 hover:dark:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+              className="px-3 py-2 rounded-lg border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 text-black dark:text-white hover:from-cyan-500/20 hover:to-blue-500/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-lg"
               aria-label="Toggle dark/light mode"
             >
               {theme === "dark" ? "🌙" : "☀️"}
             </button>
 
             {/* Navigation Links */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link
+            <div className="hidden md:flex items-center space-x-8">              <Link
                 to="/"
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                   isActive("/")
-                    ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
-                    : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                    ? "text-cyan-400 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 shadow-lg"
+                    : "text-black/70 dark:text-white/70 hover:text-cyan-400 hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10"
                 }`}
               >
                 Home

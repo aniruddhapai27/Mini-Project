@@ -130,13 +130,12 @@ const QuizResults = () => {
         );
     }
   };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-t-black dark:border-t-white border-gray-300 dark:border-gray-700 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-black dark:text-white">Calculating results...</p>
+        <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-8 shadow-xl">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+          <p className="text-white">Calculating results...</p>
         </div>
       </div>
     );
