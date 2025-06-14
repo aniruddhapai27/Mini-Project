@@ -49,9 +49,23 @@ const Quiz = () => {
   }, [subject, navigate]);
 
   useEffect(() => {
+    // If questions for this subject are already in localStorage, use them
+    const cacheKey = `quiz-questions-${subject}`;
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        dispatch(startQuiz({ questions: parsed, subject }));
+        return;
+      }
+    }
     // Fetch questions for the subject if not active
     if (!currentQuiz.isActive && subject) {
-      dispatch(fetchQuestionsBySubject(subject));
+      dispatch(fetchQuestionsBySubject(subject)).then((action) => {
+        if (action.payload && Array.isArray(action.payload)) {
+          localStorage.setItem(cacheKey, JSON.stringify(action.payload));
+        }
+      });
     }
   }, [dispatch, subject, currentQuiz.isActive]);
 
@@ -175,22 +189,20 @@ const Quiz = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-cyan-500"></div>
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black dark:border-white"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <h1 className="text-2xl font-bold text-red-500">
-          Error Loading Questions
-        </h1>
-        <p className="text-gray-600">{error}</p>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-white dark:bg-black">
+        <h1 className="text-2xl font-bold text-red-500">Error Loading Questions</h1>
+        <p className="text-black/70 dark:text-white/70">{error}</p>
         <button
           onClick={() => navigate("/quiz-selection")}
-          className="px-4 py-2 bg-cyan-500 text-white rounded-md hover:bg-cyan-600"
+          className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
         >
           Back to Quiz Selection
         </button>
@@ -201,12 +213,12 @@ const Quiz = () => {
   // Check if we have a current question to display
   if (!currentQuestion) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-white dark:bg-black">
         <h1 className="text-2xl font-bold">No Questions Available</h1>
-        <p className="text-gray-600">Please select a different subject.</p>
+        <p className="text-black/70 dark:text-white/70">Please select a different subject.</p>
         <button
           onClick={() => navigate("/quiz-selection")}
-          className="px-4 py-2 bg-cyan-500 text-white rounded-md hover:bg-cyan-600"
+          className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-md hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
         >
           Back to Quiz Selection
         </button>
@@ -215,60 +227,61 @@ const Quiz = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center py-8">
+      <div className="w-full max-w-2xl mx-auto bg-black/5 dark:bg-white/5 shadow-2xl rounded-2xl overflow-hidden animate-fadeIn">
         {/* Quiz Header */}
-        <div className="bg-gradient-to-r from-cyan-500 to-purple-500 p-6 text-white">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">
-              {subject?.charAt(0).toUpperCase() + subject?.slice(1)} Quiz
-            </h1>
-            <button
-              onClick={handleExitQuiz}
-              className="text-white hover:text-red-200"
-            >
-              Exit Quiz
-            </button>
+        <div className="p-6 border-b border-black/10 dark:border-white/10 flex flex-col md:flex-row justify-between items-center bg-white dark:bg-black">
+          <h1 className="text-2xl font-bold text-black dark:text-white mb-2 md:mb-0">
+            {subject?.charAt(0).toUpperCase() + subject?.slice(1)} Quiz
+          </h1>
+          <button
+            onClick={handleExitQuiz}
+            className="text-black dark:text-white hover:text-red-500 dark:hover:text-red-400 font-semibold transition-colors"
+          >
+            Exit Quiz
+          </button>
+        </div>
+        {/* Progress Bar */}
+        <div className="px-6 pt-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-black/70 dark:text-white/70 text-sm">
+              Question {currentQuiz.currentIndex + 1} of {currentQuiz.questions.length}
+            </span>
+            <span className="text-black/70 dark:text-white/70 text-sm">
+              {Math.round(progressInfo.percentage)}%
+            </span>
           </div>
-          <div className="mt-2 flex items-center justify-between">
-            <p>
-              Question {currentQuiz.currentIndex + 1} of{" "}
-              {currentQuiz.questions.length}
-            </p>{" "}
-            <div className="w-48 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-              <div
-                className="bg-gradient-to-r from-green-400 to-blue-500 h-2.5 rounded-full"
-                style={{ width: `${progressInfo.percentage}%` }}
-              ></div>
-            </div>
+          <div className="w-full bg-black/10 dark:bg-white/10 rounded-full h-2.5">
+            <div
+              className="bg-black dark:bg-white h-2.5 rounded-full transition-all duration-500"
+              style={{ width: `${progressInfo.percentage}%` }}
+            ></div>
           </div>
         </div>
-
         {/* Quiz Content */}
         <div className="p-6">
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4">
+            <h2 className="text-xl font-semibold mb-4 text-black dark:text-white animate-fadeIn">
               {currentQuestion?.question}
             </h2>
-
             {/* Options */}
             <div className="space-y-3">
               {currentQuestion?.options.map((option, index) => (
                 <div
                   key={index}
                   onClick={() => handleOptionSelect(index)}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all hover:border-purple-300 hover:shadow-md ${
+                  className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 hover:border-black dark:hover:border-white hover:shadow-lg animate-fadeIn ${
                     selectedOption === index
-                      ? "border-purple-500 bg-purple-50"
-                      : "border-gray-200"
+                      ? "border-black dark:border-white bg-black/10 dark:bg-white/10 text-black dark:text-white shadow-md scale-105"
+                      : "border-black/10 dark:border-white/10 text-black/70 dark:text-white/70"
                   }`}
                 >
                   <div className="flex items-center">
                     <div
-                      className={`w-6 h-6 flex items-center justify-center rounded-full mr-3 ${
+                      className={`w-6 h-6 flex items-center justify-center rounded-full mr-3 font-bold text-base transition-all duration-200 ${
                         selectedOption === index
-                          ? "bg-purple-500 text-white"
-                          : "bg-gray-200 text-gray-600"
+                          ? "bg-black dark:bg-white text-white dark:text-black"
+                          : "bg-black/10 dark:bg-white/10 text-black/70 dark:text-white/70"
                       }`}
                     >
                       {String.fromCharCode(65 + index)}
@@ -279,16 +292,15 @@ const Quiz = () => {
               ))}
             </div>
           </div>
-
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
             <button
               onClick={handlePreviousQuestion}
               disabled={currentQuiz.currentIndex === 0}
-              className={`px-6 py-2.5 rounded-md ${
+              className={`px-6 py-2.5 rounded-md font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 animate-fadeIn ${
                 currentQuiz.currentIndex === 0
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  : "bg-black/10 dark:bg-white/10 text-black dark:text-white hover:bg-black/20 dark:hover:bg-white/20 hover:scale-105"
               }`}
             >
               Previous
@@ -296,13 +308,12 @@ const Quiz = () => {
             <button
               onClick={handleNextQuestion}
               disabled={selectedOption === null}
-              className={`px-6 py-2.5 rounded-md transition-all ${
+              className={`px-6 py-2.5 rounded-md font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 animate-fadeIn ${
                 selectedOption === null
-                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                  : currentQuiz.currentIndex ===
-                    currentQuiz.questions.length - 1
-                  ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-lg hover:shadow-green-500/20"
-                  : "bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:shadow-lg hover:shadow-purple-500/20"
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : currentQuiz.currentIndex === currentQuiz.questions.length - 1
+                  ? "bg-black dark:bg-white text-white dark:text-black hover:scale-105"
+                  : "bg-black dark:bg-white text-white dark:text-black hover:scale-105"
               }`}
             >
               {currentQuiz.currentIndex === currentQuiz.questions.length - 1

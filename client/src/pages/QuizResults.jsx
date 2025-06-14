@@ -69,7 +69,6 @@ const QuizResults = () => {
     navigate("/quiz-selection");
   };
 
-
   const getPerformanceIcon = (performance) => {
     switch (performance) {
       case "Excellent":
@@ -223,11 +222,32 @@ const QuizResults = () => {
                 {results.performance}
               </span>
             </div>
-
+            {/* Progress Bar */}
+            <div className="w-full max-w-md mx-auto mb-6">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-black/70 dark:text-white/70 text-sm">
+                  Progress
+                </span>
+                <span className="text-black/70 dark:text-white/70 text-sm">
+                  {Math.round((results.correctAnswers / results.totalQuestions) * 100)}%
+                </span>
+              </div>
+              <div className="w-full h-4 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+                <div
+                  className="h-4 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${(results.correctAnswers / results.totalQuestions) * 100}%`,
+                    background:
+                      (results.correctAnswers / results.totalQuestions) >= 0.7
+                        ? 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)' // green
+                        : 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)', // red
+                  }}
+                ></div>
+              </div>
+            </div>
             <div className="text-6xl font-bold mb-2 text-black dark:text-white animate-fadeIn">
               {results.score}%
             </div>
-
             <div className="text-xl text-black/70 dark:text-white/70 mb-6 animate-fadeIn">
               Grade:{" "}
               <span className="font-bold text-black dark:text-white">
@@ -237,7 +257,7 @@ const QuizResults = () => {
 
             <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
               <div className="text-center">
-                <div className="text-2xl font-bold text-black dark:text-white">
+                <div className="text-2xl font-bold text-green-500">
                   {results.correctAnswers}
                 </div>
                 <div className="text-sm text-black/70 dark:text-white/70">
@@ -245,7 +265,7 @@ const QuizResults = () => {
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-black dark:text-white">
+                <div className="text-2xl font-bold text-red-500">
                   {results.summary?.questionsIncorrect ||
                     results.totalQuestions - results.correctAnswers}
                 </div>
@@ -293,14 +313,13 @@ const QuizResults = () => {
             <h2 className="text-2xl font-bold text-black dark:text-white mb-6">
               Question by Question Review
             </h2>
-
             {results.detailedResults.map((result, index) => (
               <div
                 key={result.questionId}
                 className={`bg-black/5 dark:bg-white/5 border rounded-xl p-6 shadow-md transition-transform duration-300 animate-fadeIn ${
                   result.isCorrect
-                    ? "border-black/20 dark:border-white/20"
-                    : "border-black/30 dark:border-white/30"
+                    ? "border-green-500"
+                    : "border-red-500"
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">
@@ -310,7 +329,7 @@ const QuizResults = () => {
                         Question {index + 1}
                       </span>
                       {result.isCorrect ? (
-                        <div className="flex items-center text-black dark:text-white">
+                        <div className="flex items-center text-green-500">
                           <svg
                             className="w-5 h-5 mr-1"
                             fill="currentColor"
@@ -325,7 +344,7 @@ const QuizResults = () => {
                           <span className="text-sm font-medium">Correct</span>
                         </div>
                       ) : (
-                        <div className="flex items-center text-black dark:text-white">
+                        <div className="flex items-center text-red-500">
                           <svg
                             className="w-5 h-5 mr-1"
                             fill="currentColor"
@@ -351,20 +370,15 @@ const QuizResults = () => {
                   {result.options.map((option, optionIndex) => {
                     const isUserSelected = optionIndex === result.userSelectedOption;
                     const isCorrect = optionIndex === result.correctOption;
-
-                    let bgColor =
-                      "bg-black/10 dark:bg-white/10 border-black/10 dark:border-white/10";
+                    let bgColor = "bg-black/10 dark:bg-white/10 border-black/10 dark:border-white/10";
                     let textColor = "text-black dark:text-white";
-
                     if (isCorrect) {
-                      bgColor = "bg-black/20 dark:bg-white/20 border-black dark:border-white";
-                      textColor = "text-black dark:text-white font-bold";
+                      bgColor = "bg-green-500 border-green-700";
+                      textColor = "text-white font-bold";
                     } else if (isUserSelected && !isCorrect) {
-                      bgColor =
-                        "bg-black/30 dark:bg-white/30 border-black/30 dark:border-white/30";
-                      textColor = "text-black dark:text-white";
+                      bgColor = "bg-red-500 border-red-700";
+                      textColor = "text-white font-bold";
                     }
-
                     return (
                       <div
                         key={optionIndex}
@@ -374,24 +388,9 @@ const QuizResults = () => {
                           <span className={`text-sm font-medium mr-3 ${textColor}`}>
                             {String.fromCharCode(65 + optionIndex)}.
                           </span>
-                          <span className={textColor}>{option}</span>
+                          <span className={textColor + ' whitespace-pre-line'}>{option}</span>
                           <div className="ml-auto flex items-center space-x-2">
-                            {isCorrect && (
-                              <span className="text-xs bg-black/10 dark:bg-white/10 text-black dark:text-white px-2 py-1 rounded">
-                                Correct Answer
-                              </span>
-                            )}
-                            {isUserSelected && (
-                              <span
-                                className={`text-xs px-2 py-1 rounded ${
-                                  isCorrect
-                                    ? "bg-black/10 dark:bg-white/10 text-black dark:text-white"
-                                    : "bg-black/20 dark:bg-white/20 text-black dark:text-white"
-                                }`}
-                              >
-                                Your Answer
-                              </span>
-                            )}
+                            {/* Removed 'Correct Answer' and 'Your Answer' badges from red and green boxes for cleaner look */}
                           </div>
                         </div>
                       </div>
