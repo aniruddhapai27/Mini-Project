@@ -69,12 +69,6 @@ const QuizResults = () => {
     navigate("/quiz-selection");
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 90) return "text-green-400";
-    if (score >= 70) return "text-blue-400";
-    if (score >= 50) return "text-yellow-400";
-    return "text-red-400";
-  };
 
   const getPerformanceIcon = (performance) => {
     switch (performance) {
@@ -140,10 +134,10 @@ const QuizResults = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-t-cyan-400 border-gray-600 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-400">Calculating results...</p>
+          <div className="w-12 h-12 border-4 border-t-black dark:border-t-white border-gray-300 dark:border-gray-700 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-black dark:text-white">Calculating results...</p>
         </div>
       </div>
     );
@@ -151,10 +145,10 @@ const QuizResults = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-center bg-gray-800/50 border border-red-700/30 rounded-xl p-8 max-w-md">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="text-center bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-8 max-w-md">
           <svg
-            className="w-12 h-12 text-red-400 mx-auto"
+            className="w-12 h-12 text-black dark:text-white mx-auto"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -166,9 +160,9 @@ const QuizResults = () => {
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p className="mt-4 text-red-400">{error}</p>
+          <p className="mt-4 text-black dark:text-white">{error}</p>
           <button
-            className="mt-6 py-2 px-6 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="mt-6 py-2 px-6 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
             onClick={handleNewQuiz}
           >
             Back to Quiz Selection
@@ -180,10 +174,10 @@ const QuizResults = () => {
 
   if (!results) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-center bg-gray-800/50 border border-yellow-700/30 rounded-xl p-8 max-w-md">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="text-center bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-8 max-w-md">
           <svg
-            className="w-12 h-12 text-yellow-400 mx-auto"
+            className="w-12 h-12 text-black dark:text-white mx-auto"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -195,9 +189,9 @@ const QuizResults = () => {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L5.232 16.5c-.77.833.192 2.5 1.732 2.5z"
             />
           </svg>
-          <p className="mt-4 text-yellow-400">No quiz results found</p>
+          <p className="mt-4 text-black dark:text-white">No quiz results found</p>
           <button
-            className="mt-6 py-2 px-6 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="mt-6 py-2 px-6 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
             onClick={handleNewQuiz}
           >
             Take a Quiz
@@ -208,80 +202,86 @@ const QuizResults = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8">
+    <div className="min-h-screen bg-white dark:bg-black py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Quiz Results</h1>
-          <p className="text-gray-400">{results.subject} Quiz</p>
+        <div className="text-center mb-8 animate-fadeIn">
+          <h1 className="text-4xl font-bold text-black dark:text-white mb-2">
+            Quiz Results
+          </h1>
+          <p className="text-black/70 dark:text-white/70">
+            {results.subject} Quiz
+          </p>
         </div>
 
         {/* Score Overview */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-8 mb-8">
+        <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-8 mb-8 shadow-md animate-fadeIn">
           <div className="text-center">
             <div className="flex items-center justify-center mb-4">
               {getPerformanceIcon(results.performance)}
-              <span className="ml-3 text-2xl font-bold text-white">
+              <span className="ml-3 text-2xl font-bold text-black dark:text-white">
                 {results.performance}
               </span>
             </div>
 
-            <div
-              className={`text-6xl font-bold mb-2 ${getScoreColor(
-                results.score
-              )}`}
-            >
+            <div className="text-6xl font-bold mb-2 text-black dark:text-white animate-fadeIn">
               {results.score}%
             </div>
 
-            <div className="text-xl text-gray-300 mb-6">
+            <div className="text-xl text-black/70 dark:text-white/70 mb-6 animate-fadeIn">
               Grade:{" "}
-              <span className={`font-bold ${getScoreColor(results.score)}`}>
+              <span className="font-bold text-black dark:text-white">
                 {results.grade}
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-400">
+                <div className="text-2xl font-bold text-black dark:text-white">
                   {results.correctAnswers}
                 </div>
-                <div className="text-sm text-gray-400">Correct</div>
+                <div className="text-sm text-black/70 dark:text-white/70">
+                  Correct
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-400">
+                <div className="text-2xl font-bold text-black dark:text-white">
                   {results.summary?.questionsIncorrect ||
                     results.totalQuestions - results.correctAnswers}
                 </div>
-                <div className="text-sm text-gray-400">Incorrect</div>
+                <div className="text-sm text-black/70 dark:text-white/70">
+                  Incorrect
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">
+                <div className="text-2xl font-bold text-black dark:text-white">
                   {results.totalQuestions}
                 </div>
-                <div className="text-sm text-gray-400">Total</div>
+                <div className="text-sm text-black/70 dark:text-white/70">
+                  Total
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 mb-8 animate-fadeIn">
           <button
             onClick={() => setShowDetailedView(!showDetailedView)}
-            className="flex-1 py-3 px-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:opacity-90 transition-all duration-300"
+            className="flex-1 py-3 px-6 bg-black dark:bg-white text-white dark:text-black rounded-lg font-semibold hover:scale-105 transition-all duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2"
           >
             {showDetailedView ? "Hide" : "Show"} Detailed Review
           </button>
           <button
             onClick={handleRetakeQuiz}
-            className="flex-1 py-3 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg font-semibold hover:opacity-90 transition-all duration-300"
+            className="flex-1 py-3 px-6 bg-black dark:bg-white text-white dark:text-black rounded-lg font-semibold hover:scale-105 transition-all duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2"
           >
             Retake Quiz
           </button>
           <button
             onClick={handleNewQuiz}
-            className="flex-1 py-3 px-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg font-semibold hover:opacity-90 transition-all duration-300"
+            className="flex-1 py-3 px-6 bg-black dark:bg-white text-white dark:text-black rounded-lg font-semibold hover:scale-105 transition-all duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2"
           >
             New Quiz
           </button>
@@ -289,26 +289,28 @@ const QuizResults = () => {
 
         {/* Detailed Results */}
         {showDetailedView && results.detailedResults && (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-white mb-6">
+          <div className="space-y-6 animate-fadeIn">
+            <h2 className="text-2xl font-bold text-black dark:text-white mb-6">
               Question by Question Review
             </h2>
 
             {results.detailedResults.map((result, index) => (
               <div
                 key={result.questionId}
-                className={`bg-gray-800/50 border rounded-xl p-6 ${
-                  result.isCorrect ? "border-green-500/30" : "border-red-500/30"
+                className={`bg-black/5 dark:bg-white/5 border rounded-xl p-6 shadow-md transition-transform duration-300 animate-fadeIn ${
+                  result.isCorrect
+                    ? "border-black/20 dark:border-white/20"
+                    : "border-black/30 dark:border-white/30"
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center mb-2">
-                      <span className="text-sm font-medium text-gray-400 mr-3">
+                      <span className="text-sm font-medium text-black/70 dark:text-white/70 mr-3">
                         Question {index + 1}
                       </span>
                       {result.isCorrect ? (
-                        <div className="flex items-center text-green-400">
+                        <div className="flex items-center text-black dark:text-white">
                           <svg
                             className="w-5 h-5 mr-1"
                             fill="currentColor"
@@ -323,7 +325,7 @@ const QuizResults = () => {
                           <span className="text-sm font-medium">Correct</span>
                         </div>
                       ) : (
-                        <div className="flex items-center text-red-400">
+                        <div className="flex items-center text-black dark:text-white">
                           <svg
                             className="w-5 h-5 mr-1"
                             fill="currentColor"
@@ -339,7 +341,7 @@ const QuizResults = () => {
                         </div>
                       )}
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-4">
+                    <h3 className="text-lg font-semibold text-black dark:text-white mb-4">
                       {result.question}
                     </h3>
                   </div>
@@ -347,36 +349,35 @@ const QuizResults = () => {
 
                 <div className="space-y-3">
                   {result.options.map((option, optionIndex) => {
-                    const isUserSelected =
-                      optionIndex === result.userSelectedOption;
+                    const isUserSelected = optionIndex === result.userSelectedOption;
                     const isCorrect = optionIndex === result.correctOption;
 
-                    let bgColor = "bg-gray-700/30 border-gray-600";
-                    let textColor = "text-gray-300";
+                    let bgColor =
+                      "bg-black/10 dark:bg-white/10 border-black/10 dark:border-white/10";
+                    let textColor = "text-black dark:text-white";
 
                     if (isCorrect) {
-                      bgColor = "bg-green-500/20 border-green-500";
-                      textColor = "text-green-400";
+                      bgColor = "bg-black/20 dark:bg-white/20 border-black dark:border-white";
+                      textColor = "text-black dark:text-white font-bold";
                     } else if (isUserSelected && !isCorrect) {
-                      bgColor = "bg-red-500/20 border-red-500";
-                      textColor = "text-red-400";
+                      bgColor =
+                        "bg-black/30 dark:bg-white/30 border-black/30 dark:border-white/30";
+                      textColor = "text-black dark:text-white";
                     }
 
                     return (
                       <div
                         key={optionIndex}
-                        className={`p-3 rounded-lg border ${bgColor}`}
+                        className={`p-3 rounded-lg border ${bgColor} transition-all duration-200 animate-fadeIn`}
                       >
                         <div className="flex items-center">
-                          <span
-                            className={`text-sm font-medium mr-3 ${textColor}`}
-                          >
+                          <span className={`text-sm font-medium mr-3 ${textColor}`}>
                             {String.fromCharCode(65 + optionIndex)}.
                           </span>
                           <span className={textColor}>{option}</span>
                           <div className="ml-auto flex items-center space-x-2">
                             {isCorrect && (
-                              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                              <span className="text-xs bg-black/10 dark:bg-white/10 text-black dark:text-white px-2 py-1 rounded">
                                 Correct Answer
                               </span>
                             )}
@@ -384,8 +385,8 @@ const QuizResults = () => {
                               <span
                                 className={`text-xs px-2 py-1 rounded ${
                                   isCorrect
-                                    ? "bg-green-500/20 text-green-400"
-                                    : "bg-red-500/20 text-red-400"
+                                    ? "bg-black/10 dark:bg-white/10 text-black dark:text-white"
+                                    : "bg-black/20 dark:bg-white/20 text-black dark:text-white"
                                 }`}
                               >
                                 Your Answer

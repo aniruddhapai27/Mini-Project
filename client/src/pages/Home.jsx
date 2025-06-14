@@ -99,13 +99,13 @@ const Home = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
           <Link
             to="/register"
-            className="px-8 py-4 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-lg border-2 border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2"
+            className="px-8 py-4 bg-black dark:bg-white text-white dark:text-black font-semibold rounded-lg border-2 border-black dark:border-white hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-300 shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 animate-fadeIn"
           >
             Start Practicing Now
           </Link>
           <Link
             to="/login"
-            className="px-8 py-4 border-2 border-black dark:border-white text-black dark:text-white font-semibold rounded-lg hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2"
+            className="px-8 py-4 border-2 border-black dark:border-white text-black dark:text-white font-semibold rounded-lg hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all duration-300 shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 animate-fadeIn"
           >
             Sign In
           </Link>

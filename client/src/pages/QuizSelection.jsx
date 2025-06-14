@@ -9,6 +9,7 @@ import {
   clearDailyQuestionsError,
   resetQuiz,
 } from "../redux/slices/dqSlice";
+import { subjectImages } from "../assets/subjectImages";
 
 const QuizSelection = () => {
   const navigate = useNavigate();
@@ -54,10 +55,12 @@ const QuizSelection = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-t-cyan-400 border-gray-600 rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-400">Loading quiz subjects...</p>
+          <div className="w-12 h-12 border-4 border-t-black dark:border-t-white border-gray-300 dark:border-gray-700 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-black dark:text-white">
+            Loading quiz subjects...
+          </p>
         </div>
       </div>
     );
@@ -65,10 +68,10 @@ const QuizSelection = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-center bg-gray-800/50 border border-red-700/30 rounded-xl p-8 max-w-md">
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="text-center bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-8 max-w-md">
           <svg
-            className="w-12 h-12 text-red-400 mx-auto"
+            className="w-12 h-12 text-black dark:text-white mx-auto"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -80,9 +83,9 @@ const QuizSelection = () => {
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p className="mt-4 text-red-400">{error}</p>
+          <p className="mt-4 text-black dark:text-white">{error}</p>
           <button
-            className="mt-6 py-2 px-6 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+            className="mt-6 py-2 px-6 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
             onClick={() => {
               dispatch(clearDailyQuestionsError());
               dispatch(fetchDailyQuestions());
@@ -98,28 +101,26 @@ const QuizSelection = () => {
   const subjects = getSubjectsFromQuestions();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8">
+    <div className="min-h-screen bg-white dark:bg-black py-8">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-4xl font-bold text-black dark:text-white mb-4 animate-fadeIn">
             Daily Quiz Challenge
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-black/70 dark:text-white/70 text-lg animate-fadeIn">
             Choose your subject and test your knowledge
           </p>
         </div>
-
         {/* Subject Selection */}
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-semibold text-white mb-6 text-center">
+          <h2 className="text-2xl font-semibold text-black dark:text-white mb-6 text-center animate-fadeIn">
             Select a Subject
           </h2>
-
           {subjects.length === 0 ? (
-            <div className="text-center bg-gray-800/50 border border-gray-700/30 rounded-xl p-8">
+            <div className="text-center bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-8 animate-fadeIn">
               <svg
-                className="w-12 h-12 text-gray-400 mx-auto mb-4"
+                className="w-12 h-12 text-black dark:text-white mx-auto mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -131,38 +132,45 @@ const QuizSelection = () => {
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <p className="text-gray-400">
+              <p className="text-black/70 dark:text-white/70">
                 No quiz questions available for today.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
               {subjects.map((subject) => (
                 <div
                   key={subject}
-                  className={`bg-gray-800/50 border rounded-xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 ${
+                  className={`bg-black/5 dark:bg-white/5 border rounded-xl p-6 cursor-pointer transition-transform duration-300 hover:scale-105 focus:scale-105 focus:outline-none border-black/10 dark:border-white/10 shadow-lg animate-fadeIn ${
                     selectedSubject === subject
-                      ? "border-cyan-500 bg-cyan-500/10"
-                      : "border-gray-700/30 hover:border-gray-600"
+                      ? "ring-2 ring-black dark:ring-white scale-105"
+                      : ""
                   }`}
+                  tabIndex={0}
                   onClick={() => handleSubjectSelection(subject)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") handleSubjectSelection(subject);
+                  }}
                 >
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-white text-xl font-bold">
-                        {subject.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <h3 className="text-white text-lg font-semibold mb-2">
+                  <div className="text-center flex flex-col items-center">
+                    <img
+                      src={
+                        subjectImages[subject.toLowerCase()] ||
+                        "https://img.icons8.com/ios-filled/100/000000/question-mark.png"
+                      }
+                      alt={subject}
+                      className="w-20 h-20 object-cover rounded-full mb-4 animate-fadeIn border-2 border-black/10 dark:border-white/10 bg-white dark:bg-black shadow-md"
+                    />
+                    <h3 className="text-black dark:text-white text-lg font-semibold mb-2 animate-fadeIn">
                       {subject}
                     </h3>
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-black/70 dark:text-white/70 text-sm animate-fadeIn">
                       {getQuestionCountBySubject(subject)} questions
                     </p>
                     {selectedSubject === subject && (
-                      <div className="mt-3">
+                      <div className="mt-3 animate-fadeIn">
                         <svg
-                          className="w-6 h-6 text-cyan-400 mx-auto"
+                          className="w-6 h-6 text-black dark:text-white mx-auto"
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
@@ -179,15 +187,14 @@ const QuizSelection = () => {
               ))}
             </div>
           )}
-
           {/* Start Quiz Button */}
           {subjects.length > 0 && (
-            <div className="text-center">
+            <div className="text-center animate-fadeIn">
               <button
-                className={`py-4 px-8 rounded-xl text-white font-semibold text-lg transition-all duration-300 ${
+                className={`py-4 px-8 rounded-xl text-white dark:text-black font-semibold text-lg transition-all duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 ${
                   selectedSubject
-                    ? "bg-gradient-to-r from-cyan-500 to-purple-500 hover:opacity-90 transform hover:scale-105"
-                    : "bg-gray-600 cursor-not-allowed opacity-50"
+                    ? "bg-black dark:bg-white hover:scale-105"
+                    : "bg-gray-400 cursor-not-allowed opacity-50"
                 }`}
                 onClick={handleStartQuiz}
                 disabled={!selectedSubject}
