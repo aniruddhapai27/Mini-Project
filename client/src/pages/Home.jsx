@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const Home = () => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black relative overflow-hidden">
       {/* Grid Background - Only for Home page */}
@@ -106,22 +108,33 @@ const Home = () => {
             <p className="text-black/70 dark:text-white/70 text-sm">
               Monitor your improvement with detailed analytics and insights
             </p>
+          </div>        </div>        {/* CTA Buttons - Only show when not authenticated */}
+        {!isAuthenticated && (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+            <Link
+              to="/register"
+              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 animate-fadeIn border border-purple-500/30"
+            >
+              Start Practicing Now
+            </Link>
+            <Link
+              to="/login"
+              className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 animate-fadeIn border border-cyan-500/30"
+            >
+              Sign In
+            </Link>
           </div>
-        </div>        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
-          <Link
-            to="/register"
-            className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 animate-fadeIn border border-purple-500/30"
-          >
-            Start Practicing Now
-          </Link>
-          <Link
-            to="/login"
-            className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 animate-fadeIn border border-cyan-500/30"
-          >
-            Sign In
-          </Link>
-        </div>        {/* Stats Section */}
+        )}
+        {isAuthenticated && (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+            <Link
+              to="/dashboard"
+              className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 animate-fadeIn border border-cyan-500/30"
+            >
+              Go to Dashboard
+            </Link>
+          </div>
+        )}{/* Stats Section */}
         <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
           <div className="text-center p-6 rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 backdrop-blur-sm">
             <div className="text-3xl font-bold text-cyan-400 mb-2">
