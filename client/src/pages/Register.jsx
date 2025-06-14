@@ -95,16 +95,25 @@ const Register = () => {
       console.error("Registration failed:", err);
     }
   };
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-black border-2 border-black/10 dark:border-white/10 rounded-2xl shadow-xl">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-black dark:text-white">
-            Register
-          </h1>
+  return (    <div className="min-h-screen flex items-center justify-center bg-black py-8">
+      <div className="w-full max-w-md p-8 space-y-8 bg-gray-800/50 backdrop-blur-xl border-2 border-purple-500/30 rounded-2xl shadow-xl relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute top-4 left-4 w-12 h-12 bg-purple-500/10 rounded-full blur-xl animate-pulse"></div>
+          <div
+            className="absolute bottom-4 right-4 w-16 h-16 bg-pink-500/10 rounded-full blur-xl animate-pulse"
+            style={{ animationDelay: "1s" }}
+          ></div>
         </div>
+
+        <div className="relative z-10">
+          {/* Header */}
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Create Account
+            </h1>
+            <p className="text-gray-300 text-sm">Join SkillWise-AI today</p>
+          </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -285,9 +294,7 @@ const Register = () => {
               "Create Account"
             )}
           </button>
-        </form>
-
-        {/* Sign In Link */}
+        </form>        {/* Sign In Link */}
         <div className="mt-6 text-center">
           <p className="text-gray-400">
             Already have an account?{" "}
@@ -298,6 +305,7 @@ const Register = () => {
               Sign in here
             </Link>
           </p>
+        </div>
         </div>
       </div>
     </div>

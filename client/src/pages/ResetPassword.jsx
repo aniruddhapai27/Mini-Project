@@ -53,20 +53,17 @@ const ResetPassword = () => {
     }
   }, [success.resetPassword, error.resetPassword, dispatch, navigate]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-black border-2 border-black/10 dark:border-white/10 rounded-2xl shadow-xl">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-black dark:text-white">
+  return (    <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="w-full max-w-md p-8 space-y-8 bg-black border-2 border-white/10 rounded-2xl shadow-xl">
+        <div className="text-center">          <h1 className="text-3xl font-bold text-white">
             Reset Password
           </h1>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div>
-            <label
+          <div>            <label
               htmlFor="password"
-              className="block text-sm font-medium text-black dark:text-white"
+              className="block text-sm font-medium text-white"
             >
               New Password
             </label>
@@ -78,13 +75,12 @@ const ResetPassword = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-black/20 dark:border-white/20 bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-white/20 bg-black text-white focus:outline-none focus:ring-2 focus:ring-white"
             />
           </div>
-          <div>
-            <label
+          <div>            <label
               htmlFor="confirmPassword"
-              className="block text-sm font-medium text-black dark:text-white"
+              className="block text-sm font-medium text-white"
             >
               Confirm New Password
             </label>
@@ -94,23 +90,20 @@ const ResetPassword = () => {
               type="password"
               autoComplete="new-password"
               required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-black/20 dark:border-white/20 bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+              value={confirmPassword}              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-white/20 bg-black text-white focus:outline-none focus:ring-2 focus:ring-white"
             />
-          </div>
-          <button
+          </div>          <button
             type="submit"
             disabled={loading.resetPassword}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-black dark:bg-white text-white dark:text-black hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-200"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-white text-black hover:bg-gray-200 transition-colors duration-200"
           >
             {loading.resetPassword ? "Resetting..." : "Reset Password"}
           </button>
         </form>
-        <div className="flex justify-between mt-4">
-          <Link
+        <div className="flex justify-between mt-4">          <Link
             to="/login"
-            className="text-xs text-black dark:text-white hover:underline"
+            className="text-xs text-white hover:underline"
           >
             Back to Login
           </Link>

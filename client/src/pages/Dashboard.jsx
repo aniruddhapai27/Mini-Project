@@ -40,7 +40,6 @@ const Dashboard = () => {
     // TODO: integrate with interview practice API
     console.log(`Starting ${type} practice session`);
   };
-
   return (
     <div className="min-h-screen py-8 bg-white dark:bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,21 +52,22 @@ const Dashboard = () => {
             Ready to ace your next interview?
           </p>
         </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-6">
+          <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-6 text-center">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-black dark:text-white text-sm">
                   Practice Sessions
                 </p>
-                <p className="text-3xl font-bold text-black dark:text-white">
-                  {userData.practiceCount}
+                <p className="text-3xl font-bold text-cyan-400">
+                  {userData.practiceCount || 12}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-black dark:text-white"
+                  className="w-6 h-6 text-cyan-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -83,19 +83,19 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-6">
+          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-6 text-center">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-black dark:text-white text-sm">
                   Average Score
                 </p>
-                <p className="text-3xl font-bold text-black dark:text-white">
-                  {userData.averageScore}%
+                <p className="text-3xl font-bold text-purple-400">
+                  {userData.averageScore || 87}%
                 </p>
               </div>
-              <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-black dark:text-white"
+                  className="w-6 h-6 text-purple-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -111,19 +111,19 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-6">
+          <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-6 text-center">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-black dark:text-white text-sm">
                   Total Practice Time
                 </p>
-                <p className="text-3xl font-bold text-black dark:text-white">
-                  {userData.totalTime}
+                <p className="text-3xl font-bold text-green-400">
+                  {userData.totalTime || "45h"}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500/30 to-emerald-500/30 rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-black dark:text-white"
+                  className="w-6 h-6 text-green-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -182,15 +182,13 @@ const Dashboard = () => {
                   Take Quiz
                 </Link>
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            </div>            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Technical Interview */}
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 group">
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-cyan-500/30 rounded-xl p-6 group hover:border-cyan-500/50 transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-black/20 transition-all duration-300">
+                  <div className="w-10 h-10 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
                     <svg
-                      className="w-5 h-5 text-black dark:text-white"
+                      className="w-5 h-5 text-cyan-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -203,7 +201,7 @@ const Dashboard = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-black dark:text-white ml-3">
+                  <h3 className="text-lg font-semibold text-white ml-3">
                     Technical Interview
                   </h3>
                 </div>
@@ -213,18 +211,18 @@ const Dashboard = () => {
                 </p>
                 <button
                   onClick={() => handleStartPractice("Technical")}
-                  className="w-full py-2 px-4 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-lg hover:bg-black/20 transition-all duration-300"
+                  className="w-full py-2 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 font-medium shadow-lg"
                 >
                   Start Practice
                 </button>
               </div>
 
               {/* Behavioral Interview */}
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 group">
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 group hover:border-purple-500/50 transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-black/20 transition-all duration-300">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
                     <svg
-                      className="w-5 h-5 text-black dark:text-white"
+                      className="w-5 h-5 text-purple-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -237,7 +235,7 @@ const Dashboard = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-black dark:text-white ml-3">
+                  <h3 className="text-lg font-semibold text-white ml-3">
                     Behavioral Interview
                   </h3>
                 </div>
@@ -247,18 +245,18 @@ const Dashboard = () => {
                 </p>
                 <button
                   onClick={() => handleStartPractice("Behavioral")}
-                  className="w-full py-2 px-4 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-lg hover:bg-black/20 transition-all duration-300"
+                  className="w-full py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-medium shadow-lg"
                 >
                   Start Practice
                 </button>
               </div>
 
               {/* System Design */}
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 group">
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-green-500/30 rounded-xl p-6 group hover:border-green-500/50 transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-black/20 transition-all duration-300">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500/30 to-emerald-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
                     <svg
-                      className="w-5 h-5 text-black dark:text-white"
+                      className="w-5 h-5 text-green-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -271,7 +269,7 @@ const Dashboard = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-black dark:text-white ml-3">
+                  <h3 className="text-lg font-semibold text-white ml-3">
                     System Design
                   </h3>
                 </div>
@@ -281,18 +279,18 @@ const Dashboard = () => {
                 </p>
                 <button
                   onClick={() => handleStartPractice("System Design")}
-                  className="w-full py-2 px-4 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-lg hover:bg-black/20 transition-all duration-300"
+                  className="w-full py-2 px-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 font-medium shadow-lg"
                 >
                   Start Practice
                 </button>
               </div>
 
               {/* Mock Interview */}
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 group">
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-orange-500/30 rounded-xl p-6 group hover:border-orange-500/50 transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-black/20 transition-all duration-300">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
                     <svg
-                      className="w-5 h-5 text-black dark:text-white"
+                      className="w-5 h-5 text-orange-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -305,7 +303,7 @@ const Dashboard = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-black dark:text-white ml-3">
+                  <h3 className="text-lg font-semibold text-white ml-3">
                     Full Mock Interview
                   </h3>
                 </div>
@@ -315,7 +313,7 @@ const Dashboard = () => {
                 </p>
                 <button
                   onClick={() => handleStartPractice("Mock Interview")}
-                  className="w-full py-2 px-4 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-lg hover:bg-black/20 transition-all duration-300"
+                  className="w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-medium shadow-lg"
                 >
                   Start Practice
                 </button>
