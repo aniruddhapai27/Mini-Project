@@ -1,41 +1,46 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const dqSchema = mongoose.Schema(
-    {
-        questions: [
-            {
-                questionNum: {
-                    type : Number,
-                    required: true,
-                },
-                question: {
-                    type: String,
-                    required: true
-                },
-                options: {
-                    type: [String],
-                    required: true
-                },
-                answer: {
-                    type: String,
-                    required: true
-                }
-            }
-        ],
-        subject:{
-            type: String,
-            required: true,
-        },
-        date:{
-            type: Date,
-            default: Date.now
-        }
-    }, {
-    timestamps: true
-    }
-);
+const dqSchema = new mongoose.Schema({
+  question: {
+    type: String,
+    required: true,
+  },
+  option1: {
+    type: String,
+    required: true,
+  },
+  option2: {
+    type: String,
+    required: true,
+  },
+  option3: {
+    type: String,
+    required: true,
+  },
+  option4: {
+    type: String,
+    required: true,
+  },
+  answer: {
+    type: String,
+    required: true,
+  },
+  subject: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: Date,
+    default: Date.now,
+  },
+  created_at: {
+    type: Date,
+    default: Date.now,
+  },
+  updated_at: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-
-const DQ = mongoose.model('DQ', dqSchema);
-module.exports = DQ;
-
+module.exports = mongoose.model("DQ", dqSchema);

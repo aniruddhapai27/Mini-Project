@@ -123,6 +123,16 @@ const Navbar = () => {
                   Dashboard
                 </Link>
                 <Link
+                  to="/quiz-selection"
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                    isActive("/quiz-selection")
+                      ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                  }`}
+                >
+                  Quiz
+                </Link>
+                <Link
                   to="/profile"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                     isActive("/profile")
@@ -244,6 +254,17 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  to="/quiz-selection"
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                    isActive("/quiz-selection")
+                      ? "text-cyan-400 bg-cyan-500/10"
+                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Quiz
                 </Link>
                 <Link
                   to="/profile"
