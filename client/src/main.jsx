@@ -17,31 +17,31 @@ createRoot(document.getElementById("root")).render(
           toastOptions={{
             success: {
               style: {
-                background: "rgba(47, 70, 94, 0.9)",
-                color: "#10b981",
-                border: "1px solid #10b981",
+                background: "#111",
+                color: "#fafafa",
+                border: "1px solid #fafafa",
               },
               iconTheme: {
-                primary: "#10b981",
-                secondary: "#FFFAEE",
+                primary: "#fafafa",
+                secondary: "#111",
               },
             },
             error: {
               style: {
-                background: "rgba(47, 70, 94, 0.9)",
+                background: "#111",
                 color: "#ef4444",
                 border: "1px solid #ef4444",
               },
               iconTheme: {
                 primary: "#ef4444",
-                secondary: "#FFFAEE",
+                secondary: "#111",
               },
             },
             loading: {
               style: {
-                background: "rgba(47, 70, 94, 0.9)",
-                color: "#60a5fa",
-                border: "1px solid #60a5fa",
+                background: "#111",
+                color: "#fafafa",
+                border: "1px solid #fafafa",
               },
             },
           }}

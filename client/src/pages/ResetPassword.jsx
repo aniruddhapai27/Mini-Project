@@ -54,86 +54,66 @@ const ResetPassword = () => {
   }, [success.resetPassword, error.resetPassword, dispatch, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-md p-8 space-y-8 bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl shadow-xl">
-        {/* Header with neon animation */}
-        <div className="text-center relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 blur-2xl"></div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent relative z-10">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-black border-2 border-black/10 dark:border-white/10 rounded-2xl shadow-xl">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-black dark:text-white">
             Reset Password
           </h1>
         </div>
 
-        <div className="space-y-6">
-          <p className="text-gray-300 text-center">
-            Enter your new password below
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="password"
-                  className="text-sm font-medium text-gray-300 block mb-2"
-                >
-                  New Password
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-600 rounded-lg bg-gray-700/50 text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                  placeholder="Enter new password"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="text-sm font-medium text-gray-300 block mb-2"
-                >
-                  Confirm New Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-600 rounded-lg bg-gray-700/50 text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                  placeholder="Confirm new password"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading.resetPassword}
-              className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-300 disabled:opacity-50"
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-black dark:text-white"
             >
-              {loading.resetPassword ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  <span>Resetting Password...</span>
-                </div>
-              ) : (
-                "Reset Password"
-              )}
-            </button>
-          </form>
-
-          <div className="text-center">
-            <Link
-              to="/login"
-              className="text-cyan-400 hover:text-cyan-300 text-sm transition-colors"
-            >
-              Return to Login
-            </Link>
+              New Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-black/20 dark:border-white/20 bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+            />
           </div>
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-black dark:text-white"
+            >
+              Confirm New Password
+            </label>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-black/20 dark:border-white/20 bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading.resetPassword}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-black dark:bg-white text-white dark:text-black hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-200"
+          >
+            {loading.resetPassword ? "Resetting..." : "Reset Password"}
+          </button>
+        </form>
+        <div className="flex justify-between mt-4">
+          <Link
+            to="/login"
+            className="text-xs text-black dark:text-white hover:underline"
+          >
+            Back to Login
+          </Link>
         </div>
       </div>
     </div>

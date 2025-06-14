@@ -172,25 +172,15 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-[80vh] bg-gradient-to-br from-gray-900 via-gray-800 to-black p-4 flex items-center">
-      <div className="max-w-5xl mx-auto w-full">
-        {/* Header with compact neon animation */}
-        <div className="text-center mb-4 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 blur-2xl animate-pulse"></div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent relative z-10 animate-pulse">
-            ⚡ PROFILE ⚡
+    <div className="min-h-screen py-8 bg-white dark:bg-black">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-black dark:text-white">
+            Profile
           </h1>
-          <div className="flex justify-center items-center space-x-2 mt-1 relative z-10">
-            <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-ping"></div>
-            <div
-              className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-ping"
-              style={{ animationDelay: "0.2s" }}
-            ></div>
-            <div
-              className="w-1.5 h-1.5 bg-pink-500 rounded-full animate-ping"
-              style={{ animationDelay: "0.4s" }}
-            ></div>
-          </div>
+          <p className="mt-2 text-black/70 dark:text-white/70">
+            Manage your account and see your progress.
+          </p>
         </div>
 
         {/* Main Profile Grid */}

@@ -42,31 +42,33 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 bg-white dark:bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-black dark:text-white">
             Welcome back, {userData.name}
           </h1>
-          <p className="mt-2 text-gray-400">
+          <p className="mt-2 text-black/70 dark:text-white/70">
             Ready to ace your next interview?
           </p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 rounded-xl p-6 hover:border-cyan-500/40 transition-all duration-300">
+          <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Practice Sessions</p>
-                <p className="text-3xl font-bold text-cyan-400">
+                <p className="text-black dark:text-white text-sm">
+                  Practice Sessions
+                </p>
+                <p className="text-3xl font-bold text-black dark:text-white">
                   {userData.practiceCount}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-cyan-400"
+                  className="w-6 h-6 text-black dark:text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -82,17 +84,19 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-all duration-300">
+          <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Average Score</p>
-                <p className="text-3xl font-bold text-purple-400">
+                <p className="text-black dark:text-white text-sm">
+                  Average Score
+                </p>
+                <p className="text-3xl font-bold text-black dark:text-white">
                   {userData.averageScore}%
                 </p>
               </div>
-              <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-purple-400"
+                  className="w-6 h-6 text-black dark:text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -108,17 +112,19 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-pink-500/10 to-red-500/10 border border-pink-500/20 rounded-xl p-6 hover:border-pink-500/40 transition-all duration-300">
+          <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Total Practice Time</p>
-                <p className="text-3xl font-bold text-pink-400">
+                <p className="text-black dark:text-white text-sm">
+                  Total Practice Time
+                </p>
+                <p className="text-3xl font-bold text-black dark:text-white">
                   {userData.totalTime}
                 </p>
               </div>
-              <div className="w-12 h-12 bg-pink-500/20 rounded-lg flex items-center justify-center">
+              <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-pink-400"
+                  className="w-6 h-6 text-black dark:text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -139,16 +145,16 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Practice Types */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-white mb-6">
+            <h2 className="text-2xl font-bold text-black dark:text-white mb-6">
               Start New Practice Session
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Technical Interview */}
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 group">
+              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 group">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center group-hover:bg-cyan-500/30 transition-all duration-300">
+                  <div className="w-10 h-10 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-black/20 transition-all duration-300">
                     <svg
-                      className="w-5 h-5 text-cyan-400"
+                      className="w-5 h-5 text-black dark:text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -161,7 +167,7 @@ const Dashboard = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-white ml-3">
+                  <h3 className="text-lg font-semibold text-black dark:text-white ml-3">
                     Technical Interview
                   </h3>
                 </div>
@@ -171,18 +177,18 @@ const Dashboard = () => {
                 </p>
                 <button
                   onClick={() => handleStartPractice("Technical")}
-                  className="w-full py-2 px-4 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500 hover:text-white transition-all duration-300"
+                  className="w-full py-2 px-4 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-lg hover:bg-black/20 transition-all duration-300"
                 >
                   Start Practice
                 </button>
               </div>
 
               {/* Behavioral Interview */}
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-purple-500/50 transition-all duration-300 group">
+              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 group">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30 transition-all duration-300">
+                  <div className="w-10 h-10 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-black/20 transition-all duration-300">
                     <svg
-                      className="w-5 h-5 text-purple-400"
+                      className="w-5 h-5 text-black dark:text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -195,7 +201,7 @@ const Dashboard = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-white ml-3">
+                  <h3 className="text-lg font-semibold text-black dark:text-white ml-3">
                     Behavioral Interview
                   </h3>
                 </div>
@@ -205,18 +211,18 @@ const Dashboard = () => {
                 </p>
                 <button
                   onClick={() => handleStartPractice("Behavioral")}
-                  className="w-full py-2 px-4 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500 hover:text-white transition-all duration-300"
+                  className="w-full py-2 px-4 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-lg hover:bg-black/20 transition-all duration-300"
                 >
                   Start Practice
                 </button>
               </div>
 
               {/* System Design */}
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-pink-500/50 transition-all duration-300 group">
+              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 group">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-pink-500/20 rounded-lg flex items-center justify-center group-hover:bg-pink-500/30 transition-all duration-300">
+                  <div className="w-10 h-10 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-black/20 transition-all duration-300">
                     <svg
-                      className="w-5 h-5 text-pink-400"
+                      className="w-5 h-5 text-black dark:text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -229,7 +235,7 @@ const Dashboard = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-white ml-3">
+                  <h3 className="text-lg font-semibold text-black dark:text-white ml-3">
                     System Design
                   </h3>
                 </div>
@@ -239,18 +245,18 @@ const Dashboard = () => {
                 </p>
                 <button
                   onClick={() => handleStartPractice("System Design")}
-                  className="w-full py-2 px-4 bg-pink-500/20 text-pink-400 rounded-lg hover:bg-pink-500 hover:text-white transition-all duration-300"
+                  className="w-full py-2 px-4 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-lg hover:bg-black/20 transition-all duration-300"
                 >
                   Start Practice
                 </button>
               </div>
 
               {/* Mock Interview */}
-              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 hover:border-green-500/50 transition-all duration-300 group">
+              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 group">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center group-hover:bg-green-500/30 transition-all duration-300">
+                  <div className="w-10 h-10 bg-black/10 dark:bg-white/10 rounded-lg flex items-center justify-center group-hover:bg-black/20 transition-all duration-300">
                     <svg
-                      className="w-5 h-5 text-green-400"
+                      className="w-5 h-5 text-black dark:text-white"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -263,7 +269,7 @@ const Dashboard = () => {
                       />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-white ml-3">
+                  <h3 className="text-lg font-semibold text-black dark:text-white ml-3">
                     Full Mock Interview
                   </h3>
                 </div>
@@ -273,7 +279,7 @@ const Dashboard = () => {
                 </p>
                 <button
                   onClick={() => handleStartPractice("Mock Interview")}
-                  className="w-full py-2 px-4 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500 hover:text-white transition-all duration-300"
+                  className="w-full py-2 px-4 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-lg hover:bg-black/20 transition-all duration-300"
                 >
                   Start Practice
                 </button>

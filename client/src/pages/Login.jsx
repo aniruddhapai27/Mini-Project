@@ -63,113 +63,71 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-black border-2 border-black/10 dark:border-white/10 rounded-2xl shadow-xl">
         <div className="text-center">
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-            Welcome Back
-          </h2>
-          <p className="mt-2 text-gray-400">
-            Sign in to continue your interview preparation
-          </p>
+          <h1 className="text-3xl font-bold text-black dark:text-white">
+            Login
+          </h1>
         </div>
-
-        {/* Form */}
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-cyan-500/20 rounded-2xl p-8 shadow-[0_0_20px_rgba(34,211,238,0.1)]">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email Input */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-900/50 border border-gray-600 rounded-lg focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 text-white placeholder-gray-400 transition-all duration-300"
-                placeholder="Enter your email"
-              />
-            </div>
-            {/* Password Input */}
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-300 mb-2"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-900/50 border border-gray-600 rounded-lg focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 text-white placeholder-gray-400 transition-all duration-300"
-                placeholder="Enter your password"
-              />
-            </div>{" "}
-            {/* Forgot Password */}
-            <div className="flex justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-300 inline-flex items-center group"
-              >
-                <span className="relative">
-                  Forgot password?
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cyan-400 to-purple-400 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-                </span>
-                <svg
-                  className="w-3.5 h-3.5 ml-1 group-hover:translate-x-1 transition-transform"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </Link>
-            </div>
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading.login}
-              className="w-full py-3 px-4 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] transform hover:scale-[1.02]"
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-black dark:text-white"
             >
-              {loading.login ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Signing In...
-                </div>
-              ) : (
-                "Sign In"
-              )}
-            </button>
-          </form>
-
-          {/* Sign Up Link */}
-          <div className="mt-6 text-center">
-            <p className="text-gray-400">
-              Don't have an account?{" "}
-              <Link
-                to="/register"
-                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors duration-300"
-              >
-                Sign up here
-              </Link>
-            </p>
+              Email address
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-black/20 dark:border-white/20 bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+            />
           </div>
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-black dark:text-white"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={formData.password}
+              onChange={handleChange}
+              className="appearance-none rounded-md relative block w-full px-3 py-2 border border-black/20 dark:border-white/20 bg-white dark:bg-black text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading.login}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium bg-black dark:bg-white text-white dark:text-black hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors duration-200"
+          >
+            {loading.login ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+        <div className="flex justify-between mt-4">
+          <Link
+            to="/forgot-password"
+            className="text-xs text-black dark:text-white hover:underline"
+          >
+            Forgot password?
+          </Link>
+          <Link
+            to="/register"
+            className="text-xs text-black dark:text-white hover:underline"
+          >
+            Don't have an account? Sign Up
+          </Link>
         </div>
       </div>
     </div>

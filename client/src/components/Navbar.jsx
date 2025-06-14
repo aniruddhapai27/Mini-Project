@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { logoutUser } from "../redux/slices/authSlice";
 
 const Navbar = () => {
@@ -10,6 +10,23 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("theme") || "dark";
+    }
+    return "dark";
+  });
+
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+      document.body.style.background = "#111";
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.body.style.background = "#fafafa";
+    }
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -33,17 +50,29 @@ const Navbar = () => {
     }
   };
 
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
+
   return (
-    <nav className="bg-gray-900 border-b border-cyan-500/30 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="bg-white dark:bg-black border-b border-black/10 dark:border-white/10 sticky top-0 z-50 transition-colors duration-300 shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-16">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link
             to="/"
-            className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent hover:from-purple-400 hover:to-pink-400 transition-all duration-300"
+            className="text-2xl font-extrabold text-black dark:text-white tracking-wider"
+            style={{ letterSpacing: "2px" }}
           >
             SkillWise-AI
           </Link>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="ml-4 px-3 py-2 rounded-md border border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5 text-black dark:text-white hover:bg-black/10 hover:dark:bg-white/10 transition-colors duration-200"
+            aria-label="Toggle dark/light mode"
+          >
+            {theme === "dark" ? "🌙" : "☀️"}
+          </button>
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
@@ -51,8 +80,8 @@ const Navbar = () => {
               to="/"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                 isActive("/")
-                  ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-                  : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                  ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
+                  : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
               }`}
             >
               Home
@@ -64,8 +93,8 @@ const Navbar = () => {
                   to="/login"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                     isActive("/login")
-                      ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
+                      : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   Login
@@ -74,8 +103,8 @@ const Navbar = () => {
                   to="/register"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                     isActive("/register")
-                      ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
+                      : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   Sign Up
@@ -87,8 +116,8 @@ const Navbar = () => {
                   to="/dashboard"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                     isActive("/dashboard")
-                      ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
+                      : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   Dashboard
@@ -97,8 +126,8 @@ const Navbar = () => {
                   to="/profile"
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                     isActive("/profile")
-                      ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
+                      : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
                   }`}
                 >
                   Profile
@@ -124,7 +153,7 @@ const Navbar = () => {
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
-              className="text-gray-300 hover:text-cyan-400 p-2"
+              className="text-black dark:text-white p-2 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (
