@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { logoutUser } from "../redux/slices/authSlice";
 
 const Navbar = () => {
@@ -10,26 +10,8 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const { isAuthenticated, loading } = useSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("theme") || "dark";
-    }
-    return "dark";
-  });
-
-  useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-      document.body.style.background = "#111";
-    } else {
-      document.documentElement.classList.remove("dark");
-      document.body.style.background = "#fafafa";
-    }
-    localStorage.setItem("theme", theme);
-  }, [theme]);
 
   const isActive = (path) => location.pathname === path;
-
   const handleLogout = async () => {
     const loadingToast = toast.loading("Logging out...");
     try {
@@ -48,40 +30,27 @@ const Navbar = () => {
       toast.error("An error occurred during logout.");
       console.error("Logout error:", error);
     }
-  };
-
-  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
-  return (
-    <nav className="bg-white dark:bg-black border-b border-cyan-500/20 dark:border-cyan-500/20 sticky top-0 z-50 transition-colors duration-300 shadow-lg backdrop-blur-sm">
+  };  return (
+    <nav className="bg-black border-b border-cyan-500/20 sticky top-0 z-50 transition-colors duration-300 shadow-lg backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-16">
         <div className="flex items-center justify-between h-16 w-full">
           {/* Logo on the extreme left */}
           <div className="flex-shrink-0 flex items-center mr-auto">
             <Link
               to="/"
-              className="text-2xl font-extrabold text-black dark:text-white tracking-wider"
+              className="text-2xl font-extrabold text-white tracking-wider"
               style={{ letterSpacing: "2px" }}
             >
               SkillWise-AI
             </Link>
-          </div>
-          {/* Right side: Theme toggle and nav links */}
-          <div className="flex items-center space-x-4 ml-auto">            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="px-3 py-2 rounded-lg border border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 text-black dark:text-white hover:from-cyan-500/20 hover:to-blue-500/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 shadow-lg"
-              aria-label="Toggle dark/light mode"
-            >
-              {theme === "dark" ? "🌙" : "☀️"}
-            </button>
-
-            {/* Navigation Links */}
+          </div>{/* Navigation links */}
+          <div className="flex items-center space-x-4 ml-auto">            {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">              <Link
                 to="/"
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                   isActive("/")
                     ? "text-cyan-400 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 shadow-lg"
-                    : "text-black/70 dark:text-white/70 hover:text-cyan-400 hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10"
+                    : "text-white/70 hover:text-cyan-400 hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10"
                 }`}
               >
                 Home
@@ -93,8 +62,8 @@ const Navbar = () => {
                     to="/login"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                       isActive("/login")
-                        ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
-                        : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                        ? "text-white bg-white/10 shadow"
+                        : "text-white/70 hover:text-white hover:bg-white/5"
                     }`}
                   >
                     Login
@@ -103,8 +72,8 @@ const Navbar = () => {
                     to="/register"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                       isActive("/register")
-                        ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
-                        : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                        ? "text-white bg-white/10 shadow"
+                        : "text-white/70 hover:text-white hover:bg-white/5"
                     }`}
                   >
                     Sign Up
@@ -116,13 +85,12 @@ const Navbar = () => {
                     to="/dashboard"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                       isActive("/dashboard")
-                        ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
-                        : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                        ? "text-white bg-white/10 shadow"
+                        : "text-white/70 hover:text-white hover:bg-white/5"
                     }`}
                   >
                     Dashboard
-                  </Link>
-                  <Link
+                  </Link>                  <Link
                     to="/quiz-selection"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                       isActive("/quiz-selection")
@@ -136,8 +104,8 @@ const Navbar = () => {
                     to="/profile"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                       isActive("/profile")
-                        ? "text-black dark:text-white bg-black/10 dark:bg-white/10 shadow"
-                        : "text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                        ? "text-white bg-white/10 shadow"
+                        : "text-white/70 hover:text-white hover:bg-white/5"
                     }`}
                   >
                     Profile
@@ -158,12 +126,10 @@ const Navbar = () => {
                   </button>
                 </>
               )}
-            </div>
-
-            {/* Mobile menu button */}
+            </div>            {/* Mobile menu button */}
             <div className="md:hidden">
               <button
-                className="text-black dark:text-white p-2 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white"
+                className="text-white p-2 focus:outline-none focus:ring-2 focus:ring-white"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
                 {mobileMenuOpen ? (
@@ -199,9 +165,7 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Mobile Menu */}
+      </div>      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-gray-800/80 backdrop-blur-md border-t border-cyan-500/20 animate-fadeIn">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">

@@ -95,9 +95,8 @@ const Register = () => {
       console.error("Registration failed:", err);
     }
   };
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black py-8">
-      <div className="w-full max-w-md p-8 space-y-8 bg-gray-800/50 dark:bg-gray-800/50 backdrop-blur-xl border-2 border-purple-500/30 rounded-2xl shadow-xl relative overflow-hidden">
+  return (    <div className="min-h-screen flex items-center justify-center bg-black py-8">
+      <div className="w-full max-w-md p-8 space-y-8 bg-gray-800/50 backdrop-blur-xl border-2 border-purple-500/30 rounded-2xl shadow-xl relative overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute top-4 left-4 w-12 h-12 bg-purple-500/10 rounded-full blur-xl animate-pulse"></div>
