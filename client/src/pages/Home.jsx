@@ -2,9 +2,25 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
-      {/* Hero Section */}
-      <div className="text-center max-w-6xl mx-auto px-4">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black relative overflow-hidden">
+      {/* Grid Background - Only for Home page */}
+      <div className="absolute inset-0 opacity-30">
+        <div 
+          className="w-full h-full"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+              linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
+            `,
+            backgroundSize: '40px 40px'
+          }}
+        ></div>
+      </div>
+
+      {/* Content with higher z-index */}
+      <div className="relative z-10">
+        {/* Hero Section */}
+        <div className="text-center max-w-6xl mx-auto px-4">
         {/* Main Title */}
         <h1 className="text-6xl md:text-8xl font-bold mb-8 text-black dark:text-white">
           SkillWise-AI
@@ -130,18 +146,18 @@ const Home = () => {
             <div className="text-black/70 dark:text-white/70 text-sm">
               AI Availability
             </div>
-          </div>
-        </div>
+          </div>        </div>
+      </div>
       </div>
 
       {/* Floating action elements */}
-      <div className="absolute top-1/4 left-10 hidden lg:block">
+      <div className="absolute top-1/4 left-10 hidden lg:block z-20">
         <div className="w-20 h-20 border-2 border-black/30 rounded-full flex items-center justify-center animate-pulse">
           <div className="w-8 h-8 bg-black/50 rounded-full"></div>
         </div>
       </div>
 
-      <div className="absolute bottom-1/4 right-10 hidden lg:block">
+      <div className="absolute bottom-1/4 right-10 hidden lg:block z-20">
         <div className="w-16 h-16 border-2 border-black/30 rounded-full flex items-center justify-center animate-pulse delay-500">
           <div className="w-6 h-6 bg-black/50 rounded-full"></div>
         </div>

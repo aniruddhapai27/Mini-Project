@@ -438,36 +438,34 @@ const Profile = () => {
               </div>
             </div>
           </div>          {/* Right Column: Stats and Performance */}
-          <div className="lg:col-span-2">
-            {/* Metrics Cards */}
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-2 text-center">
-                <div className="text-lg mb-1">🔥</div>
-                <div className="text-lg font-bold text-cyan-400">
+          <div className="lg:col-span-2">            {/* Metrics Cards */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-4 text-center">
+                <div className="text-2xl mb-2">🔥</div>
+                <div className="text-xl font-bold text-cyan-400">
                   {stats.currentStreak}
                 </div>
-                <div className="text-gray-400 text-[10px]">Current Streak</div>
+                <div className="text-gray-400 text-xs">Current Streak</div>
               </div>
-              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-2 text-center">
-                <div className="text-lg mb-1">🏆</div>
-                <div className="text-lg font-bold text-purple-400">
+              <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-4 text-center">
+                <div className="text-2xl mb-2">🏆</div>
+                <div className="text-xl font-bold text-purple-400">
                   {stats.totalSessions}
                 </div>
-                <div className="text-gray-400 text-[10px]">Total Sessions</div>
+                <div className="text-gray-400 text-xs">Total Sessions</div>
               </div>
-              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-2 text-center">
-                <div className="text-lg mb-1">⭐</div>
-                <div className="text-lg font-bold text-green-400">
+              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-4 text-center">
+                <div className="text-2xl mb-2">⭐</div>
+                <div className="text-xl font-bold text-green-400">
                   {stats.averageScore}%
                 </div>
-                <div className="text-gray-400 text-[10px]">Average Score</div>
+                <div className="text-gray-400 text-xs">Average Score</div>
               </div>
-            </div>
-            {/* Performance Graph */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 mb-3">
-              <h3 className="text-xs font-semibold text-white mb-2 flex items-center">
+            </div>{/* Performance Graph */}
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-3">
+              <h3 className="text-sm font-semibold text-white mb-4 flex items-center">
                 <svg
-                  className="w-3 h-3 mr-1 text-cyan-500"
+                  className="w-4 h-4 mr-2 text-cyan-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -481,37 +479,36 @@ const Profile = () => {
                 </svg>
                 Performance by Category
               </h3>
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-gray-400">
+              <div className="space-y-4">                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-gray-400">
                     <span>Technical</span>
                     <span>{stats.categoryScores.technical}%</span>
                   </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
                       style={{ width: `${stats.categoryScores.technical}%` }}
                     ></div>
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-gray-400">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-gray-400">
                     <span>Behavioral</span>
                     <span>{stats.categoryScores.behavioral}%</span>
                   </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
                       style={{ width: `${stats.categoryScores.behavioral}%` }}
                     ></div>
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-gray-400">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-gray-400">
                     <span>System Design</span>
                     <span>{stats.categoryScores.systemDesign}%</span>
                   </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
                       style={{ width: `${stats.categoryScores.systemDesign}%` }}
@@ -520,10 +517,10 @@ const Profile = () => {
                 </div>
               </div>
             </div>            {/* Recent Performance */}
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-3 mb-3">
-              <h3 className="text-xs font-semibold text-white mb-2 flex items-center">
+            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-5 mb-4">
+              <h3 className="text-sm font-semibold text-white mb-4 flex items-center">
                 <svg
-                  className="w-3 h-3 mr-1 text-cyan-500"
+                  className="w-4 h-4 mr-2 text-cyan-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -537,26 +534,26 @@ const Profile = () => {
                 </svg>
                 Recent Sessions
               </h3>
-              <div className="space-y-1">
+              <div className="space-y-3">
                 {stats.recentPerformances.map((performance, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-1.5 bg-gray-700/30 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg"
                   >
                     <div>
-                      <p className="text-white text-[10px] font-medium">
+                      <p className="text-white text-sm font-medium">
                         {performance.session}
-                        <span className="ml-1 px-1 py-0.5 bg-gray-600 rounded-full text-gray-300 text-[8px]">
+                        <span className="ml-2 px-2 py-0.5 bg-gray-600 rounded-full text-gray-300 text-xs">
                           {performance.level}
                         </span>
                       </p>
-                      <p className="text-gray-400 text-[8px]">
+                      <p className="text-gray-400 text-xs">
                         {performance.date}
                       </p>
                     </div>
                     <div className="text-right">
                       <p
-                        className={`text-[10px] font-semibold ${
+                        className={`text-sm font-semibold ${
                           performance.score >= 90
                             ? "text-green-400"
                             : performance.score >= 80
@@ -572,10 +569,10 @@ const Profile = () => {
               </div>
             </div>
             {/* User Insights */}
-            <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-3">
-              <h3 className="text-xs font-semibold text-white mb-1 flex items-center">
+            <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-5">
+              <h3 className="text-sm font-semibold text-white mb-2 flex items-center">
                 <svg
-                  className="w-3 h-3 mr-1 text-cyan-500"
+                  className="w-4 h-4 mr-2 text-cyan-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -589,7 +586,7 @@ const Profile = () => {
                 </svg>
                 Your Insights
               </h3>
-              <p className="text-gray-300 text-[10px]">
+              <p className="text-gray-300 text-sm">
                 Your strongest area is{" "}
                 <span className="text-cyan-400 font-medium">
                   {getBestCategory()}
