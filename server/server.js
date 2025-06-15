@@ -16,7 +16,7 @@ const app = express();
 // Middlewares
 app.use(
   cors({
-    origin: [process.env.FRONTEND_URL, "http://localhost:5173"], // Allow requests from the frontend URL
+    origin: [process.env.FRONTEND_URL, "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"], // Allow requests from the frontend URL
     credentials: true, // Allow cookies to be sent
   })
 );

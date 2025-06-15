@@ -73,125 +73,125 @@ exports.getInterviewSession = catchAsync(async (req, res) => {
 // Generate AI interview question based on domain, difficulty, and conversation history
 const generateAIQuestion = (domain, difficulty, conversationHistory) => {
   const questions = {
-    technical: {
+    hr: {
       easy: [
-        "Tell me about yourself and your programming background.",
-        "What programming languages are you most comfortable with and why?",
-        "Explain the difference between an array and a linked list.",
-        "How do you debug code when something isn't working?",
-        "What's your favorite coding project you've worked on?",
-        "How do you stay updated with new technologies?",
-        "Describe your experience with version control systems like Git."
-      ],
-      medium: [
-        "Tell me about yourself and your technical experience.",
-        "Walk me through how you would design a simple web application.",
-        "Explain the concept of object-oriented programming with an example.",
-        "How would you optimize a slow database query?",
-        "Describe a challenging technical problem you've solved recently.",
-        "What are the differences between SQL and NoSQL databases?",
-        "How do you approach testing in your development process?"
-      ],
-      hard: [
-        "Tell me about yourself and your senior-level experience.",
-        "How would you design a distributed system for handling millions of users?",
-        "Explain the trade-offs between consistency and availability in distributed systems.",
-        "How would you approach debugging a performance issue in a microservices architecture?",
-        "Describe your experience with system design and scalability challenges.",
-        "How do you handle data consistency in distributed transactions?",
-        "What strategies do you use for optimizing application performance at scale?"
-      ]
-    },
-    behavioral: {
-      easy: [
-        "Tell me about yourself and what interests you about this role.",
-        "Describe a time when you had to work with a difficult team member.",
-        "How do you handle stress and pressure in your work?",
-        "Tell me about a mistake you made and how you learned from it.",
+        "Tell me about yourself and why you're interested in this position.",
+        "What are your greatest strengths and how do they apply to this role?",
+        "Describe a time when you had to work as part of a team.",
+        "How do you handle stress and pressure in the workplace?",
         "What motivates you in your professional life?",
-        "How do you prioritize your tasks during a busy day?",
-        "Describe a time when you received constructive feedback."
+        "Where do you see yourself in 5 years?",
+        "Why are you looking to leave your current position?"
       ],
       medium: [
-        "Tell me about yourself and your leadership experience.",
-        "Describe a time when you had to convince someone to see your point of view.",
-        "How do you prioritize tasks when everything seems urgent?",
-        "Tell me about a time you had to make a difficult decision with limited information.",
+        "Tell me about yourself and your career aspirations.",
+        "Describe a time when you had to deal with a difficult colleague or customer.",
+        "How do you prioritize tasks when you have multiple deadlines?",
+        "Tell me about a time you received constructive criticism and how you handled it.",
         "Describe a situation where you had to adapt to significant changes.",
-        "How do you handle conflicts within your team?",
-        "Tell me about a time when you went above and beyond your job responsibilities."
+        "How do you handle conflicts in the workplace?",
+        "Tell me about a time when you went above and beyond your job duties."
       ],
       hard: [
-        "Tell me about yourself and your track record of driving results.",
-        "Describe a time when you led a team through a major organizational change.",
-        "How do you handle conflicts between competing stakeholders?",
-        "Tell me about a time you had to deliver bad news to senior leadership.",
-        "Describe your approach to building and maintaining high-performing teams.",
-        "How do you influence others when you don't have direct authority?",
-        "Tell me about a time when you had to make a decision that was unpopular but necessary."
+        "Tell me about yourself and your leadership philosophy.",
+        "Describe a time when you had to make an unpopular decision.",
+        "How do you handle situations where you disagree with your manager?",
+        "Tell me about a time you had to deliver difficult news to a team or client.",
+        "How do you build trust and rapport with new team members?",
+        "Describe a time when you had to influence others without direct authority.",
+        "How do you handle ethical dilemmas in the workplace?"
       ]
     },
-    'system-design': {
+    'data-science': {
       easy: [
-        "Tell me about yourself and your experience with system design.",
-        "How would you design a simple URL shortener like bit.ly?",
-        "Explain how you would design a basic chat application.",
-        "What databases would you choose for different types of data?",
-        "How would you handle user authentication in a web application?",
-        "Describe how you would design a simple file upload system.",
-        "How would you implement caching in a web application?"
+        "Tell me about yourself and your interest in data science.",
+        "What is the difference between supervised and unsupervised learning?",
+        "Explain what overfitting means and how to prevent it.",
+        "How would you handle missing data in a dataset?",
+        "What is the difference between correlation and causation?",
+        "Describe the steps in a typical data science project workflow.",
+        "What programming languages and tools do you use for data analysis?"
       ],
       medium: [
-        "Tell me about yourself and your architecture experience.",
-        "Design a social media feed system like Twitter's timeline.",
-        "How would you design a file storage system like Dropbox?",
-        "Explain how you would design a real-time notification system.",
-        "How would you design a system to handle online payments?",
-        "Design a recommendation system for an e-commerce platform.",
-        "How would you architect a multi-tenant SaaS application?"
+        "Tell me about yourself and your data science experience.",
+        "How would you approach feature selection for a machine learning model?",
+        "Explain the bias-variance tradeoff in machine learning.",
+        "How would you evaluate the performance of a classification model?",
+        "Describe how you would handle imbalanced datasets.",
+        "What is cross-validation and why is it important?",
+        "How would you explain a complex data science concept to a non-technical stakeholder?"
       ],
       hard: [
-        "Tell me about yourself and your experience with large-scale systems.",
-        "Design a global content delivery network (CDN).",
-        "How would you design a search engine like Google?",
-        "Explain how you would design a distributed database system.",
-        "Design a real-time analytics system for millions of events per second.",
-        "How would you design a video streaming platform like Netflix?",
-        "Design a distributed logging and monitoring system."
+        "Tell me about yourself and your advanced data science expertise.",
+        "How would you design an A/B testing framework for a large-scale application?",
+        "Explain how you would build a recommendation system from scratch.",
+        "How do you handle concept drift in production machine learning models?",
+        "Describe your approach to feature engineering for time series data.",
+        "How would you optimize a machine learning pipeline for real-time predictions?",
+        "Explain how you would implement a distributed machine learning system."
       ]
     },
-    product: {
+    webdev: {
       easy: [
-        "Tell me about yourself and your interest in product management.",
-        "How would you prioritize features for a mobile app?",
-        "Describe how you would gather user feedback for a new product.",
-        "How do you define success for a product feature?",
-        "What's your process for making data-driven decisions?",
-        "How do you balance user needs with business constraints?",
-        "Describe how you would conduct user research for a new feature."
+        "Tell me about yourself and your web development background.",
+        "What is the difference between HTML, CSS, and JavaScript?",
+        "Explain what responsive web design means.",
+        "How do you debug issues in web applications?",
+        "What is the difference between GET and POST HTTP methods?",
+        "Describe your experience with version control systems like Git.",
+        "What front-end frameworks or libraries have you worked with?"
       ],
       medium: [
-        "Tell me about yourself and your product management experience.",
-        "How would you launch a new product in a competitive market?",
-        "Describe how you would work with engineering teams to deliver features.",
-        "How do you balance user needs with business objectives?",
-        "Tell me about a time you had to pivot a product strategy.",
-        "How do you measure the success of a product after launch?",
-        "Describe your approach to competitive analysis."
+        "Tell me about yourself and your full-stack development experience.",
+        "How would you optimize the performance of a web application?",
+        "Explain the difference between client-side and server-side rendering.",
+        "How do you handle state management in a React application?",
+        "Describe your approach to API design and development.",
+        "How do you ensure web accessibility in your applications?",
+        "What security considerations do you keep in mind when developing web apps?"
       ],
       hard: [
-        "Tell me about yourself and your track record in product leadership.",
-        "How would you develop a product strategy for entering a new market?",
-        "Describe how you would build and lead a product organization.",
-        "How do you align multiple stakeholders around a product vision?",
-        "Tell me about a time you had to make a tough product decision with significant trade-offs.",
-        "How do you scale product management processes as a company grows?",
-        "Describe your approach to building a product roadmap for the next 3 years."
+        "Tell me about yourself and your senior web development expertise.",
+        "How would you architect a microservices-based web application?",
+        "Explain your approach to implementing real-time features in web applications.",
+        "How do you handle caching strategies in a high-traffic web application?",
+        "Describe how you would implement a CI/CD pipeline for a web application.",
+        "How do you approach performance monitoring and optimization in production?",
+        "Explain how you would design a scalable authentication system."
+      ]
+    },
+    'full-technical': {
+      easy: [
+        "Tell me about yourself and your overall technical background.",
+        "Explain the difference between a stack and a queue data structure.",
+        "How do you approach problem-solving when faced with a new technical challenge?",
+        "What is Big O notation and why is it important?",
+        "Describe your experience with databases and SQL.",
+        "How do you stay updated with new technologies and best practices?",
+        "What is your preferred development environment and why?"
+      ],
+      medium: [
+        "Tell me about yourself and your comprehensive technical experience.",
+        "How would you design a URL shortener service like bit.ly?",
+        "Explain the differences between SQL and NoSQL databases and when to use each.",
+        "How do you approach code reviews and maintaining code quality?",
+        "Describe your experience with cloud platforms and deployment strategies.",
+        "How would you implement caching in a distributed system?",
+        "Explain your approach to testing (unit, integration, end-to-end)."
+      ],
+      hard: [
+        "Tell me about yourself and your senior-level technical leadership.",
+        "How would you design a chat system that supports millions of concurrent users?",
+        "Explain the CAP theorem and its implications for distributed systems.",
+        "How do you approach system design for high availability and fault tolerance?",
+        "Describe your experience with performance optimization at scale.",
+        "How would you design a real-time analytics system for big data?",
+        "Explain your approach to technical decision-making and architecture choices."
       ]
     }
   };
 
-  const domainQuestions = questions[domain] || questions.technical;
+  const domainQuestions = questions[domain] || questions['full-technical'];
   const difficultyQuestions = domainQuestions[difficulty] || domainQuestions.easy;
   
   // Return question based on conversation length, cycling through if we run out
