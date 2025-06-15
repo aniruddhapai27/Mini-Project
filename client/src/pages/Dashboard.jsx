@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   // For displaying user data
   const userData = user || {
@@ -305,12 +306,11 @@ const Dashboard = () => {
                 <p className="text-gray-400 mb-4 text-sm">
                   Complete interview simulation with multiple rounds and
                   comprehensive feedback.
-                </p>
-                <button
-                  onClick={() => handleStartPractice("Mock Interview")}
+                </p>                <button
+                  onClick={() => navigate('/mock-interview-selection')}
                   className="w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-medium shadow-lg"
                 >
-                  Start Practice
+                  Start Mock Interview
                 </button>
               </div>
             </div>

@@ -69,3 +69,54 @@ async def feedback(feedbackRequest: FeedbackRequest, current_user: dict = Depend
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing feedback request: {str(e)}")
+
+@interview_router.post("/mock-interview", response_model=InterviewResponse)
+async def mock_interview(InterviewRequest: InterviewRequest, current_user: dict = Depends(require_auth)):
+    """
+    Text-based mock interview endpoint for gamified interview experience
+    """
+    try:
+        if not InterviewRequest.domain or not InterviewRequest.difficulty or not InterviewRequest.user:
+            raise ValueError("Domain, difficulty, and user response are required fields.")
+        
+        # Use authenticated user ID
+        user_id = current_user["_id"]
+        
+        response = await ai_interview(
+            domain = InterviewRequest.domain,
+            difficulty= InterviewRequest.difficulty,
+            user_response = InterviewRequest.user,
+            session = InterviewRequest.session or None,
+            user_id = user_id
+        )
+        if not response:
+            raise HTTPException(status_code=404, detail="No interview response generated.")
+        return InterviewResponse(
+            session_id=response["session_id"],
+            ai=response["ai"]
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing mock interview: {str(e)}")
+
+@interview_router.post("/mock-interview-feedback/{session_id}", response_model=FeedBackResponse)
+async def mock_interview_feedback(session_id: str, current_user: dict = Depends(require_auth)):
+    """
+    Generate feedback for completed mock interview session
+    """
+    try:
+        if not session_id:
+            raise ValueError("Session ID is required.")
+        
+        feedback_data = await get_interview_feedback(session_id)
+        if not feedback_data:
+            raise HTTPException(status_code=404, detail="No feedback generated for this session.")
+        
+        return FeedBackResponse(
+            feedback=feedback_data
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating interview feedback: {str(e)}")

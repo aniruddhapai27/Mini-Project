@@ -94,11 +94,54 @@ const Register = () => {
       toast.error("An unexpected error occurred. Please try again.");
       console.error("Registration failed:", err);
     }
-  };
-  return (    <div className="min-h-screen flex items-center justify-center bg-black py-8">
-      <div className="w-full max-w-md p-8 space-y-8 bg-gray-800/50 backdrop-blur-xl border-2 border-purple-500/30 rounded-2xl shadow-xl relative overflow-hidden">
-        {/* Animated background elements */}
-        <div className="absolute top-0 left-0 w-full h-full">
+  };  return (    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-purple-900/50 relative overflow-hidden py-8">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        {/* Gradient Orbs */}
+        <div className="absolute top-1/5 left-1/5 w-96 h-96 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/5 right-1/5 w-80 h-80 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-br from-indigo-500/15 to-violet-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "4s" }}></div>
+        
+        {/* Floating Geometric Shapes */}
+        <div className="absolute top-16 left-16 w-4 h-4 bg-purple-400/30 rotate-45 animate-float-slow"></div>
+        <div className="absolute top-24 right-24 w-6 h-6 bg-pink-400/30 rounded-full animate-float-medium"></div>
+        <div className="absolute bottom-24 left-24 w-3 h-3 bg-blue-400/30 rotate-45 animate-float-fast"></div>
+        <div className="absolute bottom-16 right-16 w-5 h-5 bg-cyan-400/30 rounded-full animate-float-slow"></div>
+        <div className="absolute top-1/3 right-1/4 w-2 h-2 bg-violet-400/40 rotate-45 animate-float-medium"></div>
+        <div className="absolute bottom-1/3 left-1/4 w-4 h-4 bg-indigo-400/30 rounded-full animate-float-fast"></div>
+        <div className="absolute top-2/3 right-2/3 w-3 h-3 bg-fuchsia-400/30 rotate-45 animate-float-slow"></div>
+        
+        {/* Hexagon Pattern Overlay */}
+        <div className="absolute inset-0 opacity-5">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="hexagons" x="0" y="0" width="50" height="43.4" patternUnits="userSpaceOnUse">
+                <polygon fill="none" stroke="currentColor" strokeWidth="1" points="24.8,22 37.3,29.2 37.3,43.7 24.8,50.9 12.3,43.7 12.3,29.2"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hexagons)" className="text-purple-500"/>
+          </svg>
+        </div>
+        
+        {/* Animated Lines */}
+        <div className="absolute top-0 left-1/5 w-px h-full bg-gradient-to-b from-transparent via-purple-500/20 to-transparent animate-pulse"></div>
+        <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-pink-500/20 to-transparent animate-pulse" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute left-0 top-1/5 w-full h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute left-0 bottom-1/4 w-full h-px bg-gradient-to-r from-transparent via-violet-500/20 to-transparent animate-pulse" style={{ animationDelay: "3s" }}></div>
+        
+        {/* Particle System */}
+        <div className="absolute top-1/4 left-1/2 w-1 h-1 bg-purple-400/60 rounded-full animate-ping"></div>
+        <div className="absolute top-3/4 left-1/4 w-1 h-1 bg-pink-400/60 rounded-full animate-ping" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-blue-400/60 rounded-full animate-ping" style={{ animationDelay: "2s" }}></div>
+      </div>
+
+      {/* Register Form Container */}
+      <div className="w-full max-w-md p-8 space-y-8 bg-gray-900/80 backdrop-blur-xl border border-purple-500/20 rounded-2xl shadow-2xl relative overflow-hidden z-10">
+        {/* Form Inner Glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5 rounded-2xl"></div>
+        
+        {/* Animated form background elements */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
           <div className="absolute top-4 left-4 w-12 h-12 bg-purple-500/10 rounded-full blur-xl animate-pulse"></div>
           <div
             className="absolute bottom-4 right-4 w-16 h-16 bg-pink-500/10 rounded-full blur-xl animate-pulse"

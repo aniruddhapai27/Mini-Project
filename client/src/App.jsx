@@ -12,6 +12,9 @@ import ResetPassword from "./pages/ResetPassword";
 import QuizSelection from "./pages/QuizSelection";
 import Quiz from "./pages/Quiz";
 import QuizResults from "./pages/QuizResults";
+import MockInterviewSelection from "./pages/MockInterviewSelection";
+import MockInterview from "./pages/MockInterview";
+import MockInterviewResults from "./pages/MockInterviewResults";
 import { Route, Routes } from "react-router-dom";
 import { getMe } from "./redux/slices/authSlice";
 import Loading from "./components/Loading";
@@ -67,12 +70,35 @@ const App = () => {
               <Quiz />
             </ProtectedRoute>
           }
-        />
-        <Route
+        />        <Route
           path="quiz-results"
           element={
             <ProtectedRoute>
               <QuizResults />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="mock-interview-selection"
+          element={
+            <ProtectedRoute>
+              <MockInterviewSelection />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="mock-interview/:sessionId"
+          element={
+            <ProtectedRoute>
+              <MockInterview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="mock-interview-results"
+          element={
+            <ProtectedRoute>
+              <MockInterviewResults />
             </ProtectedRoute>
           }
         />

@@ -7,6 +7,8 @@ const cookieParser = require("cookie-parser");
 const authRouter = require("./routes/authRoutes");
 const userRouter = require("./routes/userRoutes");
 const dqRouter = require("./routes/dqRoutes");
+const interviewRouter = require("./routes/interviewRoutes");
+const { globalErrorHandler } = require("./utils/catchAsync");
 
 dotenv.config();
 const app = express();
@@ -38,6 +40,10 @@ app.get("/", (req, res) => {
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/dq", dqRouter);
+app.use("/api/v1/interview", interviewRouter);
+
+// Global error handling middleware
+app.use(globalErrorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;

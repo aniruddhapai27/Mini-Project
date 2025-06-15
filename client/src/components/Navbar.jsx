@@ -1,15 +1,30 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { logoutUser } from "../redux/slices/authSlice";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();  const { isAuthenticated, loading } = useSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activitiesDropdownOpen, setActivitiesDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setActivitiesDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const isActive = (path) => location.pathname === path;
   const handleLogout = async () => {
@@ -80,8 +95,7 @@ const Navbar = () => {
                   </Link>
                 </>
               ) : (
-                <>
-                  <Link
+                <>                  <Link
                     to="/dashboard"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
                       isActive("/dashboard")
@@ -90,16 +104,76 @@ const Navbar = () => {
                     }`}
                   >
                     Dashboard
-                  </Link>                  <Link
-                    to="/quiz-selection"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
-                      isActive("/quiz-selection")
-                        ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-                        : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
-                    }`}
-                  >
-                    Quiz
                   </Link>
+
+                  {/* Activities Dropdown */}
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 flex items-center space-x-1 ${
+                        isActive("/quiz-selection") || isActive("/mock-interview-selection") || isActive("/mock-interview")
+                          ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+                          : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      }`}
+                      onClick={() => setActivitiesDropdownOpen(!activitiesDropdownOpen)}
+                    >
+                      <span>Activities</span>
+                      <svg 
+                        className={`w-4 h-4 transition-transform duration-200 ${activitiesDropdownOpen ? 'rotate-180' : ''}`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>                    {/* Dropdown Menu */}
+                    {activitiesDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md rounded-lg shadow-xl z-50 animate-fadeIn">
+                        <div className="py-2">                          <Link
+                            to="/quiz-selection"
+                            className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                              isActive("/quiz-selection")
+                                ? "text-cyan-400 bg-cyan-500/10"
+                                : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                            }`}
+                            onClick={() => setActivitiesDropdownOpen(false)}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="font-medium">Quiz</div>
+                                <div className="text-xs text-gray-400">Test your knowledge</div>
+                              </div>
+                            </div>
+                          </Link>
+                            <Link
+                            to="/mock-interview-selection"
+                            className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                              isActive("/mock-interview-selection") || isActive("/mock-interview")
+                                ? "text-orange-400 bg-orange-500/10"
+                                : "text-gray-300 hover:text-orange-400 hover:bg-orange-500/5"
+                            }`}
+                            onClick={() => setActivitiesDropdownOpen(false)}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="font-medium">Mock Interview</div>
+                                <div className="text-xs text-gray-400">Practice interviews</div>
+                              </div>
+                            </div>
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <Link
                     to="/profile"
                     className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
@@ -208,8 +282,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                {" "}
-                <Link
+                {" "}                <Link
                   to="/dashboard"
                   className={`block px-3 py-2 rounded-md text-base font-medium ${
                     isActive("/dashboard")
@@ -220,17 +293,52 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Link>
-                <Link
-                  to="/quiz-selection"
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
-                    isActive("/quiz-selection")
-                      ? "text-cyan-400 bg-cyan-500/10"
-                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Quiz
-                </Link>
+
+                {/* Activities Section for Mobile */}
+                <div className="px-3 py-2">
+                  <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Activities
+                  </div>
+                  <div className="ml-2 space-y-1">
+                    <Link
+                      to="/quiz-selection"
+                      className={`block px-3 py-2 rounded-md text-base font-medium ${
+                        isActive("/quiz-selection")
+                          ? "text-cyan-400 bg-cyan-500/10"
+                          : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <span>Quiz</span>
+                      </div>
+                    </Link>
+                    
+                    <Link
+                      to="/mock-interview-selection"
+                      className={`block px-3 py-2 rounded-md text-base font-medium ${
+                        isActive("/mock-interview-selection") || isActive("/mock-interview")
+                          ? "text-orange-400 bg-orange-500/10"
+                          : "text-gray-300 hover:text-orange-400 hover:bg-orange-500/5"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 rounded bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                        </div>
+                        <span>Mock Interview</span>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
                 <Link
                   to="/profile"
                   className={`block px-3 py-2 rounded-md text-base font-medium ${
