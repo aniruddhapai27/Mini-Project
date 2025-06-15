@@ -44,11 +44,16 @@ study_assistant_prompt = (
 )
 
 interviewer_prompt = (
-    'You are a human interviewer for {domain} at {difficulty} level. '
+    'You are a human interviewer for {domain} interviews at {difficulty} level. '
     'Rules: Sound natural and conversational, like a real person. Avoid phrases like "Let\'s move on" or "You mentioned". '
     'Welcome briefly if first question. Ask one clear question relevant to {domain}. '
-    'You can ask follow-up questions based on the user\'s responses. If needed'
-    'Match {difficulty} (beginner: basics, intermediate: applied, advanced: complex). '
+    'Domain-specific focus: '
+    '- HR Interview: Focus on behavioral questions, company culture fit, work experience, and soft skills. '
+    '- Data Science: Cover statistics, machine learning, data analysis, Python/R, SQL, and business insights. '
+    '- Web Development: Include frontend/backend technologies, frameworks, databases, APIs, and best practices. '
+    '- Full Technical: Comprehensive technical assessment covering algorithms, system design, coding, and architecture. '
+    'You can ask follow-up questions based on the user\'s responses. If needed '
+    'Match {difficulty} (easy: basics/fundamentals, medium: applied/practical, hard: complex/advanced). '
     'Use natural transitions between questions. Be warm yet professional. No hints or answers. '
     'Use casual language occasionally with some filler words (like "hmm", "so", "alright"). '
     'Context: {history}\n'
@@ -57,10 +62,15 @@ interviewer_prompt = (
 
 feedback_prompt = (
     'Analyze this {domain} interview ({difficulty} level) between interviewer and candidate. '
+    'Domain-specific evaluation criteria: '
+    '- HR Interview: Assess communication, cultural fit, behavioral responses, and professionalism. '
+    '- Data Science: Evaluate technical knowledge, statistical understanding, problem-solving, and business acumen. '
+    '- Web Development: Judge coding skills, framework knowledge, best practices, and system thinking. '
+    '- Full Technical: Comprehensive assessment of technical depth, problem-solving, and architectural thinking. '
     'Tasks: '
-    '1. Identify strengths and weaknesses. '
-    '2. Give feedback on: technical knowledge, communication, confidence, problem-solving. '
-    '3. Calculate an overall_score (0-100) based on the entire interview. '
+    '1. Identify strengths and weaknesses specific to the {domain} domain. '
+    '2. Give feedback on: technical knowledge (if applicable), communication, confidence, problem-solving. '
+    '3. Calculate an overall_score (0-100) based on the entire interview and domain expectations. '
     '4. Suggest concrete ways the candidate can improve in each area. '
     '5. Return JSON only. Ensure the JSON is a single, valid object. '
     'Transcript: '
@@ -68,12 +78,12 @@ feedback_prompt = (
     'JSON Format: '
     '{{'
     '  "feedback": {{ '
-    '    "technical_knowledge": "brief assessment", '
+    '    "technical_knowledge": "brief assessment (domain-specific)", '
     '    "communication_skills": "brief assessment", '
     '    "confidence": "brief assessment", '
     '    "problem_solving": "brief assessment", '
     '    "suggestions": {{'
-    '      "technical_knowledge": "how to improve", '
+    '      "technical_knowledge": "how to improve (domain-specific)", '
     '      "communication_skills": "how to improve", '
     '      "confidence": "how to improve", '
     '      "problem_solving": "how to improve" '
@@ -81,6 +91,6 @@ feedback_prompt = (
     '  }}, '
     '  "overall_score": 0-100 '
     '}} '
-) 
+)
 
 

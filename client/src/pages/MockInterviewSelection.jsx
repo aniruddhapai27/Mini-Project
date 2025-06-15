@@ -22,36 +22,35 @@ const MockInterviewSelection = () => {
   const streakCount = useSelector(selectStreakCount);
 
   const [selectedDomain, setSelectedDomain] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('');
-  // Available domains and difficulties
+  const [selectedDifficulty, setSelectedDifficulty] = useState('');  // Available domains and difficulties
   const domains = [
     {
-      id: 'technical',
-      name: 'Technical',
-      description: 'Coding, algorithms, and system design',
-      icon: '💻',
-      color: 'from-gray-600/10 to-gray-800/10 border-gray-500/30'
+      id: 'hr',
+      name: 'HR Interview',
+      description: 'Human resources and behavioral questions',
+      icon: '�',
+      color: 'from-blue-500/10 to-indigo-500/10 border-blue-500/30'
     },
     {
-      id: 'behavioral',
-      name: 'Behavioral',
-      description: 'Soft skills and situation-based questions',
-      icon: '🤝',
-      color: 'from-gray-700/10 to-gray-900/10 border-gray-600/30'
+      id: 'data-science',
+      name: 'Data Science',
+      description: 'Statistics, ML, analytics, and data insights',
+      icon: '📊',
+      color: 'from-green-500/10 to-emerald-500/10 border-green-500/30'
     },
     {
-      id: 'system-design',
-      name: 'System Design',
-      description: 'Architecture and scalability discussions',
-      icon: '🏗️',
-      color: 'from-gray-500/10 to-gray-700/10 border-gray-400/30'
+      id: 'webdev',
+      name: 'Web Development',
+      description: 'Frontend, backend, and full-stack development',
+      icon: '�',
+      color: 'from-purple-500/10 to-violet-500/10 border-purple-500/30'
     },
     {
-      id: 'product',
-      name: 'Product',
-      description: 'Product management and strategy',
-      icon: '📱',
-      color: 'from-orange-500/10 to-red-500/10 border-orange-500/30'
+      id: 'full-technical',
+      name: 'Full Technical',
+      description: 'Comprehensive technical interview covering all areas',
+      icon: '⚡',
+      color: 'from-red-500/10 to-orange-500/10 border-red-500/30'
     }
   ];
 
@@ -80,9 +79,7 @@ const MockInterviewSelection = () => {
       xpMultiplier: '2x',
       color: 'bg-red-500'
     }
-  ];
-
-  const handleStartInterview = async () => {
+  ];  const handleStartInterview = async () => {
     if (!selectedDomain || !selectedDifficulty) {
       alert('Please select both domain and difficulty');
       return;

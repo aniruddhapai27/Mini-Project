@@ -46,9 +46,7 @@ const MockInterview = () => {
   // Local state
   const [questionCount, setQuestionCount] = useState(0);
   const [showEndModal, setShowEndModal] = useState(false);
-  const [interviewStarted, setInterviewStarted] = useState(false);
-
-  // Initialize interview session
+  const [interviewStarted, setInterviewStarted] = useState(false);  // Initialize interview session
   useEffect(() => {
     if (sessionId) {
       dispatch(getInterviewSession(sessionId));
@@ -60,25 +58,17 @@ const MockInterview = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }  }, [userResponse]);
+
+  const getCurrentAIQuestion = useCallback(() => {
+    if (!currentSession?.QnA || currentSession.QnA.length === 0) {
+      return "Welcome to your mock interview! Please start by introducing yourself and telling me about your background.";
     }
-  }, [userResponse]);  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.key === 'Enter' && userResponse.trim() && !isWaitingForAI) {
-        handleSendResponse();
-      }
-    };
+    
+    const lastQnA = currentSession.QnA[currentSession.QnA.length - 1];
+    return lastQnA?.bot || "Please continue with your response.";
+  }, [currentSession]);
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [userResponse, isWaitingForAI, handleSendResponse]);
-
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      dispatch(resetCurrentSession());
-    };
-  }, [dispatch]);
   const handleSendResponse = useCallback(async () => {
     if (!userResponse.trim() || isWaitingForAI) return;
 
@@ -103,14 +93,25 @@ const MockInterview = () => {
       console.error('Failed to send response:', error);
     }
   }, [dispatch, sessionId, userResponse, isWaitingForAI, questionCount, getCurrentAIQuestion]);
-  const getCurrentAIQuestion = useCallback(() => {
-    if (!currentSession?.QnA || currentSession.QnA.length === 0) {
-      return "Welcome to your mock interview! Please start by introducing yourself and telling me about your background.";
-    }
-    
-    const lastQnA = currentSession.QnA[currentSession.QnA.length - 1];
-    return lastQnA?.bot || "Please continue with your response.";
-  }, [currentSession]);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key === 'Enter' && userResponse.trim() && !isWaitingForAI) {
+        handleSendResponse();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [userResponse, isWaitingForAI, handleSendResponse]);
+
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetCurrentSession());
+    };
+  }, [dispatch]);
 
   const handleEndInterview = async () => {
     try {
@@ -156,14 +157,24 @@ const MockInterview = () => {
       default: return 'text-gray-400';
     }
   };
-
   const getDomainIcon = (domain) => {
     switch (domain) {
-      case 'technical': return '💻';
-      case 'behavioral': return '🤝';
-      case 'system-design': return '🏗️';
-      case 'product': return '📱';
+      case 'hr': return '👥';
+      case 'data-science': return '📊';
+      case 'webdev': return '🌐';
+      case 'full-technical': return '⚡';
       default: return '🎯';
+    }
+  };
+
+  // Format domain names for display
+  const formatDomainName = (domain) => {
+    switch (domain) {
+      case 'hr': return 'HR';
+      case 'data-science': return 'Data Science';
+      case 'webdev': return 'Web Development';
+      case 'full-technical': return 'Full Technical';
+      default: return domain?.charAt(0).toUpperCase() + domain?.slice(1);
     }
   };
 
@@ -225,13 +236,13 @@ const MockInterview = () => {
       return () => clearTimeout(timer);
     }
   }, [showAchievementAnimation, dispatch]);
-
   if (sessionLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-8 shadow-xl">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
           <p className="text-white">Loading interview session...</p>
+          <p className="text-gray-400 text-sm mt-2">Session ID: {sessionId}</p>
         </div>
       </div>
     );
@@ -239,12 +250,13 @@ const MockInterview = () => {
 
   if (sessionError) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center bg-red-500/10 border border-red-500/30 rounded-xl p-8 max-w-md">
           <svg className="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="text-red-400 mb-4">{sessionError}</p>
+          <p className="text-red-400 mb-2">{sessionError}</p>
+          <p className="text-gray-400 text-sm mb-4">Session ID: {sessionId}</p>
           <button
             onClick={() => navigate('/mock-interview-selection')}
             className="py-2 px-6 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-300"
@@ -258,9 +270,10 @@ const MockInterview = () => {
 
   if (!currentSession) {
     return (
-      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <p className="text-black dark:text-white">No interview session found</p>
+          <p className="text-white mb-2">No interview session found</p>
+          <p className="text-gray-400 text-sm mb-4">Session ID: {sessionId}</p>
           <button
             onClick={() => navigate('/mock-interview-selection')}
             className="mt-4 py-2 px-6 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-all duration-300"
@@ -353,9 +366,8 @@ const MockInterview = () => {
         <div className="container mx-auto px-4 py-4">          <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-4 mb-4 md:mb-0">
               <div className="text-3xl">{getDomainIcon(currentSession.domain)}</div>
-              <div>
-                <h1 className="text-xl font-bold text-white">
-                  {currentSession.domain?.charAt(0).toUpperCase() + currentSession.domain?.slice(1)} Interview
+              <div>                <h1 className="text-xl font-bold text-white">
+                  {formatDomainName(currentSession.domain)} Interview
                 </h1>
                 <div className="flex items-center space-x-2">
                   <span className={`text-sm font-medium ${getDifficultyColor(currentSession.difficulty)}`}>
@@ -403,7 +415,7 @@ const MockInterview = () => {
             <div className="bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-xl p-8">
               <div className="text-6xl mb-4">{getDomainIcon(currentSession.domain)}</div>
               <h2 className="text-3xl font-bold text-black dark:text-white mb-4">
-                Ready for Your {currentSession.domain?.charAt(0).toUpperCase() + currentSession.domain?.slice(1)} Interview?
+                Ready for Your {formatDomainName(currentSession.domain)} Interview?
               </h2>
               <p className="text-lg text-black/70 dark:text-white/70 mb-6">
                 This is a {currentSession.difficulty} level interview. Take your time to think through your responses.

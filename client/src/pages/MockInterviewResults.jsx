@@ -83,6 +83,17 @@ const MockInterviewResults = () => {
     return Math.floor(baseXP * difficultyMultiplier[difficulty] * scoreMultiplier);
   };
 
+  // Format domain names for display
+  const formatDomainName = (domain) => {
+    switch (domain) {
+      case 'hr': return 'HR';
+      case 'data-science': return 'Data Science';
+      case 'webdev': return 'Web Development';
+      case 'full-technical': return 'Full Technical';
+      default: return domain?.charAt(0).toUpperCase() + domain?.slice(1);
+    }
+  };
+
   // Confetti Component
   const Confetti = () => (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
@@ -205,7 +216,7 @@ const MockInterviewResults = () => {
             Interview Complete!
           </h1>
           <p className="text-lg text-gray-300">
-            {session.domain?.charAt(0).toUpperCase() + session.domain?.slice(1)} Interview Results
+            {formatDomainName(session.domain)} Interview Results
           </p>
         </div>
 

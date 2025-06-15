@@ -36,30 +36,36 @@ const Profile = () => {
     currentStreak: 3,
     maxStreak: 5,
     lastSessionDate: "2025-06-01",
-    badges: ["Fast Learner", "Consistent", "Top Performer"],
-    categoryScores: {
-      technical: 88,
-      behavioral: 82,
-      systemDesign: 76,
+    badges: ["Fast Learner", "Consistent", "Top Performer"],    categoryScores: {
+      hr: 88,
+      dataScience: 82,
+      webdev: 85,
+      fullTechnical: 76,
     },
     recentPerformances: [
       {
-        session: "Technical",
+        session: "HR Interview",
         score: 92,
         date: "2025-06-01",
         level: "advanced",
       },
       {
-        session: "Behavioral",
+        session: "Data Science",
         score: 85,
         date: "2025-05-28",
         level: "intermediate",
       },
       {
-        session: "System Design",
-        score: 78,
+        session: "Web Development",
+        score: 88,
         date: "2025-05-25",
         level: "intermediate",
+      },
+      {
+        session: "Full Technical",
+        score: 78,
+        date: "2025-05-22",
+        level: "hard",
       },
     ],
   });
@@ -160,16 +166,17 @@ const Profile = () => {
       </div>
     );
   }
-
   // Determine the highest performing category
   const getBestCategory = () => {
-    const { technical, behavioral, systemDesign } = stats.categoryScores;
-    if (technical >= behavioral && technical >= systemDesign)
-      return "Technical";
-    if (behavioral >= technical && behavioral >= systemDesign)
-      return "Behavioral";
-    return "System Design";
-  };  return (
+    const { hr, dataScience, webdev, fullTechnical } = stats.categoryScores;
+    if (hr >= dataScience && hr >= webdev && hr >= fullTechnical)
+      return "HR Interview";
+    if (dataScience >= hr && dataScience >= webdev && dataScience >= fullTechnical)
+      return "Data Science";
+    if (webdev >= hr && webdev >= dataScience && webdev >= fullTechnical)
+      return "Web Development";
+    return "Full Technical";
+  };return (
     <div className="min-h-screen py-4 bg-black relative overflow-hidden">
       {/* Pure Black Geometric Background */}
       <div className="absolute inset-0">
@@ -536,45 +543,56 @@ const Profile = () => {
                   />
                 </svg>
                 Performance by Category
-              </h3>
-              <div className="space-y-4">                <div className="space-y-2">
+              </h3>              <div className="space-y-4">
+                <div className="space-y-2">
                   <div className="flex justify-between text-sm text-gray-400">
-                    <span>Technical</span>
-                    <span>{stats.categoryScores.technical}%</span>
+                    <span>HR Interview</span>
+                    <span>{stats.categoryScores.hr}%</span>
                   </div>
                   <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                      style={{ width: `${stats.categoryScores.technical}%` }}
+                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
+                      style={{ width: `${stats.categoryScores.hr}%` }}
                     ></div>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm text-gray-400">
-                    <span>Behavioral</span>
-                    <span>{stats.categoryScores.behavioral}%</span>
-                  </div>
-                  <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
-                      style={{ width: `${stats.categoryScores.behavioral}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>System Design</span>
-                    <span>{stats.categoryScores.systemDesign}%</span>
+                    <span>Data Science</span>
+                    <span>{stats.categoryScores.dataScience}%</span>
                   </div>
                   <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
-                      style={{ width: `${stats.categoryScores.systemDesign}%` }}
+                      style={{ width: `${stats.categoryScores.dataScience}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-gray-400">
+                    <span>Web Development</span>
+                    <span>{stats.categoryScores.webdev}%</span>
+                  </div>
+                  <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-purple-500 to-violet-500 rounded-full"
+                      style={{ width: `${stats.categoryScores.webdev}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-gray-400">
+                    <span>Full Technical</span>
+                    <span>{stats.categoryScores.fullTechnical}%</span>
+                  </div>                  <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full"
+                      style={{ width: `${stats.categoryScores.fullTechnical}%` }}
                     ></div>
                   </div>
                 </div>
               </div>
-            </div>            {/* Recent Performance */}
+            </div>{/* Recent Performance */}
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-5 mb-4">
               <h3 className="text-sm font-semibold text-white mb-4 flex items-center">
                 <svg

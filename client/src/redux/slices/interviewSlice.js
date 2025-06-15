@@ -6,7 +6,7 @@ export const createInterviewSession = createAsyncThunk(
   'interview/createSession',
   async ({ domain, difficulty }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/interview/sessions', {
+      const response = await api.post('/api/v1/interview/sessions', {
         domain,
         difficulty
       });
@@ -23,7 +23,7 @@ export const getInterviewSession = createAsyncThunk(
   'interview/getSession',
   async (sessionId, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/interview/sessions/${sessionId}`);
+      const response = await api.get(`/api/v1/interview/sessions/${sessionId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -37,7 +37,7 @@ export const updateInterviewSession = createAsyncThunk(
   'interview/updateSession',
   async ({ sessionId, bot, user }, { rejectWithValue }) => {
     try {
-      const response = await api.patch(`/interview/sessions/${sessionId}`, {
+      const response = await api.patch(`/api/v1/interview/sessions/${sessionId}`, {
         bot,
         user
       });
@@ -54,7 +54,7 @@ export const endInterviewSession = createAsyncThunk(
   'interview/endSession',
   async ({ sessionId, finalScore, feedback }, { rejectWithValue }) => {
     try {
-      const response = await api.patch(`/interview/sessions/${sessionId}/end`, {
+      const response = await api.patch(`/api/v1/interview/sessions/${sessionId}/end`, {
         finalScore,
         feedback
       });
@@ -71,7 +71,7 @@ export const getInterviewStats = createAsyncThunk(
   'interview/getStats',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get('/interview/stats');
+      const response = await api.get('/api/v1/interview/stats');
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -85,7 +85,7 @@ export const getRecentInterviews = createAsyncThunk(
   'interview/getRecent',
   async (limit = 5, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/interview/recent?limit=${limit}`);
+      const response = await api.get(`/api/v1/interview/recent?limit=${limit}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
