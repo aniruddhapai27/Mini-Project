@@ -39,22 +39,19 @@ const Dashboard = () => {
   const handleStartPractice = (type) => {
     // TODO: integrate with interview practice API
     console.log(`Starting ${type} practice session`);
-  };
-  return (
-    <div className="min-h-screen py-8 bg-white dark:bg-black">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  };  return (
+    <div className="min-h-screen bg-white dark:bg-black">
+      <div className="w-full">
         {/* Header */}
-        <div className="mb-8">
+        <div className="px-4 sm:px-6 lg:px-8 pt-8">
           <h1 className="text-4xl font-bold text-black dark:text-white">
             Welcome back, {userData.name}
           </h1>
           <p className="mt-2 text-black/70 dark:text-white/70">
             Ready to ace your next interview?
           </p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        </div>        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 sm:px-6 lg:px-8 mt-8">
           <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-6 text-center">
             <div className="flex items-center justify-between">
               <div>
@@ -138,9 +135,8 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </div>{" "}
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        </div>{" "}        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 sm:px-6 lg:px-8 mt-8">
           {/* Practice Types */}
           <div className="lg:col-span-2">
             <h2 className="text-2xl font-bold text-black dark:text-white mb-6">
@@ -178,11 +174,10 @@ const Dashboard = () => {
                 <Link
                   to="/quiz-selection"
                   className="py-2 px-6 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300"
-                >
-                  Take Quiz
+                >                  Take Quiz
                 </Link>
               </div>
-            </div>            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            </div>            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               {/* Technical Interview */}
               <div className="bg-gray-800/50 backdrop-blur-sm border border-cyan-500/30 rounded-xl p-6 group hover:border-cyan-500/50 transition-all duration-300">
                 <div className="flex items-center mb-4">

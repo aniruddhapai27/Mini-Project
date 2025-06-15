@@ -177,9 +177,6 @@ const Profile = () => {
           <h1 className="text-3xl font-bold text-black dark:text-white">
             Profile
           </h1>
-          <p className="mt-2 text-black/70 dark:text-white/70">
-            Manage your account and see your progress.
-          </p>
         </div>
 
         {/* Main Profile Grid */}
