@@ -254,44 +254,108 @@ const Quiz = () => {
         </div>
       </div>
     );
-  }
+  }  return (
+    <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center py-8">
+      {/* Pure Black Geometric Background */}
+      <div className="absolute inset-0">
+        {/* Subtle Black Gradient Orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-gray-900/20 to-black rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-gray-800/15 to-black rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-gray-700/10 to-black rounded-full blur-3xl animate-pulse" style={{ animationDelay: "4s" }}></div>
+          {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 opacity-12">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
+                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="white" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+        
+        {/* Hexagon Pattern */}
+        <div className="absolute inset-0 opacity-8">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="hexagon" x="0" y="0" width="60" height="52" patternUnits="userSpaceOnUse">
+                <polygon fill="none" stroke="white" strokeWidth="0.5" points="30,1 52.5,14 52.5,40 30,53 7.5,40 7.5,14"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hexagon)" />
+          </svg>
+        </div>
+          {/* Geometric Floating Shapes - Pure Black/Gray */}
+        <div className="absolute top-16 left-16 w-4 h-4 bg-gray-800/40 rotate-45 animate-float-slow"></div>
+        <div className="absolute top-24 right-24 w-3 h-3 bg-gray-700/30 rounded-full animate-float-medium"></div>
+        <div className="absolute bottom-24 left-24 w-2 h-2 bg-gray-600/35 rotate-45 animate-float-fast"></div>
+        <div className="absolute bottom-16 right-16 w-5 h-5 bg-gray-800/30 animate-float-slow"></div>
+        <div className="absolute top-1/3 right-1/3 w-1 h-8 bg-gray-700/25 animate-float-medium"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-8 h-1 bg-gray-600/25 animate-float-fast"></div>
+        
+        {/* Circuit Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="circuit" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+                <path d="M0,40 L20,40 M60,40 L80,40 M40,0 L40,20 M40,60 L40,80" stroke="white" strokeWidth="0.5" fill="none"/>
+                <circle cx="20" cy="40" r="2" fill="white" opacity="0.3"/>
+                <circle cx="60" cy="40" r="2" fill="white" opacity="0.3"/>
+                <circle cx="40" cy="20" r="2" fill="white" opacity="0.3"/>
+                <circle cx="40" cy="60" r="2" fill="white" opacity="0.3"/>
+                <rect x="35" y="35" width="10" height="10" fill="none" stroke="white" strokeWidth="0.5" opacity="0.2"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#circuit)" />
+          </svg>
+        </div>
+        
+        {/* Subtle Gradient Lines */}
+        <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-gray-700/20 to-transparent animate-pulse"></div>
+        <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-gray-600/15 to-transparent animate-pulse" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute left-0 top-1/4 w-full h-px bg-gradient-to-r from-transparent via-gray-700/20 to-transparent animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute left-0 bottom-1/3 w-full h-px bg-gradient-to-r from-transparent via-gray-600/15 to-transparent animate-pulse" style={{ animationDelay: "3s" }}></div>      </div>
 
-  return (
-    <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center py-8">
-      <div className="w-full max-w-2xl mx-auto bg-black/5 dark:bg-white/5 shadow-2xl rounded-2xl overflow-hidden animate-fadeIn">
+      {/* Quiz Container */}
+      <div className="w-full max-w-2xl mx-auto bg-gray-900/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden animate-fadeIn relative z-10 border border-white/10">
+        {/* Container Inner Glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-gray-500/5 rounded-2xl pointer-events-none"></div>
+        
         {/* Quiz Header */}
-        <div className="p-6 border-b border-black/10 dark:border-white/10 flex flex-col md:flex-row justify-between items-center bg-white dark:bg-black">
-          <h1 className="text-2xl font-bold text-black dark:text-white mb-2 md:mb-0">
+        <div className="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-center bg-gray-800/50 backdrop-blur-sm relative">
+          <h1 className="text-2xl font-bold text-white mb-2 md:mb-0 drop-shadow-lg">
             {subject?.charAt(0).toUpperCase() + subject?.slice(1)} Quiz
           </h1>
           <button
             onClick={handleExitQuiz}
-            className="text-black dark:text-white hover:text-red-500 dark:hover:text-red-400 font-semibold transition-colors"
+            className="text-white/80 hover:text-red-400 font-semibold transition-colors drop-shadow-sm"
           >
             Exit Quiz
           </button>
         </div>
+        
         {/* Progress Bar */}
-        <div className="px-6 pt-4">
+        <div className="px-6 pt-4 bg-gray-800/30 backdrop-blur-sm relative">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-black/70 dark:text-white/70 text-sm">
+            <span className="text-white/80 text-sm">
               Question {currentQuiz.currentIndex + 1} of {currentQuiz.questions.length}
             </span>
-            <span className="text-black/70 dark:text-white/70 text-sm">
+            <span className="text-white/80 text-sm">
               {Math.round(progressInfo.percentage)}%
             </span>
           </div>
-          <div className="w-full bg-black/10 dark:bg-white/10 rounded-full h-2.5">
+          <div className="w-full bg-white/10 rounded-full h-2.5">
             <div
-              className="bg-black dark:bg-white h-2.5 rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-gray-400 to-white h-2.5 rounded-full transition-all duration-500 shadow-lg"
               style={{ width: `${progressInfo.percentage}%` }}
             ></div>
           </div>
         </div>
+        
         {/* Quiz Content */}
-        <div className="p-6">
+        <div className="p-6 bg-gray-800/30 backdrop-blur-sm relative">
           <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-4 text-black dark:text-white animate-fadeIn">
+            <h2 className="text-xl font-semibold mb-4 text-white animate-fadeIn drop-shadow-lg">
               {currentQuestion?.question}
             </h2>
             {/* Options */}
@@ -299,38 +363,39 @@ const Quiz = () => {
               {currentQuestion?.options.map((option, index) => (
                 <div
                   key={index}
-                  onClick={() => handleOptionSelect(index)}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 hover:border-black dark:hover:border-white hover:shadow-lg animate-fadeIn ${
+                  className={`flex items-center p-4 rounded-lg cursor-pointer transition-all duration-300 backdrop-blur-sm border ${
                     selectedOption === index
-                      ? "border-black dark:border-white bg-black/10 dark:bg-white/10 text-black dark:text-white shadow-md scale-105"
-                      : "border-black/10 dark:border-white/10 text-black/70 dark:text-white/70"
+                      ? "bg-white/20 border-white/40 shadow-lg shadow-white/10"
+                      : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20"
                   }`}
+                  onClick={() => handleOptionSelect(index)}
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center w-full">
                     <div
                       className={`w-6 h-6 flex items-center justify-center rounded-full mr-3 font-bold text-base transition-all duration-200 ${
                         selectedOption === index
-                          ? "bg-black dark:bg-white text-white dark:text-black"
-                          : "bg-black/10 dark:bg-white/10 text-black/70 dark:text-white/70"
+                          ? "bg-white text-black shadow-lg"
+                          : "bg-white/20 text-white/70"
                       }`}
                     >
                       {String.fromCharCode(65 + index)}
                     </div>
-                    <span>{option}</span>
+                    <span className="text-white/90">{option}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
+          
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
             <button
               onClick={handlePreviousQuestion}
               disabled={currentQuiz.currentIndex === 0}
-              className={`px-6 py-2.5 rounded-md font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 animate-fadeIn ${
+              className={`px-6 py-2.5 rounded-md font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 animate-fadeIn backdrop-blur-sm ${
                 currentQuiz.currentIndex === 0
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-black/10 dark:bg-white/10 text-black dark:text-white hover:bg-black/20 dark:hover:bg-white/20 hover:scale-105"
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-white/10 text-white hover:bg-white/20 hover:scale-105"
               }`}
             >
               Previous
@@ -338,12 +403,12 @@ const Quiz = () => {
             <button
               onClick={handleNextQuestion}
               disabled={selectedOption === null}
-              className={`px-6 py-2.5 rounded-md font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 animate-fadeIn ${
+              className={`px-6 py-2.5 rounded-md font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 animate-fadeIn backdrop-blur-sm ${
                 selectedOption === null
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                   : currentQuiz.currentIndex === currentQuiz.questions.length - 1
-                  ? "bg-black dark:bg-white text-white dark:text-black hover:scale-105"
-                  : "bg-black dark:bg-white text-white dark:text-black hover:scale-105"
+                  ? "bg-white text-black hover:scale-105 shadow-lg"
+                  : "bg-white text-black hover:scale-105 shadow-lg"
               }`}
             >
               {currentQuiz.currentIndex === currentQuiz.questions.length - 1

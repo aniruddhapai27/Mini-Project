@@ -62,10 +62,10 @@ const Navbar = () => {
           <div className="flex items-center space-x-4 ml-auto">            {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-8">              <Link
                 to="/"
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 border ${
                   isActive("/")
-                    ? "text-cyan-400 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 shadow-lg"
-                    : "text-white/70 hover:text-cyan-400 hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10"
+                    ? "text-cyan-400 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30 shadow-lg"
+                    : "text-white/70 hover:text-cyan-400 hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 border-transparent hover:border-cyan-500/20"
                 }`}
               >
                 Home
@@ -75,20 +75,20 @@ const Navbar = () => {
                 <>
                   <Link
                     to="/login"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 border ${
                       isActive("/login")
-                        ? "text-white bg-white/10 shadow"
-                        : "text-white/70 hover:text-white hover:bg-white/5"
+                        ? "text-white bg-white/10 border-white/30 shadow-lg"
+                        : "text-white/70 hover:text-white hover:bg-white/5 border-transparent hover:border-white/20"
                     }`}
                   >
                     Login
                   </Link>
                   <Link
                     to="/register"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 border ${
                       isActive("/register")
-                        ? "text-white bg-white/10 shadow"
-                        : "text-white/70 hover:text-white hover:bg-white/5"
+                        ? "text-white bg-white/10 border-white/30 shadow-lg"
+                        : "text-white/70 hover:text-white hover:bg-white/5 border-transparent hover:border-white/20"
                     }`}
                   >
                     Sign Up
@@ -97,22 +97,20 @@ const Navbar = () => {
               ) : (
                 <>                  <Link
                     to="/dashboard"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 border ${
                       isActive("/dashboard")
-                        ? "text-white bg-white/10 shadow"
-                        : "text-white/70 hover:text-white hover:bg-white/5"
+                        ? "text-white bg-white/10 border-white/30 shadow-lg"
+                        : "text-white/70 hover:text-white hover:bg-white/5 border-transparent hover:border-white/20"
                     }`}
                   >
                     Dashboard
-                  </Link>
-
-                  {/* Activities Dropdown */}
+                  </Link>                  {/* Activities Dropdown */}
                   <div className="relative" ref={dropdownRef}>
                     <button
-                      className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 flex items-center space-x-1 ${
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-1 border ${
                         isActive("/quiz-selection") || isActive("/mock-interview-selection") || isActive("/mock-interview")
-                          ? "text-cyan-400 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.3)]"
-                          : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                          ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/30 shadow-lg"
+                          : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5 border-transparent hover:border-cyan-500/20"
                       }`}
                       onClick={() => setActivitiesDropdownOpen(!activitiesDropdownOpen)}
                     >
@@ -125,7 +123,7 @@ const Navbar = () => {
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
-                    </button>                    {/* Dropdown Menu */}
+                    </button>{/* Dropdown Menu */}
                     {activitiesDropdownOpen && (
                       <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md rounded-lg shadow-xl z-50 animate-fadeIn">
                         <div className="py-2">                          <Link
@@ -173,19 +171,18 @@ const Navbar = () => {
                         </div>
                       </div>
                     )}
-                  </div>
-                  <Link
+                  </div>                  <Link
                     to="/profile"
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ${
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 border ${
                       isActive("/profile")
-                        ? "text-white bg-white/10 shadow"
-                        : "text-white/70 hover:text-white hover:bg-white/5"
+                        ? "text-white bg-white/10 border-white/30 shadow-lg"
+                        : "text-white/70 hover:text-white hover:bg-white/5 border-transparent hover:border-white/20"
                     }`}
                   >
                     Profile
                   </Link>
                   <button
-                    className="px-4 py-2 rounded-md text-sm font-medium border border-red-500 text-red-400 hover:bg-red-500 hover:text-gray-900 transition-all duration-300 shadow-[0_0_10px_rgba(239,68,68,0.3)] hover:shadow-[0_0_20px_rgba(239,68,68,0.6)]"
+                    className="px-4 py-2 rounded-lg text-sm font-medium border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/50 transition-all duration-300 shadow-lg hover:shadow-red-500/20"
                     onClick={handleLogout}
                     disabled={loading.logout}
                   >
@@ -242,13 +239,12 @@ const Navbar = () => {
       </div>      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-gray-800/80 backdrop-blur-md border-t border-cyan-500/20 animate-fadeIn">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">            <Link
               to="/"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
+              className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                 isActive("/")
-                  ? "text-cyan-400 bg-cyan-500/10"
-                  : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                  ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/30"
+                  : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5 border-transparent hover:border-cyan-500/20"
               }`}
               onClick={() => setMobileMenuOpen(false)}
             >
@@ -256,13 +252,12 @@ const Navbar = () => {
             </Link>
 
             {!isAuthenticated ? (
-              <>
-                <Link
+              <>                <Link
                   to="/login"
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                     isActive("/login")
-                      ? "text-cyan-400 bg-cyan-500/10"
-                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      ? "text-white bg-white/10 border-white/30"
+                      : "text-gray-300 hover:text-white hover:bg-white/5 border-transparent hover:border-white/20"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -270,10 +265,10 @@ const Navbar = () => {
                 </Link>
                 <Link
                   to="/register"
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                     isActive("/register")
-                      ? "text-cyan-400 bg-cyan-500/10"
-                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      ? "text-white bg-white/10 border-white/30"
+                      : "text-gray-300 hover:text-white hover:bg-white/5 border-transparent hover:border-white/20"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -284,10 +279,10 @@ const Navbar = () => {
               <>
                 {" "}                <Link
                   to="/dashboard"
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                     isActive("/dashboard")
-                      ? "text-cyan-400 bg-cyan-500/10"
-                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      ? "text-white bg-white/10 border-white/30"
+                      : "text-gray-300 hover:text-white hover:bg-white/5 border-transparent hover:border-white/20"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -299,13 +294,12 @@ const Navbar = () => {
                   <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">
                     Activities
                   </div>
-                  <div className="ml-2 space-y-1">
-                    <Link
+                  <div className="ml-2 space-y-1">                    <Link
                       to="/quiz-selection"
-                      className={`block px-3 py-2 rounded-md text-base font-medium ${
+                      className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                         isActive("/quiz-selection")
-                          ? "text-cyan-400 bg-cyan-500/10"
-                          : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                          ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/30"
+                          : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5 border-transparent hover:border-cyan-500/20"
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
@@ -321,10 +315,10 @@ const Navbar = () => {
                     
                     <Link
                       to="/mock-interview-selection"
-                      className={`block px-3 py-2 rounded-md text-base font-medium ${
+                      className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                         isActive("/mock-interview-selection") || isActive("/mock-interview")
-                          ? "text-orange-400 bg-orange-500/10"
-                          : "text-gray-300 hover:text-orange-400 hover:bg-orange-500/5"
+                          ? "text-orange-400 bg-orange-500/10 border-orange-500/30"
+                          : "text-gray-300 hover:text-orange-400 hover:bg-orange-500/5 border-transparent hover:border-orange-500/20"
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
@@ -338,20 +332,19 @@ const Navbar = () => {
                       </div>
                     </Link>
                   </div>
-                </div>
-                <Link
+                </div>                <Link
                   to="/profile"
-                  className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                     isActive("/profile")
-                      ? "text-cyan-400 bg-cyan-500/10"
-                      : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5"
+                      ? "text-white bg-white/10 border-white/30" 
+                      : "text-gray-300 hover:text-white hover:bg-white/5 border-transparent hover:border-white/20"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Profile
                 </Link>
                 <button
-                  className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                  className="w-full text-left block px-4 py-2 rounded-lg text-base font-medium border border-red-500/30 text-red-400 hover:bg-red-500/10 hover:text-red-300 hover:border-red-500/50 transition-all duration-300"
                   onClick={handleLogout}
                   disabled={loading.logout}
                 >

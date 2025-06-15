@@ -41,8 +41,47 @@ const Dashboard = () => {
     // TODO: integrate with interview practice API
     console.log(`Starting ${type} practice session`);
   };  return (
-    <div className="min-h-screen bg-white dark:bg-black">
-      <div className="w-full">
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Pure Black Geometric Background */}
+      <div className="absolute inset-0">
+        {/* Subtle Black Gradient Orbs */}
+        <div className="absolute top-1/5 left-1/5 w-96 h-96 bg-gradient-to-br from-gray-900/15 to-black rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/5 right-1/5 w-80 h-80 bg-gradient-to-br from-gray-800/10 to-black rounded-full blur-3xl animate-pulse" style={{ animationDelay: "3s" }}></div>
+          {/* Dashboard Grid Pattern */}
+        <div className="absolute inset-0 opacity-12">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid-dashboard" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+                <path d="M 80 0 L 0 0 0 80" fill="none" stroke="white" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-dashboard)" />
+          </svg>
+        </div>
+        
+        {/* Circuit Pattern */}
+        <div className="absolute inset-0 opacity-8">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="circuit-dashboard" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+                <path d="M0,50 L25,50 M75,50 L100,50 M50,0 L50,25 M50,75 L50,100" stroke="white" strokeWidth="0.5" fill="none"/>
+                <circle cx="25" cy="50" r="2" fill="white" opacity="0.2"/>
+                <circle cx="75" cy="50" r="2" fill="white" opacity="0.2"/>
+                <circle cx="50" cy="25" r="2" fill="white" opacity="0.2"/>
+                <circle cx="50" cy="75" r="2" fill="white" opacity="0.2"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#circuit-dashboard)" />
+          </svg>
+        </div>
+          {/* Floating Elements */}
+        <div className="absolute top-16 left-16 w-2 h-2 bg-gray-800/35 rotate-45 animate-float-slow"></div>
+        <div className="absolute top-24 right-24 w-3 h-3 bg-gray-700/30 animate-float-medium"></div>
+        <div className="absolute bottom-24 left-24 w-1 h-8 bg-gray-600/25 animate-float-fast"></div>
+        <div className="absolute bottom-16 right-16 w-8 h-1 bg-gray-500/25 animate-float-slow"></div>
+      </div>
+      
+      <div className="w-full relative z-10">
         {/* Header */}
         <div className="px-4 sm:px-6 lg:px-8 pt-8">
           <h1 className="text-4xl font-bold text-black dark:text-white">

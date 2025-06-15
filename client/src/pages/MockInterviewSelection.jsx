@@ -23,7 +23,6 @@ const MockInterviewSelection = () => {
 
   const [selectedDomain, setSelectedDomain] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('');
-
   // Available domains and difficulties
   const domains = [
     {
@@ -31,21 +30,21 @@ const MockInterviewSelection = () => {
       name: 'Technical',
       description: 'Coding, algorithms, and system design',
       icon: '💻',
-      color: 'from-cyan-500/10 to-blue-500/10 border-cyan-500/30'
+      color: 'from-gray-600/10 to-gray-800/10 border-gray-500/30'
     },
     {
       id: 'behavioral',
       name: 'Behavioral',
       description: 'Soft skills and situation-based questions',
       icon: '🤝',
-      color: 'from-purple-500/10 to-pink-500/10 border-purple-500/30'
+      color: 'from-gray-700/10 to-gray-900/10 border-gray-600/30'
     },
     {
       id: 'system-design',
       name: 'System Design',
       description: 'Architecture and scalability discussions',
       icon: '🏗️',
-      color: 'from-green-500/10 to-emerald-500/10 border-green-500/30'
+      color: 'from-gray-500/10 to-gray-700/10 border-gray-400/30'
     },
     {
       id: 'product',
@@ -109,36 +108,108 @@ const MockInterviewSelection = () => {
       dispatch(clearCreateError());
     }
   }, [dispatch, createError]);
-
   return (
-    <div className="min-h-screen bg-white dark:bg-black py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
-        {/* Header with Gamification Elements */}
+    <div className="min-h-screen bg-black relative overflow-hidden py-8">
+      {/* Pure Black Geometric Background */}
+      <div className="absolute inset-0">
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+
+        {/* Hexagon Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="hexagons" x="0" y="0" width="50" height="43.4" patternUnits="userSpaceOnUse">
+                <polygon fill="none" stroke="white" strokeWidth="1" points="24.8,22 37.3,29.2 37.3,43.7 24.8,50.9 12.3,43.7 12.3,29.2"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hexagons)" />
+          </svg>
+        </div>
+
+        {/* Circuit Pattern */}
+        <div className="absolute inset-0 opacity-8">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="circuit" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                <rect x="20" y="20" width="20" height="20" fill="none" stroke="white" strokeWidth="0.5"/>
+                <circle cx="30" cy="10" r="2" fill="white" opacity="0.3"/>
+                <circle cx="50" cy="30" r="2" fill="white" opacity="0.3"/>
+                <circle cx="30" cy="50" r="2" fill="white" opacity="0.3"/>
+                <circle cx="10" cy="30" r="2" fill="white" opacity="0.3"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#circuit)" />
+          </svg>
+        </div>
+
+        {/* Floating Geometric Shapes */}
+        <div className="absolute top-16 left-16 w-4 h-4 bg-white opacity-10 rotate-45 animate-float-slow"></div>
+        <div className="absolute top-24 right-24 w-6 h-6 bg-gray-300 opacity-15 rounded-full animate-float-medium"></div>
+        <div className="absolute bottom-24 left-24 w-3 h-3 bg-white opacity-20 rotate-45 animate-float-fast"></div>
+        <div className="absolute bottom-16 right-16 w-5 h-5 bg-gray-400 opacity-12 rounded-full animate-float-slow"></div>
+        <div className="absolute top-1/3 right-1/4 w-2 h-2 bg-white opacity-25 rotate-45 animate-float-medium"></div>
+        <div className="absolute bottom-1/3 left-1/4 w-4 h-4 bg-gray-500 opacity-10 rounded-full animate-float-fast"></div>
+
+        {/* Diamond Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="diamonds" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+                <path d="M15,0 L30,15 L15,30 L0,15 Z" fill="none" stroke="white" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#diamonds)" />
+          </svg>
+        </div>
+
+        {/* Animated Lines */}
+        <div className="absolute top-0 left-1/5 w-px h-full bg-gradient-to-b from-transparent via-white/20 to-transparent animate-pulse"></div>
+        <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-gray-300/20 to-transparent animate-pulse" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute left-0 top-1/5 w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute left-0 bottom-1/4 w-full h-px bg-gradient-to-r from-transparent via-gray-400/15 to-transparent animate-pulse" style={{ animationDelay: "3s" }}></div>
+
+        {/* Particle System */}
+        <div className="absolute top-1/4 left-1/2 w-1 h-1 bg-white opacity-40 rounded-full animate-ping"></div>
+        <div className="absolute top-3/4 left-1/4 w-1 h-1 bg-gray-300 opacity-50 rounded-full animate-ping" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-white opacity-60 rounded-full animate-ping" style={{ animationDelay: "2s" }}></div>
+      </div>
+
+      <div className="container mx-auto px-4 max-w-6xl relative z-10">        {/* Header with Gamification Elements */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-black dark:text-white mb-4 animate-fadeIn">
+          <h1 className="text-4xl font-bold text-white mb-4 animate-fadeIn">
             Mock Interview Challenge
           </h1>
-          <p className="text-lg text-black/70 dark:text-white/70 mb-6 animate-fadeIn">
+          <p className="text-lg text-gray-300 mb-6 animate-fadeIn">
             Test your skills with AI-powered interview simulation
           </p>
           
           {/* Gamification Stats */}
           <div className="flex justify-center items-center space-x-6 mb-8">
-            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-4 text-center">
+            <div className="bg-gradient-to-br from-gray-600/10 to-gray-800/10 border border-gray-500/30 rounded-xl p-4 text-center">
               <div className="text-2xl mb-1">🏆</div>
-              <div className="text-xl font-bold text-purple-400">Level {level}</div>
+              <div className="text-xl font-bold text-gray-400">Level {level}</div>
               <div className="text-xs text-gray-400">Current Level</div>
             </div>
             
-            <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-4 text-center">
+            <div className="bg-gradient-to-br from-gray-700/10 to-gray-900/10 border border-gray-600/30 rounded-xl p-4 text-center">
               <div className="text-2xl mb-1">⭐</div>
-              <div className="text-xl font-bold text-cyan-400">{totalXP}</div>
+              <div className="text-xl font-bold text-gray-400">{totalXP}</div>
               <div className="text-xs text-gray-400">Total XP</div>
             </div>
             
-            <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl p-4 text-center">
+            <div className="bg-gradient-to-br from-gray-500/10 to-gray-700/10 border border-gray-400/30 rounded-xl p-4 text-center">
               <div className="text-2xl mb-1">🔥</div>
-              <div className="text-xl font-bold text-orange-400">{streakCount}</div>
+              <div className="text-xl font-bold text-gray-400">{streakCount}</div>
               <div className="text-xs text-gray-400">Day Streak</div>
             </div>
           </div>
@@ -146,7 +217,7 @@ const MockInterviewSelection = () => {
 
         {/* Domain Selection */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-black dark:text-white mb-6 text-center">
+          <h2 className="text-2xl font-bold text-white mb-6 text-center">
             Choose Your Interview Domain
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -255,10 +326,9 @@ const MockInterviewSelection = () => {
             </div>
           )}
           
-          <button
-            className={`py-4 px-8 rounded-2xl text-white font-semibold text-lg transition-all duration-300 shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+          <button            className={`py-4 px-8 rounded-2xl text-white font-semibold text-lg transition-all duration-300 shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               selectedDomain && selectedDifficulty && !createLoading
-                ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 hover:scale-105 focus:ring-purple-500"
+                ? "bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 hover:scale-105 focus:ring-gray-500"
                 : "bg-gray-600 cursor-not-allowed opacity-50"
             }`}
             onClick={handleStartInterview}
@@ -280,12 +350,10 @@ const MockInterviewSelection = () => {
               "Select Domain & Difficulty First"
             )}
           </button>
-        </div>
-
-        {/* Tips Section */}
-        <div className="mt-12 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center">
-            <svg className="w-5 h-5 mr-2 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        </div>        {/* Tips Section */}
+        <div className="mt-12 bg-gradient-to-r from-gray-600/10 to-gray-800/10 border border-gray-500/30 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Interview Tips
@@ -293,22 +361,22 @@ const MockInterviewSelection = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl mb-2">🎯</div>
-              <h4 className="font-semibold text-black dark:text-white mb-1">Be Specific</h4>
-              <p className="text-sm text-black/70 dark:text-white/70">
+              <h4 className="font-semibold text-white mb-1">Be Specific</h4>
+              <p className="text-sm text-gray-300">
                 Provide detailed answers with examples
               </p>
             </div>
             <div className="text-center">
               <div className="text-2xl mb-2">⏰</div>
-              <h4 className="font-semibold text-black dark:text-white mb-1">Take Your Time</h4>
-              <p className="text-sm text-black/70 dark:text-white/70">
+              <h4 className="font-semibold text-white mb-1">Take Your Time</h4>
+              <p className="text-sm text-gray-300">
                 Think before answering, quality over speed
               </p>
             </div>
             <div className="text-center">
               <div className="text-2xl mb-2">💪</div>
-              <h4 className="font-semibold text-black dark:text-white mb-1">Stay Confident</h4>
-              <p className="text-sm text-black/70 dark:text-white/70">
+              <h4 className="font-semibold text-white mb-1">Stay Confident</h4>
+              <p className="text-sm text-gray-300">
                 Express your thoughts clearly and confidently
               </p>
             </div>

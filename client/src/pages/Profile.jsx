@@ -169,15 +169,76 @@ const Profile = () => {
     if (behavioral >= technical && behavioral >= systemDesign)
       return "Behavioral";
     return "System Design";
-  };
-  return (
-    <div className="min-h-screen py-4 bg-white dark:bg-black">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-black dark:text-white">
-            Profile
-          </h1>
+  };  return (
+    <div className="min-h-screen py-4 bg-black relative overflow-hidden">
+      {/* Pure Black Geometric Background */}
+      <div className="absolute inset-0">
+        {/* Subtle Black Gradient Orbs */}
+        <div className="absolute top-1/6 left-1/6 w-96 h-96 bg-gradient-to-br from-gray-900/20 to-black rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/6 right-1/6 w-80 h-80 bg-gradient-to-br from-gray-800/15 to-black rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-gray-700/10 to-black rounded-full blur-3xl animate-pulse" style={{ animationDelay: "4s" }}></div>
+          {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 opacity-12">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid-profile" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                <path d="M 60 0 L 0 0 0 60" fill="none" stroke="white" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-profile)" />
+          </svg>
         </div>
+        
+        {/* Diamond Pattern */}
+        <div className="absolute inset-0 opacity-8">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="diamond" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                <polygon fill="none" stroke="white" strokeWidth="0.5" points="20,5 35,20 20,35 5,20"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#diamond)" />
+          </svg>
+        </div>
+        
+        {/* Circuit Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="circuit-profile" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+                <path d="M0,50 L25,50 M75,50 L100,50 M50,0 L50,25 M50,75 L50,100" stroke="white" strokeWidth="0.5" fill="none"/>
+                <circle cx="25" cy="50" r="2" fill="white" opacity="0.2"/>
+                <circle cx="75" cy="50" r="2" fill="white" opacity="0.2"/>
+                <circle cx="50" cy="25" r="2" fill="white" opacity="0.2"/>
+                <circle cx="50" cy="75" r="2" fill="white" opacity="0.2"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#circuit-profile)" />
+          </svg>
+        </div>
+
+        {/* Geometric Floating Shapes - Pure Black/Gray */}
+        <div className="absolute top-20 left-20 w-3 h-3 bg-gray-800/35 rotate-45 animate-float-slow"></div>
+        <div className="absolute top-32 right-32 w-2 h-2 bg-gray-700/30 animate-float-medium"></div>
+        <div className="absolute bottom-32 left-32 w-4 h-4 bg-gray-600/30 rotate-45 animate-float-fast"></div>
+        <div className="absolute bottom-20 right-20 w-5 h-5 bg-gray-800/25 animate-float-slow"></div>        <div className="absolute top-1/4 right-1/3 w-1 h-6 bg-gray-700/25 animate-float-medium"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-6 h-1 bg-gray-600/25 animate-float-fast"></div>
+        
+        {/* Subtle Gradient Lines */}
+        <div className="absolute top-0 left-1/5 w-px h-full bg-gradient-to-b from-transparent via-gray-700/25 to-transparent animate-pulse"></div>
+        <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-gray-600/20 to-transparent animate-pulse" style={{ animationDelay: "1s" }}></div>
+        <div className="absolute left-0 top-1/5 w-full h-px bg-gradient-to-r from-transparent via-gray-700/25 to-transparent animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute left-0 bottom-1/4 w-full h-px bg-gradient-to-r from-transparent via-gray-600/20 to-transparent animate-pulse" style={{ animationDelay: "3s" }}></div>
+      </div>
+
+      {/* Content with backdrop filter */}
+      <div className="relative z-10 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg">
+              Profile
+            </h1>
+          </div>
 
         {/* Main Profile Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -601,10 +662,10 @@ const Profile = () => {
                   {stats.currentStreak}-day streak
                 </span>{" "}
                 to improve your interview skills!
-              </p>
-            </div>{" "}
+              </p>            </div>{" "}
           </div>{" "}
         </div>
+      </div>
       </div>
 
       {/* Change Password Modal */}

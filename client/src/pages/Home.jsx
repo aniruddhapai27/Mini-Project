@@ -3,19 +3,41 @@ import { useSelector } from "react-redux";
 
 const Home = () => {
   const { isAuthenticated } = useSelector((state) => state.auth);  return (
-    <div className="h-screen flex items-center justify-center bg-white dark:bg-black relative overflow-hidden">
-      {/* Grid Background - Only for Home page */}
-      <div className="absolute inset-0 opacity-30">
-        <div 
-          className="w-full h-full"
-          style={{
-            backgroundImage: `
-              linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-              linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
-            `,
-            backgroundSize: '40px 40px'
-          }}
-        ></div>
+    <div className="h-screen flex items-center justify-center bg-black relative overflow-hidden">
+      {/* Pure Black Geometric Background */}
+      <div className="absolute inset-0">
+        {/* Subtle Black Gradient Orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-gray-900/15 to-black rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-gray-800/10 to-black rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+          {/* Grid Pattern Overlay */}
+        <div className="absolute inset-0 opacity-12">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid-home" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid-home)" />
+          </svg>
+        </div>
+        
+        {/* Dot Pattern */}
+        <div className="absolute inset-0 opacity-8">
+          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dots-home" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                <circle cx="30" cy="30" r="1" fill="white" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dots-home)" />
+          </svg>
+        </div>
+        
+        {/* Floating Shapes */}
+        <div className="absolute top-20 left-20 w-3 h-3 bg-gray-800/30 rotate-45 animate-float-slow"></div>
+        <div className="absolute top-32 right-32 w-2 h-2 bg-gray-700/25 animate-float-medium"></div>
+        <div className="absolute bottom-32 left-32 w-4 h-4 bg-gray-600/25 rotate-45 animate-float-fast"></div>
+        <div className="absolute bottom-20 right-20 w-1 h-1 bg-gray-500/30 animate-float-slow"></div>
       </div>
 
       {/* Content with higher z-index */}
