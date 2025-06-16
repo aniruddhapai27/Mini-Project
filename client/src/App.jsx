@@ -13,6 +13,7 @@ import QuizSelection from "./pages/QuizSelection";
 import Quiz from "./pages/Quiz";
 import QuizResults from "./pages/QuizResults";
 import MockInterviewSelection from "./pages/MockInterviewSelection";
+import MockInterviewTest from "./pages/MockInterviewTest";
 import MockInterview from "./pages/MockInterview";
 import MockInterviewResults from "./pages/MockInterviewResults";
 import { Route, Routes } from "react-router-dom";
@@ -77,21 +78,15 @@ const App = () => {
               <QuizResults />
             </ProtectedRoute>
           }
-        />
-        <Route
+        />        <Route
           path="mock-interview-selection"
           element={
-            <ProtectedRoute>
-              <MockInterviewSelection />
-            </ProtectedRoute>
+            <MockInterviewSelection />
           }
-        />
-        <Route
+        /><Route
           path="mock-interview/:sessionId"
           element={
-            <ProtectedRoute>
-              <MockInterview />
-            </ProtectedRoute>
+            <MockInterviewTest />
           }
         />
         <Route

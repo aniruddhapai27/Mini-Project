@@ -18,12 +18,18 @@ const MockInterviewResults = () => {
   const totalXP = useSelector(selectTotalXP);
   const streakCount = useSelector(selectStreakCount);
   const achievements = useSelector(selectAchievements);
+  // Get data from navigation state or provide defaults
+  const {
+    conversation = [],
+    domain = 'hr',
+    difficulty = 'medium',
+    score = 75,
+    feedback = 'Great job on completing the interview! Keep practicing to improve your skills.',
+    questionCount = conversation.length
+  } = location.state || {};
 
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
-
-  // Get results from location state
-  const { sessionId, session, score, feedback, questionCount } = location.state || {};
 
   useEffect(() => {
     // Show confetti animation for good scores
@@ -113,8 +119,7 @@ const MockInterviewResults = () => {
       ))}
     </div>
   );
-
-  if (!sessionId || !session) {
+  if (!conversation || conversation.length === 0) {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center">
@@ -214,9 +219,8 @@ const MockInterviewResults = () => {
         <div className="text-center mb-8 animate-fadeIn">
           <h1 className="text-4xl font-bold text-white mb-2">
             Interview Complete!
-          </h1>
-          <p className="text-lg text-gray-300">
-            {formatDomainName(session.domain)} Interview Results
+          </h1>          <p className="text-lg text-gray-300">
+            {formatDomainName(domain)} Interview Results
           </p>
         </div>
 
@@ -255,17 +259,16 @@ const MockInterviewResults = () => {
                 <div className="text-2xl font-bold text-purple-400">{questionCount}</div>
                 <div className="text-sm text-black/70 dark:text-white/70">Questions</div>
               </div>
-              
-              <div className="text-center p-4 bg-black/5 dark:bg-white/5 rounded-lg">
+                <div className="text-center p-4 bg-black/5 dark:bg-white/5 rounded-lg">
                 <div className="text-2xl font-bold text-cyan-400">
-                  {session.difficulty?.toUpperCase()}
+                  {difficulty?.toUpperCase()}
                 </div>
                 <div className="text-sm text-black/70 dark:text-white/70">Difficulty</div>
               </div>
               
               <div className="text-center p-4 bg-black/5 dark:bg-white/5 rounded-lg">
                 <div className="text-2xl font-bold text-green-400">
-                  +{calculateXPGained(score, session.difficulty)}
+                  +{calculateXPGained(score, difficulty)}
                 </div>
                 <div className="text-sm text-black/70 dark:text-white/70">XP Gained</div>
               </div>
@@ -357,11 +360,10 @@ const MockInterviewResults = () => {
           </button>
 
           {showDetailedView && (
-            <div className="mt-4 space-y-4 animate-fadeIn">
-              <h3 className="text-lg font-semibold text-black dark:text-white mb-4">
+            <div className="mt-4 space-y-4 animate-fadeIn">              <h3 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Complete Interview Transcript
               </h3>
-              {session.QnA?.map((qna, index) => (
+              {conversation?.map((item, index) => (
                 <div key={index} className="space-y-3">
                   {/* AI Question */}
                   <div className="flex items-start space-x-3">
@@ -370,7 +372,7 @@ const MockInterviewResults = () => {
                     </div>
                     <div className="flex-1 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-4">
                       <p className="text-black dark:text-white text-sm leading-relaxed">
-                        {qna.bot}
+                        {item.question || item.bot}
                       </p>
                     </div>
                   </div>
@@ -382,7 +384,7 @@ const MockInterviewResults = () => {
                     </div>
                     <div className="flex-1 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg p-4">
                       <p className="text-black dark:text-white text-sm leading-relaxed">
-                        {qna.user}
+                        {item.answer || item.user}
                       </p>
                     </div>
                   </div>

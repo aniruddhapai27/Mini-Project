@@ -41,6 +41,10 @@ const interviewSchema = mongoose.Schema(
       score:{
         type: Number,
         default: 0
+      },
+      sessionId: {
+        type: String,
+        default: null // Python service session ID for resume-based interviews
       }
     },
     {
