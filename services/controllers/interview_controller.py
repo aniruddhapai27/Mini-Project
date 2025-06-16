@@ -8,7 +8,7 @@ from database.db_config import get_database
 import datetime
 from bson import ObjectId
 from utils.helper import extract_json_objects
-from models.prompts import interviewer_prompt, feedback_prompt
+from models.prompts import interviewer_prompt, feedback_prompt, resume_based_interviewer_prompt
 
 load_dotenv()
 
@@ -97,67 +97,6 @@ async def text_to_speech_controller(text: str, voice: str = "Aaliyah-PlayAI"):
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
     
     
-async def ai_interview(domain, difficulty, user_response, session, user_id=None):
-    try:
-        db = await get_database()
-        collection = db['interviews']  
-        if not session:
-            new_session = {
-                "domain": domain,
-                "difficulty": difficulty,
-                "user": ObjectId(user_id) if user_id else None,  
-                "created_at": str(datetime.datetime.now()),
-                "QnA": [ 
-                    {
-                        "bot": "Welcome to the AI interview. Please introduce yourself.",
-                        "user": user_response, 
-                        "createdAt": str(datetime.datetime.now())  
-                    }
-                ]
-            }
-            result = await collection.insert_one(new_session)
-            session = result.inserted_id
-        else:
-
-            try:
-                if isinstance(session, str):
-                    session = ObjectId(session)
-            except Exception as e:
-                raise HTTPException(status_code=400, detail=f"Invalid session ID format: {str(e)}")
-                
-        session_data = await collection.find_one({"_id":session})
-        if not session_data:
-            raise HTTPException(status_code=404, detail="Session not found.")
-        history = session_data.get('QnA', [])  
-        response = interviewer.chat.completions.create(
-            model = "meta-llama/llama-4-scout-17b-16e-instruct",
-            messages = [
-                {
-                    "role": "system",
-                    "content": interviewer_prompt.format(domain=domain, difficulty=difficulty, history=history[-5:]) 
-                },
-                {
-                    "role": "user",
-                    "content": user_response
-                }
-            ]
-        )
-        question = response.choices[0].message.content.strip()
-        await collection.update_one({"_id": session}, {"$push": {"QnA": {  
-            "bot": question, 
-            "user": user_response,
-            "createdAt": str(datetime.datetime.now())  
-        }}})
-        return {
-            "session_id": str(session),
-            "ai": question
-        }
-    except Exception as e:
-        error_details = traceback.format_exc()
-        print(f"Error processing AI interview: {str(e)}\n{error_details}")
-        raise HTTPException(status_code=500, detail=f"Error processing AI interview: {str(e)}")  
-    
-
 async def get_interview_feedback(session_id: str):
     try:
         db = await get_database()
@@ -201,3 +140,26 @@ async def get_interview_feedback(session_id: str):
         if isinstance(e, HTTPException):
             raise
         raise HTTPException(status_code=500, detail=f"Error processing interview feedback: {str(e)}")
+
+async def resume_based_interviewer(resume_content: str, domain: str, difficulty: str, history: str):
+    try:
+        response = interviewer.chat.completions.create(
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            messages=[
+                {"role": "system", "content": f"You are a professional {domain} interviewer. Ask natural, conversational questions based on the candidate's resume and {domain} domain expertise."},
+                {"role": "user", "content": resume_based_interviewer_prompt.format(
+                    resume_content=resume_content,
+                    domain=domain,
+                    difficulty=difficulty,
+                    history=history
+                )}
+            ]
+        )
+        return response.choices[0].message.content.strip()
+        
+    except Exception as e:
+        error_details = traceback.format_exc()
+        print(f"Error generating resume-based interview question: {str(e)}\\n{error_details}")
+        if isinstance(e, HTTPException):
+            raise
+        raise HTTPException(status_code=500, detail=f"Error generating resume-based interview question: {str(e)}")

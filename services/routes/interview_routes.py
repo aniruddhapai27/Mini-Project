@@ -1,8 +1,11 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form, Request, Depends
 from models.response_model import voiceTranscript, InterviewResponse, FeedBackResponse
-from controllers.interview_controller import transcript, text_to_speech_controller, ai_interview, get_interview_feedback
-from models.request_models import TextToSpeechRequest, InterviewRequest, FeedbackRequest
+from controllers.interview_controller import transcript, text_to_speech_controller, get_interview_feedback, resume_based_interviewer
+from models.request_models import TextToSpeechRequest, FeedbackRequest
 from auth import require_auth
+from database.db_config import get_database
+from bson import ObjectId
+import datetime
 
 interview_router = APIRouter()
 
@@ -16,7 +19,6 @@ async def voice_to_text(file: UploadFile = File(...), current_user: dict = Depen
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing audio file: {str(e)}")
 
-
 @interview_router.post("/text-to-speech")
 async def text_to_speech(VoiceRequest: TextToSpeechRequest, current_user: dict = Depends(require_auth)):
     try:
@@ -27,39 +29,12 @@ async def text_to_speech(VoiceRequest: TextToSpeechRequest, current_user: dict =
         return await text_to_speech_controller(VoiceRequest.text, VoiceRequest.voice)
     except Exception as e:  
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
-    
-
-@interview_router.post("/get-interview", response_model=InterviewResponse)
-async def interview(InterviewRequest: InterviewRequest, current_user: dict = Depends(require_auth)):
-    try:
-        if not InterviewRequest.domain or not InterviewRequest.difficulty or not InterviewRequest.user:
-            raise ValueError("Domain, difficulty, and user response are required fields.")
-        
-        # Use authenticated user ID
-        user_id = current_user["_id"]
-        
-        response = await ai_interview(
-            domain = InterviewRequest.domain,
-            difficulty= InterviewRequest.difficulty,
-            user_response = InterviewRequest.user,
-            session = InterviewRequest.session or None,
-            user_id = user_id
-        )
-        if not response:
-            raise HTTPException(status_code=404, detail="No interview response generated.")
-        return InterviewResponse(
-            ai = response.get('ai', ''),
-            session= response.get('session_id', ''),
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing interview request: {str(e)}")
-
 
 @interview_router.post("/feedback", response_model=FeedBackResponse)
 async def feedback(feedbackRequest: FeedbackRequest, current_user: dict = Depends(require_auth)):
     try:
         if not feedbackRequest.session:
-            raise ValueError("Session ID and feedback are required fields.")
+            raise ValueError("Session ID is required.")
         
         response = await get_interview_feedback(
             session_id = feedbackRequest.session
@@ -70,53 +45,97 @@ async def feedback(feedbackRequest: FeedbackRequest, current_user: dict = Depend
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing feedback request: {str(e)}")
 
-@interview_router.post("/mock-interview", response_model=InterviewResponse)
-async def mock_interview(InterviewRequest: InterviewRequest, current_user: dict = Depends(require_auth)):
+@interview_router.post("/resume-based", response_model=InterviewResponse)
+async def resume_based_interview(
+    file: UploadFile = File(...),
+    domain: str = Form(...),
+    difficulty: str = Form(...),
+    user_response: str = Form(...),
+    session: str = Form(None),
+    current_user: dict = Depends(require_auth)
+):
     """
-    Text-based mock interview endpoint for gamified interview experience
+    Resume-based interview endpoint that generates questions based on the candidate's resume and specified domain
     """
     try:
-        if not InterviewRequest.domain or not InterviewRequest.difficulty or not InterviewRequest.user:
-            raise ValueError("Domain, difficulty, and user response are required fields.")
+        # Validate inputs
+        if not file.filename.endswith(('.pdf', '.docx', '.txt')):
+            raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a PDF, DOCX, or TXT file.")
+        
+        if domain not in ['hr', 'dataScience', 'webdev', 'fullTechnical']:
+            raise HTTPException(status_code=400, detail="Domain must be 'hr', 'dataScience', 'webdev', or 'fullTechnical'.")
+        
+        if difficulty not in ['easy', 'medium', 'hard']:
+            raise HTTPException(status_code=400, detail="Difficulty must be 'easy', 'medium', or 'hard'.")
+        
+        if not user_response.strip():
+            raise HTTPException(status_code=400, detail="User response cannot be empty.")
         
         # Use authenticated user ID
         user_id = current_user["_id"]
         
-        response = await ai_interview(
-            domain = InterviewRequest.domain,
-            difficulty= InterviewRequest.difficulty,
-            user_response = InterviewRequest.user,
-            session = InterviewRequest.session or None,
-            user_id = user_id
+        # Parse resume content
+        from utils.helper import extract_text
+        resume_content = extract_text(file)
+        if not resume_content:
+            raise HTTPException(status_code=400, detail="Could not extract text from the resume file.")
+        
+        # Get or create session
+        db = await get_database()
+        collection = db['interviews']
+        
+        if session:
+            # Get existing session
+            session_doc = await collection.find_one({"_id": ObjectId(session), "user_id": user_id})
+            if not session_doc:
+                raise HTTPException(status_code=404, detail="Interview session not found.")
+            
+            # Build conversation history
+            history = ""
+            if "conversation" in session_doc:
+                for item in session_doc["conversation"]:
+                    history += f"Interviewer: {item.get('interviewer', '')}\nCandidate: {item.get('candidate', '')}\n"
+            
+            # Add current user response to history
+            history += f"Candidate: {user_response}\n"
+        else:
+            # Create new session
+            session_doc = {
+                "user_id": user_id,
+                "domain": domain,
+                "difficulty": difficulty,
+                "resume_content": resume_content[:1000],  # Store first 1000 chars for reference
+                "conversation": [],
+                "created_at": datetime.datetime.now(),
+                "type": "resume_based"
+            }
+            result = await collection.insert_one(session_doc)
+            session = str(result.inserted_id)
+            history = f"Candidate: {user_response}\n"
+        
+        # Generate next question
+        ai_response = await resume_based_interviewer(resume_content, domain, difficulty, history)
+        
+        # Update session with new conversation
+        await collection.update_one(
+            {"_id": ObjectId(session)},
+            {
+                "$push": {
+                    "conversation": {
+                        "candidate": user_response,
+                        "interviewer": ai_response,
+                        "timestamp": datetime.datetime.now()
+                    }
+                }
+            }
         )
-        if not response:
-            raise HTTPException(status_code=404, detail="No interview response generated.")
+        
         return InterviewResponse(
-            session_id=response["session_id"],
-            ai=response["ai"]
+            session_id=session,
+            ai=ai_response
         )
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing mock interview: {str(e)}")
-
-@interview_router.post("/mock-interview-feedback/{session_id}", response_model=FeedBackResponse)
-async def mock_interview_feedback(session_id: str, current_user: dict = Depends(require_auth)):
-    """
-    Generate feedback for completed mock interview session
-    """
-    try:
-        if not session_id:
-            raise ValueError("Session ID is required.")
         
-        feedback_data = await get_interview_feedback(session_id)
-        if not feedback_data:
-            raise HTTPException(status_code=404, detail="No feedback generated for this session.")
-        
-        return FeedBackResponse(
-            feedback=feedback_data
-        )
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating interview feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing resume-based interview: {str(e)}")
