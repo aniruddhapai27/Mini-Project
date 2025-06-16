@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Form, Request, D
 from models.response_model import voiceTranscript, InterviewResponse, FeedBackResponse
 from controllers.interview_controller import transcript, text_to_speech_controller, get_interview_feedback, resume_based_interviewer
 from models.request_models import TextToSpeechRequest, FeedbackRequest
-from auth import require_auth
+from utils.auth_middleware import require_auth_dep
 from database.db_config import get_database
 from bson import ObjectId
 import datetime
@@ -10,7 +10,7 @@ import datetime
 interview_router = APIRouter()
 
 @interview_router.post("/transcript", response_model=voiceTranscript)
-async def voice_to_text(file: UploadFile = File(...), current_user: dict = Depends(require_auth)):
+async def voice_to_text(file: UploadFile = File(...), current_user: dict = Depends(require_auth_dep)):
     try:
         if not file.filename.endswith(('.mp3', '.wav', '.flac')):
             raise ValueError("Unsupported file type. Please upload an audio file.")
@@ -20,7 +20,7 @@ async def voice_to_text(file: UploadFile = File(...), current_user: dict = Depen
         raise HTTPException(status_code=500, detail=f"Error processing audio file: {str(e)}")
 
 @interview_router.post("/text-to-speech")
-async def text_to_speech(VoiceRequest: TextToSpeechRequest, current_user: dict = Depends(require_auth)):
+async def text_to_speech(VoiceRequest: TextToSpeechRequest, current_user: dict = Depends(require_auth_dep)):
     try:
         if not VoiceRequest.text:
             raise ValueError("Text cannot be empty.")
@@ -31,7 +31,7 @@ async def text_to_speech(VoiceRequest: TextToSpeechRequest, current_user: dict =
         raise HTTPException(status_code=500, detail=f"Error generating speech: {str(e)}")
 
 @interview_router.post("/feedback", response_model=FeedBackResponse)
-async def feedback(feedbackRequest: FeedbackRequest, current_user: dict = Depends(require_auth)):
+async def feedback(feedbackRequest: FeedbackRequest, current_user: dict = Depends(require_auth_dep)):
     try:
         if not feedbackRequest.session:
             raise ValueError("Session ID is required.")
@@ -51,8 +51,8 @@ async def resume_based_interview(
     domain: str = Form(...),
     difficulty: str = Form(...),
     user_response: str = Form(...),
-    session: str = Form(None)
-    # Temporarily removed: current_user: dict = Depends(require_auth)
+    session: str = Form(None),
+    current_user: dict = Depends(require_auth_dep)
 ):
     """
     Resume-based interview endpoint that generates questions based on the candidate's resume and specified domain
@@ -70,8 +70,9 @@ async def resume_based_interview(
         
         if not user_response.strip():
             raise HTTPException(status_code=400, detail="User response cannot be empty.")
-          # Use authenticated user ID (temporarily use a default for testing)
-        user_id = "test_user_id"
+        
+        # Use authenticated user ID
+        user_id = current_user["_id"]
         
         # Parse resume content
         from utils.helper import extract_text

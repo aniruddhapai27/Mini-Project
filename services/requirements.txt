@@ -18,5 +18,5 @@ faiss-cpu
 langchain_huggingface
 pypdf2
 python-docx
-docx
-PyJWT>=2.4.0
+pyjwt
+requests
