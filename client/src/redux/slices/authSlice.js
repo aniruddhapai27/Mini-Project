@@ -155,7 +155,6 @@ const authSlice = createSlice({
       updateProfile: false,
     },
   },
-
   reducers: {
     reset: (state) => {
       state.user = null;
@@ -186,6 +185,11 @@ const authSlice = createSlice({
         updatePassword: false,
         updateProfile: false,
       };
+    },
+    updateUser: (state, action) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
     },
     clearErrors: (state) => {
       state.error = {
@@ -347,5 +351,12 @@ const authSlice = createSlice({
   },
 });
 
-export const { reset, clearErrors, clearSuccess } = authSlice.actions;
+// Selectors
+export const selectUser = (state) => state.auth.user;
+export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
+export const selectAuthLoading = (state) => state.auth.loading;
+export const selectAuthError = (state) => state.auth.error;
+export const selectAuthSuccess = (state) => state.auth.success;
+
+export const { reset, updateUser, clearErrors, clearSuccess } = authSlice.actions;
 export default authSlice.reducer;

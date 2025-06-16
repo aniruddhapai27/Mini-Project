@@ -72,7 +72,6 @@ const MockInterview = () => {
     };
     return names[domain] || domain;
   };
-
   // Handle sending user response
   const handleSendResponse = useCallback(async () => {
     if (!userResponse.trim() || aiResponseLoading) return;
@@ -82,7 +81,6 @@ const MockInterview = () => {
       difficulty: sessionData.difficulty,
       userResponse: userResponse.trim(),
       sessionId: currentSessionId,
-      resumeFile: null, // Will use default resume
     };
 
     dispatch(sendInterviewMessage(messageData));
@@ -101,8 +99,7 @@ const MockInterview = () => {
     currentSessionId,
     conversation.length,
     dispatch,
-  ]);
-  // Handle starting the interview
+  ]);  // Handle starting the interview
   const handleStartInterview = async () => {
     dispatch(startInterview());
 
@@ -114,7 +111,6 @@ const MockInterview = () => {
       userResponse:
         "Hello, I'm ready to start the interview. Please begin with your first question.",
       sessionId: null, // No session initially
-      resumeFile: null, // Will use default resume
     };
 
     dispatch(sendInterviewMessage(initialMessageData));

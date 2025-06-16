@@ -105,37 +105,16 @@ export const getRecentInterviews = createAsyncThunk(
 export const sendInterviewMessage = createAsyncThunk(
   "interview/sendMessage",
   async (
-    { domain, difficulty, userResponse, sessionId, resumeFile },
+    { domain, difficulty, userResponse, sessionId },
     { rejectWithValue }
   ) => {
     try {
       if (!sessionId) {
         // First message - create new interview session
-        const formData = new FormData();
-
-        // Add resume file (create default if not provided)
-        if (resumeFile) {
-          formData.append("resume", resumeFile);
-        } else {
-          const defaultResume = new Blob(
-            ["Sample resume content for interview"],
-            { type: "text/plain" }
-          );
-          formData.append("resume", defaultResume, "resume.txt");
-        }
-
-        formData.append("domain", domain);
-        formData.append("difficulty", difficulty);
-
-        const response = await api.post(
-          "/api/v1/interview/resume-based",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
+        const response = await api.post("/api/v1/interview/sessions", {
+          domain,
+          difficulty,
+        });
 
         return {
           aiResponse:
@@ -144,11 +123,12 @@ export const sendInterviewMessage = createAsyncThunk(
           sessionId: response.data?.data?.sessionId,
           userMessage: "Hello, I am ready to start the interview.",
           isFirstMessage: true,
+          resumeUsed: response.data?.data?.resumeUsed || false,
         };
       } else {
         // Continue existing interview session
         const response = await api.patch(
-          `/api/v1/interview/resume-based/${sessionId}`,
+          `/api/v1/interview/sessions/${sessionId}`,
           {
             userResponse: userResponse,
           }

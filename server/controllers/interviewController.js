@@ -12,7 +12,9 @@
  */
 
 const Interview = require("../models/interviewModel");
+const User = require("../models/userModel");
 const { catchAsync } = require("../utils/catchAsync");
+const axios = require("axios");
 
 // Get interview session by ID
 exports.getInterviewSession = catchAsync(async (req, res) => {
@@ -238,7 +240,7 @@ exports.getRecentInterviews = catchAsync(async (req, res) => {
   });
 });
 
-// Resume-based interview controller
+// Resume-based interview controller - Updated to use user's stored resume
 exports.createResumeBasedInterview = catchAsync(async (req, res) => {
   const userId = req.user._id;
   const { domain, difficulty } = req.body;
@@ -263,28 +265,49 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
       message: "Difficulty must be easy, medium, or hard",
     });
   }
+
   try {
+    // Get user's stored resume
+    const user = await User.findById(userId).select('resume');
+    let resumeBuffer = null;
+    let resumeFilename = "no_resume.txt";
+    
+    if (user && user.resume) {
+      try {
+        // Download resume from Cloudinary
+        const response = await axios.get(user.resume, { 
+          responseType: 'arraybuffer',
+          timeout: 10000 // 10 second timeout
+        });
+        resumeBuffer = Buffer.from(response.data);
+        resumeFilename = user.resume.split('/').pop() || "resume.pdf";
+      } catch (downloadError) {
+        console.log("Failed to download user's resume, using default:", downloadError.message);
+      }
+    }
+
     let aiResponse, pythonSessionId;
 
     try {
       const pythonAPI = require("../utils/pythonAPI");
       const FormData = require("form-data");
+      
       // Create FormData to send to Python service
       const formData = new FormData();
 
-      if (req.file) {
-        formData.append("file", req.file.buffer, {
-          filename: req.file.originalname,
-          contentType: req.file.mimetype,
+      if (resumeBuffer) {
+        formData.append("file", resumeBuffer, {
+          filename: resumeFilename,
+          contentType: resumeFilename.endsWith('.pdf') ? 'application/pdf' : 'text/plain',
         });
       } else {
-        // Create a dummy resume file if none provided
-        const dummyBuffer = Buffer.from(
-          "No resume provided. Please conduct a general interview.",
+        // Create a default message if no resume is available
+        const defaultBuffer = Buffer.from(
+          "No resume provided. Please conduct a general interview based on the selected domain and difficulty level.",
           "utf8"
         );
-        formData.append("file", dummyBuffer, {
-          filename: "dummy_resume.txt",
+        formData.append("file", defaultBuffer, {
+          filename: "default_message.txt",
           contentType: "text/plain",
         });
       }
@@ -308,6 +331,7 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
             ...formData.getHeaders(),
             Cookie: `jwt=${token}`,
           },
+          timeout: 30000 // 30 second timeout
         }
       );
 
@@ -351,6 +375,7 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
         },
       ],
       sessionId: pythonSessionId,
+      resumeUsed: user?.resume || null, // Store which resume was used
     });
 
     await newInterview.save();
@@ -365,6 +390,7 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
         difficulty: difficulty,
         firstQuestion: aiResponse,
         createdAt: newInterview.createdAt,
+        resumeUsed: !!user?.resume, // Boolean indicating if resume was used
       },
     });
   } catch (error) {
@@ -376,6 +402,7 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
     });
   }
 });
+
 
 // Continue resume-based interview
 exports.continueResumeBasedInterview = catchAsync(async (req, res) => {

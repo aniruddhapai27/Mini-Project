@@ -19,9 +19,9 @@ const userSchema = mongoose.Schema(
     },
     profilePic: {
       type: String,
-    },
-    resume: {
+    },    resume: {
       type: String,
+      default: null, // Cloudinary URL for the user's resume
     },
     currentStreak: {
       type: Number, 

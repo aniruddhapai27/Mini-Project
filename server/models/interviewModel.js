@@ -40,7 +40,10 @@ const interviewSchema = mongoose.Schema(
       },
       score:{
         type: Number,
-        default: 0
+        default: 0      },
+      resumeUsed: {
+        type: String,
+        default: null // URL of the resume used for this interview
       },
       sessionId: {
         type: String,
