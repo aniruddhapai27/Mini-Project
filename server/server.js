@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const authRouter = require("./routes/authRoutes");
 const userRouter = require("./routes/userRoutes");
 const dqRouter = require("./routes/dqRoutes");
@@ -32,10 +33,35 @@ try {
   console.log("❌ MongoDB Connection Error:", error);
 }
 
+// Proxy configuration
+app.use('/api/v1/python', createProxyMiddleware({
+  target: 'http://localhost:8000', // Python service URL
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/v1/python': '', // Remove base path when forwarding to the target
+  },
+}));
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Server is running...");
 });
+
+// Python services proxy
+app.use('/api/v1/services', createProxyMiddleware({
+  target: 'http://localhost:8000',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api/v1/services': '/',
+  },
+  onError: (err, req, res) => {
+    console.log('Python API proxy error:', err.message);
+    res.status(503).json({ 
+      success: false, 
+      message: 'Python API service unavailable' 
+    });
+  }
+}));
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/user", userRouter);

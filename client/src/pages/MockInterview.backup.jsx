@@ -159,21 +159,18 @@ const MockInterview = () => {
     } finally {
       setIsTyping(false);
     }
-  }, [sessionData.domain, sessionData.difficulty, currentSessionId]);  // Handle starting the interview
+  }, [sessionData.domain, sessionData.difficulty, currentSessionId]);
+  // Handle starting the interview
   const handleStartInterview = async () => {
-    console.log('handleStartInterview called');
-    console.log('Setting interviewStarted to true');
     setInterviewStarted(true);
     
     const welcomeMessage = "Hello! I'm your AI interviewer. Let's start with a simple question: Can you please introduce yourself and tell me about your background?";
     
-    console.log('Setting conversation with welcome message');
     setConversation([{
       type: 'ai',
       message: welcomeMessage,
       timestamp: new Date()
     }]);
-    console.log('Interview started successfully');
   };
 
   // Handle ending interview
@@ -351,10 +348,10 @@ const MockInterview = () => {
             </div>
           </div>
         </div>
-      </div>      {/* Main Content */}
+      </div>
+
+      {/* Main Content */}
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
-        {console.log('Render - interviewStarted:', interviewStarted)}
-        {console.log('Render - conversation length:', conversation.length)}
         {!interviewStarted ? (
           /* Interview Introduction */
           <div className="text-center space-y-8">

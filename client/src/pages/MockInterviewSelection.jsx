@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  createInterviewSession,
   selectCreateLoading,
   selectCreateError,
   selectLevel,
@@ -86,14 +85,14 @@ const MockInterviewSelection = () => {
     }
 
     try {
-      const resultAction = await dispatch(createInterviewSession({
-        domain: selectedDomain,
-        difficulty: selectedDifficulty
-      })).unwrap();
-
-      if (resultAction.sessionId) {
-        navigate(`/mock-interview/${resultAction.sessionId}`);
-      }
+      // For the new conversational interview system, we'll create a session ID and navigate directly
+      const sessionId = 'new'; // Let the interview page handle session creation
+      navigate(`/mock-interview/${sessionId}`, {
+        state: {
+          domain: selectedDomain,
+          difficulty: selectedDifficulty
+        }
+      });
     } catch (error) {
       console.error('Failed to start interview:', error);
     }
