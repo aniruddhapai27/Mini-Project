@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import {
   selectCreateLoading,
   selectCreateError,
   selectLevel,
   selectTotalXP,
   selectStreakCount,
-  clearCreateError
-} from '../redux/slices/interviewSlice';
+  clearCreateError,
+} from "../redux/slices/interviewSlice";
 
 const MockInterviewSelection = () => {
   const navigate = useNavigate();
@@ -20,81 +20,82 @@ const MockInterviewSelection = () => {
   const totalXP = useSelector(selectTotalXP);
   const streakCount = useSelector(selectStreakCount);
 
-  const [selectedDomain, setSelectedDomain] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('');  // Available domains and difficulties
+  const [selectedDomain, setSelectedDomain] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState(""); // Available domains and difficulties
   const domains = [
     {
-      id: 'hr',
-      name: 'HR Interview',
-      description: 'Human resources and behavioral questions',
-      icon: '�',
-      color: 'from-blue-500/10 to-indigo-500/10 border-blue-500/30'
+      id: "hr",
+      name: "HR Interview",
+      description: "Human resources and behavioral questions",
+      icon: "�",
+      color: "from-blue-500/10 to-indigo-500/10 border-blue-500/30",
     },
     {
-      id: 'data-science',
-      name: 'Data Science',
-      description: 'Statistics, ML, analytics, and data insights',
-      icon: '📊',
-      color: 'from-green-500/10 to-emerald-500/10 border-green-500/30'
+      id: "dataScience",
+      name: "Data Science",
+      description: "Statistics, ML, analytics, and data insights",
+      icon: "📊",
+      color: "from-green-500/10 to-emerald-500/10 border-green-500/30",
     },
     {
-      id: 'webdev',
-      name: 'Web Development',
-      description: 'Frontend, backend, and full-stack development',
-      icon: '�',
-      color: 'from-purple-500/10 to-violet-500/10 border-purple-500/30'
+      id: "webdev",
+      name: "Web Development",
+      description: "Frontend, backend, and full-stack development",
+      icon: "�",
+      color: "from-purple-500/10 to-violet-500/10 border-purple-500/30",
     },
     {
-      id: 'full-technical',
-      name: 'Full Technical',
-      description: 'Comprehensive technical interview covering all areas',
-      icon: '⚡',
-      color: 'from-red-500/10 to-orange-500/10 border-red-500/30'
-    }
+      id: "fullTechnical",
+      name: "Full Technical",
+      description: "Comprehensive technical interview covering all areas",
+      icon: "⚡",
+      color: "from-red-500/10 to-orange-500/10 border-red-500/30",
+    },
   ];
 
   const difficulties = [
     {
-      id: 'easy',
-      name: 'Easy',
-      description: 'Perfect for beginners',
-      icon: '🌱',
-      xpMultiplier: '1x',
-      color: 'bg-green-500'
+      id: "easy",
+      name: "Easy",
+      description: "Perfect for beginners",
+      icon: "🌱",
+      xpMultiplier: "1x",
+      color: "bg-green-500",
     },
     {
-      id: 'medium',
-      name: 'Medium',
-      description: 'Intermediate level challenge',
-      icon: '🔥',
-      xpMultiplier: '1.5x',
-      color: 'bg-yellow-500'
+      id: "medium",
+      name: "Medium",
+      description: "Intermediate level challenge",
+      icon: "🔥",
+      xpMultiplier: "1.5x",
+      color: "bg-yellow-500",
     },
     {
-      id: 'hard',
-      name: 'Hard',
-      description: 'Expert level challenge',
-      icon: '⚡',
-      xpMultiplier: '2x',
-      color: 'bg-red-500'
-    }
-  ];  const handleStartInterview = async () => {
+      id: "hard",
+      name: "Hard",
+      description: "Expert level challenge",
+      icon: "⚡",
+      xpMultiplier: "2x",
+      color: "bg-red-500",
+    },
+  ];
+  const handleStartInterview = async () => {
     if (!selectedDomain || !selectedDifficulty) {
-      alert('Please select both domain and difficulty');
+      alert("Please select both domain and difficulty");
       return;
     }
 
     try {
       // For the new conversational interview system, we'll create a session ID and navigate directly
-      const sessionId = 'new'; // Let the interview page handle session creation
+      const sessionId = "new"; // Let the interview page handle session creation
       navigate(`/mock-interview/${sessionId}`, {
         state: {
           domain: selectedDomain,
-          difficulty: selectedDifficulty
-        }
+          difficulty: selectedDifficulty,
+        },
       });
     } catch (error) {
-      console.error('Failed to start interview:', error);
+      console.error("Failed to start interview:", error);
     }
   };
 
@@ -112,8 +113,18 @@ const MockInterviewSelection = () => {
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
+              <pattern
+                id="grid"
+                width="40"
+                height="40"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 40 0 L 0 0 0 40"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="1"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
@@ -124,8 +135,20 @@ const MockInterviewSelection = () => {
         <div className="absolute inset-0 opacity-5">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="hexagons" x="0" y="0" width="50" height="43.4" patternUnits="userSpaceOnUse">
-                <polygon fill="none" stroke="white" strokeWidth="1" points="24.8,22 37.3,29.2 37.3,43.7 24.8,50.9 12.3,43.7 12.3,29.2"/>
+              <pattern
+                id="hexagons"
+                x="0"
+                y="0"
+                width="50"
+                height="43.4"
+                patternUnits="userSpaceOnUse"
+              >
+                <polygon
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="1"
+                  points="24.8,22 37.3,29.2 37.3,43.7 24.8,50.9 12.3,43.7 12.3,29.2"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#hexagons)" />
@@ -136,12 +159,27 @@ const MockInterviewSelection = () => {
         <div className="absolute inset-0 opacity-8">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="circuit" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-                <rect x="20" y="20" width="20" height="20" fill="none" stroke="white" strokeWidth="0.5"/>
-                <circle cx="30" cy="10" r="2" fill="white" opacity="0.3"/>
-                <circle cx="50" cy="30" r="2" fill="white" opacity="0.3"/>
-                <circle cx="30" cy="50" r="2" fill="white" opacity="0.3"/>
-                <circle cx="10" cy="30" r="2" fill="white" opacity="0.3"/>
+              <pattern
+                id="circuit"
+                x="0"
+                y="0"
+                width="60"
+                height="60"
+                patternUnits="userSpaceOnUse"
+              >
+                <rect
+                  x="20"
+                  y="20"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="0.5"
+                />
+                <circle cx="30" cy="10" r="2" fill="white" opacity="0.3" />
+                <circle cx="50" cy="30" r="2" fill="white" opacity="0.3" />
+                <circle cx="30" cy="50" r="2" fill="white" opacity="0.3" />
+                <circle cx="10" cy="30" r="2" fill="white" opacity="0.3" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#circuit)" />
@@ -160,8 +198,20 @@ const MockInterviewSelection = () => {
         <div className="absolute inset-0 opacity-5">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="diamonds" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
-                <path d="M15,0 L30,15 L15,30 L0,15 Z" fill="none" stroke="white" strokeWidth="0.5"/>
+              <pattern
+                id="diamonds"
+                x="0"
+                y="0"
+                width="30"
+                height="30"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M15,0 L30,15 L15,30 L0,15 Z"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="0.5"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#diamonds)" />
@@ -170,17 +220,34 @@ const MockInterviewSelection = () => {
 
         {/* Animated Lines */}
         <div className="absolute top-0 left-1/5 w-px h-full bg-gradient-to-b from-transparent via-white/20 to-transparent animate-pulse"></div>
-        <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-gray-300/20 to-transparent animate-pulse" style={{ animationDelay: "1s" }}></div>
-        <div className="absolute left-0 top-1/5 w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent animate-pulse" style={{ animationDelay: "2s" }}></div>
-        <div className="absolute left-0 bottom-1/4 w-full h-px bg-gradient-to-r from-transparent via-gray-400/15 to-transparent animate-pulse" style={{ animationDelay: "3s" }}></div>
+        <div
+          className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-gray-300/20 to-transparent animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute left-0 top-1/5 w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+        <div
+          className="absolute left-0 bottom-1/4 w-full h-px bg-gradient-to-r from-transparent via-gray-400/15 to-transparent animate-pulse"
+          style={{ animationDelay: "3s" }}
+        ></div>
 
         {/* Particle System */}
         <div className="absolute top-1/4 left-1/2 w-1 h-1 bg-white opacity-40 rounded-full animate-ping"></div>
-        <div className="absolute top-3/4 left-1/4 w-1 h-1 bg-gray-300 opacity-50 rounded-full animate-ping" style={{ animationDelay: "1s" }}></div>
-        <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-white opacity-60 rounded-full animate-ping" style={{ animationDelay: "2s" }}></div>
+        <div
+          className="absolute top-3/4 left-1/4 w-1 h-1 bg-gray-300 opacity-50 rounded-full animate-ping"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 right-1/4 w-1 h-1 bg-white opacity-60 rounded-full animate-ping"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-6xl relative z-10">        {/* Header with Gamification Elements */}
+      <div className="container mx-auto px-4 max-w-6xl relative z-10">
+        {" "}
+        {/* Header with Gamification Elements */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-4 animate-fadeIn">
             Mock Interview Challenge
@@ -188,29 +255,32 @@ const MockInterviewSelection = () => {
           <p className="text-lg text-gray-300 mb-6 animate-fadeIn">
             Test your skills with AI-powered interview simulation
           </p>
-          
+
           {/* Gamification Stats */}
           <div className="flex justify-center items-center space-x-6 mb-8">
             <div className="bg-gradient-to-br from-gray-600/10 to-gray-800/10 border border-gray-500/30 rounded-xl p-4 text-center">
               <div className="text-2xl mb-1">🏆</div>
-              <div className="text-xl font-bold text-gray-400">Level {level}</div>
+              <div className="text-xl font-bold text-gray-400">
+                Level {level}
+              </div>
               <div className="text-xs text-gray-400">Current Level</div>
             </div>
-            
+
             <div className="bg-gradient-to-br from-gray-700/10 to-gray-900/10 border border-gray-600/30 rounded-xl p-4 text-center">
               <div className="text-2xl mb-1">⭐</div>
               <div className="text-xl font-bold text-gray-400">{totalXP}</div>
               <div className="text-xs text-gray-400">Total XP</div>
             </div>
-            
+
             <div className="bg-gradient-to-br from-gray-500/10 to-gray-700/10 border border-gray-400/30 rounded-xl p-4 text-center">
               <div className="text-2xl mb-1">🔥</div>
-              <div className="text-xl font-bold text-gray-400">{streakCount}</div>
+              <div className="text-xl font-bold text-gray-400">
+                {streakCount}
+              </div>
               <div className="text-xs text-gray-400">Day Streak</div>
             </div>
           </div>
         </div>
-
         {/* Domain Selection */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">
@@ -220,7 +290,9 @@ const MockInterviewSelection = () => {
             {domains.map((domain) => (
               <div
                 key={domain.id}
-                className={`bg-gradient-to-br ${domain.color} border-2 backdrop-blur-xl rounded-xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 focus:scale-105 focus:outline-none shadow-lg animate-fadeIn ${
+                className={`bg-gradient-to-br ${
+                  domain.color
+                } border-2 backdrop-blur-xl rounded-xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 focus:scale-105 focus:outline-none shadow-lg animate-fadeIn ${
                   selectedDomain === domain.id
                     ? "ring-2 ring-cyan-400 scale-105"
                     : ""
@@ -259,7 +331,6 @@ const MockInterviewSelection = () => {
             ))}
           </div>
         </div>
-
         {/* Difficulty Selection */}
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-black dark:text-white mb-6 text-center">
@@ -289,7 +360,9 @@ const MockInterviewSelection = () => {
                     {difficulty.description}
                   </p>
                   <div className="flex items-center justify-center space-x-2">
-                    <span className={`px-2 py-1 rounded text-white text-xs font-bold ${difficulty.color}`}>
+                    <span
+                      className={`px-2 py-1 rounded text-white text-xs font-bold ${difficulty.color}`}
+                    >
                       {difficulty.xpMultiplier} XP
                     </span>
                   </div>
@@ -313,7 +386,6 @@ const MockInterviewSelection = () => {
             ))}
           </div>
         </div>
-
         {/* Start Interview Button */}
         <div className="text-center">
           {createError && (
@@ -321,8 +393,9 @@ const MockInterviewSelection = () => {
               {createError}
             </div>
           )}
-          
-          <button            className={`py-4 px-8 rounded-2xl text-white font-semibold text-lg transition-all duration-300 shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+
+          <button
+            className={`py-4 px-8 rounded-2xl text-white font-semibold text-lg transition-all duration-300 shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               selectedDomain && selectedDifficulty && !createLoading
                 ? "bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 hover:scale-105 focus:ring-gray-500"
                 : "bg-gray-600 cursor-not-allowed opacity-50"
@@ -337,20 +410,44 @@ const MockInterviewSelection = () => {
               </div>
             ) : selectedDomain && selectedDifficulty ? (
               <div className="flex items-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
                 </svg>
-                Start {selectedDomain.charAt(0).toUpperCase() + selectedDomain.slice(1)} Interview
+                Start{" "}
+                {selectedDomain.charAt(0).toUpperCase() +
+                  selectedDomain.slice(1)}{" "}
+                Interview
               </div>
             ) : (
               "Select Domain & Difficulty First"
             )}
           </button>
-        </div>        {/* Tips Section */}
+        </div>{" "}
+        {/* Tips Section */}
         <div className="mt-12 bg-gradient-to-r from-gray-600/10 to-gray-800/10 border border-gray-500/30 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <svg className="w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <svg
+              className="w-5 h-5 mr-2 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             Interview Tips
           </h3>
