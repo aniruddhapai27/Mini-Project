@@ -71,22 +71,29 @@ const App = () => {
               <Quiz />
             </ProtectedRoute>
           }
-        />        <Route
+        />{" "}
+        <Route
           path="quiz-results"
           element={
             <ProtectedRoute>
               <QuizResults />
             </ProtectedRoute>
           }
-        />        <Route
+        />{" "}
+        <Route
           path="mock-interview-selection"
           element={
-            <MockInterviewSelection />
+            <ProtectedRoute>
+              <MockInterviewSelection />
+            </ProtectedRoute>
           }
-        /><Route
+        />
+        <Route
           path="mock-interview/:sessionId"
           element={
-            <MockInterviewTest />
+            <ProtectedRoute>
+              <MockInterviewTest />
+            </ProtectedRoute>
           }
         />
         <Route

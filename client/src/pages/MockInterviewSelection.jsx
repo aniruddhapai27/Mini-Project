@@ -270,7 +270,8 @@ const MockInterviewSelection = () => {
           </h1>
           <p className="text-lg text-gray-300 mb-6 animate-fadeIn">
             Test your skills with AI-powered interview simulation
-          </p>          {/* Gamification Stats */}
+          </p>{" "}
+          {/* Gamification Stats */}
           <div className="flex justify-center items-center space-x-6 mb-8">
             <div className="bg-gradient-to-br from-gray-600/10 to-gray-800/10 border border-gray-500/30 rounded-xl p-4 text-center">
               <div className="text-2xl mb-1">🏆</div>
@@ -294,25 +295,37 @@ const MockInterviewSelection = () => {
               <div className="text-xs text-gray-400">Day Streak</div>
             </div>
           </div>
-
           {/* Resume Status */}
           <div className="mb-8">
             {hasResume ? (
               <div className="max-w-2xl mx-auto bg-gradient-to-br from-green-900/20 to-emerald-900/20 border border-green-500/30 rounded-xl p-6">
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-green-400">Resume Ready</h3>
+                  <h3 className="text-lg font-bold text-green-400">
+                    Resume Ready
+                  </h3>
                 </div>
                 <p className="text-green-300 text-center mb-4">
-                  Your interviews will be personalized based on your uploaded resume
+                  Your interviews will be personalized based on your uploaded
+                  resume
                 </p>
                 <div className="flex justify-center gap-3">
                   <button
-                    onClick={() => window.open(user.resume, '_blank')}
+                    onClick={() => window.open(user.resume, "_blank")}
                     className="text-sm bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
                   >
                     View Resume
@@ -329,22 +342,43 @@ const MockInterviewSelection = () => {
               <div className="max-w-2xl mx-auto bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-xl p-6">
                 <div className="flex items-center justify-center gap-3 mb-3">
                   <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <svg
+                      className="w-5 h-5 text-black"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-yellow-400">No Resume Uploaded</h3>
+                  <h3 className="text-lg font-bold text-yellow-400">
+                    No Resume Uploaded
+                  </h3>
                 </div>
                 <p className="text-yellow-300 text-center mb-4">
-                  Upload your resume to get personalized interview questions based on your experience
+                  Upload your resume to get personalized interview questions
+                  based on your experience
                 </p>
                 <div className="flex justify-center gap-3">
                   <Link
                     to="/profile"
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                      />
                     </svg>
                     Upload Resume
                   </Link>
@@ -553,7 +587,6 @@ const MockInterviewSelection = () => {
             </div>
           </div>
         </div>
-
         {/* Resume Upload Prompt */}
         {showResumePrompt && (
           <div className="fixed inset-0 flex items-center justify-center z-50">
@@ -562,8 +595,8 @@ const MockInterviewSelection = () => {
                 Upload Your Resume
               </h3>
               <p className="text-sm text-gray-300 mb-4">
-                To provide a personalized interview experience, please upload your
-                resume.
+                To provide a personalized interview experience, please upload
+                your resume.
               </p>
               <div className="flex justify-center space-x-4">
                 <Link

@@ -194,6 +194,17 @@ const MockInterview = () => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [userResponse, aiResponseLoading, handleSendResponse]);
 
+  // Effect to update URL when session ID is received
+  useEffect(() => {
+    // If we have a session ID from Redux and current URL has "new" as sessionId, update the URL
+    if (currentSessionId && sessionId === "new") {
+      navigate(`/mock-interview/${currentSessionId}`, {
+        replace: true, // Replace current URL instead of adding to history
+        state: sessionData, // Keep the session data in location state
+      });
+    }
+  }, [currentSessionId, sessionId, navigate, sessionData]);
+
   // Clean up on unmount
   useEffect(() => {
     return () => {
