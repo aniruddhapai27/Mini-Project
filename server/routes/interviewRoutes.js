@@ -9,7 +9,8 @@ const {
   endInterviewSession,
   getRecentInterviews,
   createResumeBasedInterview,
-  continueResumeBasedInterview
+  continueResumeBasedInterview,
+  continueInterviewSession
 } = require('../controllers/interviewController');
 const { isLogin } = require('../middlewares/isLogin');
 
@@ -22,7 +23,7 @@ router.use(isLogin);
 router.post('/sessions', createResumeBasedInterview);
 router.get('/sessions/:sessionId', getInterviewSession);
 router.get('/sessions/:sessionId/conversation', getInterviewConversation);
-router.patch('/sessions/:sessionId', continueResumeBasedInterview);
+router.patch('/sessions/:sessionId', continueInterviewSession);
 router.patch('/sessions/:sessionId/end', endInterviewSession);
 router.delete('/sessions/:sessionId', deleteInterviewSession);
 

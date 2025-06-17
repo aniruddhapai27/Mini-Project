@@ -519,3 +519,148 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
     });
   }
 });
+
+// Simple continue interview session (simplified version)
+exports.continueInterviewSession = catchAsync(async (req, res) => {
+  const { sessionId } = req.params;
+  const { userResponse } = req.body;
+  const userId = req.user._id;
+
+  if (!userResponse || !userResponse.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "User response is required",
+    });
+  }
+
+  // Find the interview session
+  const interview = await Interview.findOne({
+    _id: sessionId,
+    user: userId,
+  });
+
+  if (!interview) {
+    return res.status(404).json({
+      success: false,
+      message: "Interview session not found",
+    });
+  }
+
+  try {
+    let aiResponse;
+
+    // Try to use Python service first
+    try {
+      const pythonAPI = require("../utils/pythonAPI");
+      const FormData = require("form-data");
+
+      // Create FormData for continuing the interview
+      const formData = new FormData();
+      formData.append("domain", interview.domain);
+      formData.append("difficulty", interview.difficulty);
+      formData.append("user_response", userResponse);
+      
+      if (interview.sessionId) {
+        formData.append("session", interview.sessionId);
+      }
+
+      // Dummy file (required by endpoint)
+      const dummyBuffer = Buffer.from("continuing interview", "utf8");
+      formData.append("file", dummyBuffer, {
+        filename: "continue.txt",
+        contentType: "text/plain",
+      });
+
+      // Add auth cookie
+      const token = req.cookies.jwt;
+
+      // Call Python service with timeout
+      const response = await pythonAPI.post(
+        "/api/v1/interview/resume-based",
+        formData,
+        {
+          headers: {
+            ...formData.getHeaders(),
+            Cookie: `jwt=${token}`,
+          },
+          timeout: 15000 // 15 second timeout
+        }
+      );
+
+      aiResponse = response.data?.ai || "Thank you for your response. Can you tell me more about that?";
+    } catch (pythonError) {
+      console.log("Python service unavailable, using fallback responses");
+
+      // Enhanced fallback responses based on domain and conversation context
+      const domainResponses = {
+        hr: [
+          "That's a great example! Can you tell me about a time when you had to work with a difficult team member?",
+          "Interesting perspective! How do you handle stress and pressure in the workplace?",
+          "Thank you for sharing that. What motivates you most in your career?",
+          "Good insight! Can you describe your ideal work environment?",
+          "How do you prioritize tasks when you have multiple deadlines?",
+          "What would you say is your greatest professional strength?",
+          "Can you give me an example of how you've handled feedback in the past?"
+        ],
+        dataScience: [
+          "Excellent! Can you walk me through your approach to data preprocessing?",
+          "That's interesting! How do you handle missing data in your datasets?",
+          "Good point! What's your experience with machine learning model validation?",
+          "Can you explain how you would approach a classification problem?",
+          "How do you ensure the quality and reliability of your data analysis?",
+          "What tools and technologies do you prefer for data visualization?",
+          "Can you describe a challenging data science project you've worked on?"
+        ],
+        webdev: [
+          "Great! Can you explain your approach to responsive web design?",
+          "Interesting! How do you optimize website performance?",
+          "Good thinking! What's your experience with version control systems?",
+          "Can you describe your debugging process when you encounter issues?",
+          "How do you stay updated with the latest web development trends?",
+          "What's your approach to writing clean, maintainable code?",
+          "Can you explain the difference between client-side and server-side rendering?"
+        ],
+        fullTechnical: [
+          "Excellent technical insight! Can you explain your approach to system design?",
+          "That's a solid answer! How do you approach debugging complex technical issues?",
+          "Good explanation! What's your experience with database optimization?",
+          "Can you walk me through your code review process?",
+          "How do you ensure scalability in your applications?",
+          "What's your approach to testing and quality assurance?",
+          "Can you explain how you handle security considerations in your projects?"
+        ]
+      };
+
+      const responses = domainResponses[interview.domain] || domainResponses.fullTechnical;
+      const responseIndex = interview.QnA.length % responses.length;
+      aiResponse = responses[responseIndex];
+    }
+
+    // Update interview session with new Q&A
+    interview.QnA.push({
+      bot: aiResponse,
+      user: userResponse,
+      createdAt: new Date(),
+    });
+
+    await interview.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        question: aiResponse,
+        sessionId: interview._id,
+        questionNumber: interview.QnA.length,
+        domain: interview.domain,
+        difficulty: interview.difficulty,
+      },
+    });
+  } catch (error) {
+    console.error("Error continuing interview session:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to continue interview session",
+      error: error.message,
+    });
+  }
+});
