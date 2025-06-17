@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useMemo } from "react";
+import { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -19,7 +19,10 @@ import {
   selectShowLevelUpAnimation,
   selectShowAchievementAnimation,
   sendInterviewMessage,
+  setAiResponseLoading,
 } from "../redux/slices/interviewSlice";
+import Navbar from "../components/Navbar";
+import Loading from "../components/Loading";
 
 const MockInterview = () => {
   const { sessionId } = useParams();
@@ -28,6 +31,7 @@ const MockInterview = () => {
   const dispatch = useDispatch();
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const [localConversation, setLocalConversation] = useState([]);
 
   // Memoize session data to prevent unnecessary re-renders
   const sessionData = useMemo(
@@ -77,7 +81,6 @@ const MockInterview = () => {
     "Conversation:",
     conversation.length
   );
-
   // Handle sending user response
   const handleSendResponse = useCallback(async () => {
     if (!userResponse.trim() || aiResponseLoading) return;
@@ -91,6 +94,29 @@ const MockInterview = () => {
     };
 
     // Add user message immediately (if not already handled by Redux)
+    setLocalConversation((prev) => [
+      ...prev,
+      {
+        type: "user",
+        message: userResponse.trim(),
+        timestamp: Date.now(),
+      },
+    ]);
+
+    // Clear the input field immediately
+    dispatch(setUserResponse(""));
+
+    // Force scroll to bottom immediately after sending message
+    setTimeout(scrollToBottom, 50);
+
+    // Keep focus on textarea after sending message
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+
+    // Set AI response loading to true to show the "AI is analyzing" indicator immediately
+    dispatch(setAiResponseLoading(true));
+
     // Then delay AI response by 1 second
     setTimeout(() => {
       dispatch(sendInterviewMessage(messageData));
@@ -109,7 +135,6 @@ const MockInterview = () => {
     conversation.length,
     dispatch,
   ]);
-
   // Handle starting the interview
   const handleStartInterview = useCallback(() => {
     console.log("Starting interview...");
@@ -126,6 +151,13 @@ const MockInterview = () => {
     };
 
     dispatch(sendInterviewMessage(initialMessageData));
+
+    // Set focus to the textarea after a short delay to allow rendering to complete
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 500);
   }, [dispatch, sessionData]);
 
   // Handle ending interview
@@ -156,16 +188,27 @@ const MockInterview = () => {
         },
       });
     }
-  }, [navigate, currentSessionId, conversation, sessionData]);
-
-  // Scroll to bottom of messages
+  }, [navigate, currentSessionId, conversation, sessionData]); // Scroll to bottom of messages
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // First try to use the reference to the end element
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }
+
+    // As a fallback, also scroll the container directly
+    const chatContainer = document.getElementById("chat-container");
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
   };
 
   useEffect(() => {
+    // Scroll when conversation changes, when AI is loading, or when local conversation changes
     scrollToBottom();
-  }, [conversation, aiResponseLoading]);
+  }, [conversation, localConversation, aiResponseLoading]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -174,25 +217,16 @@ const MockInterview = () => {
       textareaRef.current.style.height =
         Math.min(textareaRef.current.scrollHeight, 150) + "px";
     }
-  }, [userResponse]);
-
-  // Handle keyboard shortcuts
+  }, [userResponse]); // Handle keyboard shortcuts
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (
-        e.ctrlKey &&
-        e.key === "Enter" &&
-        userResponse.trim() &&
-        !aiResponseLoading
-      ) {
-        e.preventDefault();
-        handleSendResponse();
-      }
+    const handleKeyDown = () => {
+      // We're now handling keyboard shortcuts directly in the textarea's onKeyDown event
+      // This global event listener is kept for consistency but not doing anything specific
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [userResponse, aiResponseLoading, handleSendResponse]);
+  }, []);
 
   // Effect to update URL when session ID is received
   useEffect(() => {
@@ -204,6 +238,22 @@ const MockInterview = () => {
       });
     }
   }, [currentSessionId, sessionId, navigate, sessionData]);
+
+  // Reset local conversation when Redux conversation updates
+  useEffect(() => {
+    if (conversation.length > 0) {
+      // Once Redux has processed messages, we can clear our local temporary ones
+      setLocalConversation([]);
+
+      // Focus the textarea after AI response is received
+      // Using a small timeout to ensure the UI has updated
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
+      }, 100);
+    }
+  }, [conversation]);
 
   // Clean up on unmount
   useEffect(() => {
@@ -275,37 +325,42 @@ const MockInterview = () => {
       return () => clearTimeout(timer);
     }
   }, [showAchievementAnimation, dispatch]);
+
   if (!interviewStarted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="text-center space-y-8">
-            <div className="bg-black/30 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-8">
-              <div className="text-4xl mb-6 animate-pulse">
-                {getDomainIcon(sessionData.domain)}
-              </div>
-              <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                AI Interview System
-              </h1>
-              <p className="text-xl text-gray-300 mb-4">
-                Domain:{" "}
-                <span className="text-cyan-400">
-                  {formatDomainName(sessionData.domain)}
-                </span>
-              </p>
-              <p className="text-xl text-gray-300 mb-8">
-                Difficulty:{" "}
-                <span className="text-purple-400 capitalize">
-                  {sessionData.difficulty}
-                </span>
-              </p>
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="container mx-auto px-4 py-8 flex-1 flex items-center justify-center">
+          <div className="w-full max-w-3xl">
+            <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden border border-gray-700">
+              <div className="p-8 text-center space-y-6">
+                <div className="text-5xl mb-4">
+                  {getDomainIcon(sessionData.domain)}
+                </div>
+                <h1 className="text-3xl font-bold text-white mb-4">
+                  AI Interview Preparation
+                </h1>
+                <p className="text-xl text-gray-300 mb-2">
+                  Domain:{" "}
+                  <span className="text-cyan-400 font-medium">
+                    {formatDomainName(sessionData.domain)}
+                  </span>
+                </p>
+                <p className="text-xl text-gray-300 mb-6">
+                  Difficulty:{" "}
+                  <span className="text-purple-400 font-medium capitalize">
+                    {sessionData.difficulty}
+                  </span>
+                </p>
 
-              <button
-                onClick={handleStartInterview}
-                className="py-4 px-8 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-              >
-                🚀 Start Interview
-              </button>
+                <div className="mt-8">
+                  <button
+                    onClick={handleStartInterview}
+                    className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105"
+                  >
+                    🚀 Start Interview
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -314,201 +369,257 @@ const MockInterview = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
+      <div className="container mx-auto px-4 py-6 flex-1">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="text-3xl">{getDomainIcon(sessionData.domain)}</div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-              {formatDomainName(sessionData.domain)} Interview
-            </h1>
+        <div className="max-w-4xl mx-auto mb-6">
+          <div className="bg-gray-800 rounded-lg p-4 flex items-center justify-between border border-gray-700">
+            <div className="flex items-center space-x-3">
+              <div className="text-3xl">
+                {getDomainIcon(sessionData.domain)}
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">
+                  {formatDomainName(sessionData.domain)} Interview
+                </h1>
+                <p className="text-sm text-gray-400">
+                  Difficulty:{" "}
+                  <span className="text-purple-400 capitalize">
+                    {sessionData.difficulty}
+                  </span>
+                  {conversation.length > 0 && (
+                    <span className="ml-4">
+                      • Question {Math.floor(conversation.length / 2) + 1}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleEndInterview}
+              className="py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded font-medium text-sm transition duration-200"
+            >
+              End Interview
+            </button>
           </div>
-          <p className="text-gray-300">
-            Difficulty:{" "}
-            <span className="text-purple-400 capitalize">
-              {sessionData.difficulty}
-            </span>
-            {conversation.length > 0 && (
-              <span className="ml-4">
-                • Question {Math.floor(conversation.length / 2) + 1}
-              </span>
-            )}
-          </p>
         </div>
 
-        {/* Chat Container */}
-        <div className="bg-black/20 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 h-96 overflow-y-auto mb-6 space-y-4">
-          {conversation.map((message, index) => (
-            <div
-              key={index}
-              className={`flex items-start space-x-4 animate-fadeIn ${
-                message.type === "user"
-                  ? "flex-row-reverse space-x-reverse"
-                  : ""
-              }`}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {/* Avatar */}
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
-                  message.type === "ai"
-                    ? "bg-gradient-to-br from-cyan-500 to-purple-500 animate-pulse"
-                    : "bg-gradient-to-br from-purple-500 to-pink-500"
-                }`}
-              >
-                {message.type === "ai" ? "🤖" : "👤"}
+        <div className="max-w-4xl mx-auto">
+          {/* Chat Container */}
+          <div
+            className="bg-gray-800 border animate-pulse-slow border-gray-700 rounded-lg p-4 h-[400px] overflow-y-auto mb-4"
+            id="chat-container"
+          >
+            {" "}
+            {conversation.length === 0 &&
+            localConversation.length === 0 &&
+            !aiResponseLoading ? (
+              <div className="h-full flex items-center justify-center text-gray-400">
+                <p>
+                  Your interview will start soon. Get ready for the first
+                  question.
+                </p>
               </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Show all conversation messages from Redux, followed by any local messages that are not yet in Redux */}
+                {[
+                  ...conversation,
+                  ...localConversation.filter(
+                    (localMsg) =>
+                      !conversation.some(
+                        (reduxMsg) =>
+                          reduxMsg.type === localMsg.type &&
+                          reduxMsg.message === localMsg.message
+                      )
+                  ),
+                ].map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex items-start space-x-4 animate-fadeIn ${
+                      message.type === "user"
+                        ? "flex-row-reverse space-x-reverse"
+                        : ""
+                    }`}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    {/* Avatar */}
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-md ${
+                        message.type === "ai" ? "bg-blue-600" : "bg-purple-600"
+                      }`}
+                    >
+                      {message.type === "ai" ? "🤖" : "👤"}
+                    </div>
 
-              {/* Message */}
-              <div
-                className={`flex-1 max-w-[70%] ${
-                  message.type === "user" ? "text-right" : "text-left"
-                }`}
-              >
-                <div
-                  className={`p-4 rounded-2xl shadow-lg backdrop-blur-sm ${
-                    message.type === "ai"
-                      ? "bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white"
-                      : "bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 text-white"
+                    {/* Message */}
+                    <div
+                      className={`flex-1 max-w-[75%] ${
+                        message.type === "user" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      <div
+                        className={`p-3 rounded-lg shadow ${
+                          message.type === "ai"
+                            ? "bg-gray-700 text-white"
+                            : "bg-blue-600 text-white"
+                        }`}
+                      >
+                        <p className="leading-relaxed">{message.message}</p>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* AI Typing Indicator */}
+                {aiResponseLoading && (
+                  <div className="flex items-start space-x-4">
+                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-md">
+                      🤖
+                    </div>
+                    <div className="flex-1">
+                      <div className="bg-gray-700 rounded-lg p-3 shadow">
+                        <div className="flex items-center space-x-2">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                            <div
+                              className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.1s" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                              style={{ animationDelay: "0.2s" }}
+                            ></div>
+                          </div>
+                          <span className="text-blue-400 text-sm">
+                            AI is analyzing your response...
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            )}
+          </div>
+
+          {/* Input Area */}
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+            {" "}
+            <div className="mb-2">
+              <label className="text-sm font-medium bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                Your Response
+              </label>
+              <div className="relative">
+                <textarea
+                  ref={textareaRef}
+                  value={userResponse}
+                  onChange={(e) => dispatch(setUserResponse(e.target.value))}
+                  placeholder="Type your response here... (Enter to send)"
+                  className="w-full p-3 mt-1 bg-gray-700/90 border border-blue-500/40 rounded text-white placeholder-gray-400 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[80px] transition-all 
+                    backdrop-blur-sm shadow-[0_0_15px_rgba(59,130,246,0.3)] animate-pulse-slow"
+                  disabled={aiResponseLoading}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      // Enter (without shift): Send response
+                      e.preventDefault();
+                      if (userResponse.trim() && !aiResponseLoading) {
+                        handleSendResponse();
+                      }
+                    }
+                  }}
+                />
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg blur-sm opacity-20 animate-pulse-slow -z-10"></div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              {" "}
+              <div className="text-xs text-gray-400 flex items-center space-x-1">
+                <kbd className="px-1.5 py-0.5 bg-gray-700 border border-gray-600 rounded text-xs">
+                  Enter
+                </kbd>
+                <span>to send</span>
+                <span className="ml-2">•</span>
+                <kbd className="px-1.5 py-0.5 bg-gray-700 border border-gray-600 rounded text-xs ml-2">
+                  Shift+Enter
+                </kbd>
+                <span>for new line</span>
+              </div>{" "}
+              <div className="relative">
+                <button
+                  onClick={handleSendResponse}
+                  disabled={!userResponse.trim() || aiResponseLoading}
+                  className={`px-6 py-2.5 rounded-md font-medium text-sm transition-all duration-300 shadow-lg relative z-10 ${
+                    !userResponse.trim() || aiResponseLoading
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]"
                   }`}
                 >
-                  <p className="leading-relaxed text-sm md:text-base">
-                    {message.message}
-                  </p>
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* AI Typing Indicator */}
-          {aiResponseLoading && (
-            <div className="flex items-start space-x-4 animate-fadeIn">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg animate-pulse">
-                🤖
-              </div>
-              <div className="flex-1">
-                <div className="bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-2xl p-4 shadow-lg backdrop-blur-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
-                      <div
-                        className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></div>
+                  {aiResponseLoading ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-300 border-t-white"></div>
+                      <span>Processing...</span>
                     </div>
-                    <span className="text-cyan-400 text-sm">
-                      AI is analyzing your response...
+                  ) : (
+                    <span className="flex items-center space-x-1">
+                      <span>Send Response</span>
+                      <span>➤</span>
                     </span>
-                  </div>
-                </div>
+                  )}
+                </button>
+                {userResponse.trim() && !aiResponseLoading && (
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-md blur-sm opacity-40 animate-pulse-slow -z-0"></div>
+                )}
               </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="bg-black/20 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-4">
-          <div className="mb-4">
-            <label className="flex items-center space-x-2 text-sm font-medium text-gray-300 mb-3">
-              <span>Your Response</span>
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            </label>
-            <textarea
-              ref={textareaRef}
-              value={userResponse}
-              onChange={(e) => dispatch(setUserResponse(e.target.value))}
-              placeholder="Type your response here... (Ctrl+Enter to send)"
-              className="w-full p-4 border border-cyan-500/30 rounded-xl bg-black/50 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none min-h-[100px] max-h-[200px] backdrop-blur-sm transition-all duration-300"
-              disabled={aiResponseLoading}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && e.ctrlKey) {
-                  e.preventDefault();
-                  handleSendResponse();
-                }
-              }}
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-400 flex items-center space-x-2">
-              <kbd className="px-2 py-1 bg-black/50 border border-cyan-500/30 rounded text-xs text-cyan-400">
-                Ctrl
-              </kbd>
-              <span>+</span>
-              <kbd className="px-2 py-1 bg-black/50 border border-cyan-500/30 rounded text-xs text-cyan-400">
-                Enter
-              </kbd>
-              <span>to send</span>
-            </div>
-
-            <div className="flex space-x-2">
-              <button
-                onClick={handleSendResponse}
-                disabled={!userResponse.trim() || aiResponseLoading}
-                className={`group py-3 px-6 rounded-xl font-semibold transition-all duration-300 relative overflow-hidden ${
-                  !userResponse.trim() || aiResponseLoading
-                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-600 hover:to-purple-600 hover:shadow-xl hover:shadow-purple-500/25 transform hover:scale-105"
-                }`}
-              >
-                {!userResponse.trim() || aiResponseLoading ? null : (
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                )}
-                {aiResponseLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
-                    <span>Processing...</span>
-                  </div>
-                ) : (
-                  <span className="relative flex items-center space-x-2">
-                    <span>Send</span>
-                    <span>📤</span>
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleEndInterview}
-                className="py-3 px-6 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-              >
-                End Interview
-              </button>
             </div>
           </div>
         </div>
       </div>
-
       {/* Animations */}
       {showStreakAnimation && <StreakAnimation />}
       {showLevelUpAnimation && <LevelUpAnimation />}
       {showAchievementAnimation && <AchievementAnimation />}
-
-      {/* Custom CSS for animations */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
+      {/* Custom CSS for animations */}{" "}
+      <style jsx>
+        {`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
 
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out forwards;
-        }
-      `}</style>
+          .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out forwards;
+          }
+
+          @keyframes pulse-slow {
+            0%,
+            100% {
+              opacity: 1;
+              box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+            }
+            50% {
+              opacity: 0.8;
+              box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
+            }
+          }
+
+          .animate-pulse-slow {
+            animation: pulse-slow 3s ease-in-out infinite;
+          }
+        `}
+      </style>
     </div>
   );
 };

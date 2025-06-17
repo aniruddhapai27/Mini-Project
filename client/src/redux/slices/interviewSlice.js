@@ -398,6 +398,10 @@ const interviewSlice = createSlice({
     clearAiResponseError: (state) => {
       state.aiResponseError = null;
     },
+
+    setAiResponseLoading: (state, action) => {
+      state.aiResponseLoading = action.payload;
+    },
   },
 
   extraReducers: (builder) => {
@@ -618,6 +622,7 @@ export const {
   setCurrentSessionId,
   resetInterview,
   clearAiResponseError,
+  setAiResponseLoading,
 } = interviewSlice.actions;
 
 // Selectors
