@@ -245,6 +245,8 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
   const userId = req.user._id;
   const { domain, difficulty } = req.body;
 
+  console.log("Creating interview session for userId:", userId, "Type:", typeof userId);
+
   if (!domain || !difficulty) {
     return res.status(400).json({
       success: false,
@@ -360,20 +362,12 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
       pythonSessionId = `fallback_${Date.now()}_${Math.random()
         .toString(36)
         .substr(2, 9)}`;
-    }
-
-    // Create interview session in MongoDB
+    }    // Create interview session in MongoDB
     const newInterview = new Interview({
       user: userId,
       domain: domain,
       difficulty: difficulty,
-      QnA: [
-        {
-          bot: aiResponse,
-          user: "Hello, I am ready to start the interview.",
-          createdAt: new Date(),
-        },
-      ],
+      QnA: [], // Start with empty QnA array - don't store the initial greeting
       sessionId: pythonSessionId,
       resumeUsed: user?.resume || null, // Store which resume was used
     });
@@ -490,16 +484,19 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
       ];
 
       // Use a different response based on conversation length
-      const responseIndex = interview.QnA.length % fallbackResponses.length;
-      aiResponse = fallbackResponses[responseIndex];
+      const responseIndex = interview.QnA.length % fallbackResponses.length;      aiResponse = fallbackResponses[responseIndex];
+    }    // Update interview session with new Q&A
+    // Only add non-greeting messages to the conversation history
+    const isGreeting = userResponse.trim() === "Hello, I am ready to start the interview." || 
+                      userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";
+    
+    if (!isGreeting) {
+      interview.QnA.push({
+        bot: aiResponse,
+        user: userResponse,
+        createdAt: new Date(),
+      });
     }
-
-    // Update interview session with new Q&A
-    interview.QnA.push({
-      bot: aiResponse,
-      user: userResponse,
-      createdAt: new Date(),
-    });
 
     await interview.save();
 
@@ -632,16 +629,19 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
       };
 
       const responses = domainResponses[interview.domain] || domainResponses.fullTechnical;
-      const responseIndex = interview.QnA.length % responses.length;
-      aiResponse = responses[responseIndex];
+      const responseIndex = interview.QnA.length % responses.length;      aiResponse = responses[responseIndex];
+    }    // Update interview session with new Q&A
+    // Only add non-greeting messages to the conversation history
+    const isGreeting = userResponse.trim() === "Hello, I am ready to start the interview." || 
+                      userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";
+    
+    if (!isGreeting) {
+      interview.QnA.push({
+        bot: aiResponse,
+        user: userResponse,
+        createdAt: new Date(),
+      });
     }
-
-    // Update interview session with new Q&A
-    interview.QnA.push({
-      bot: aiResponse,
-      user: userResponse,
-      createdAt: new Date(),
-    });
 
     await interview.save();
 

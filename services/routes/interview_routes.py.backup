@@ -69,11 +69,13 @@ async def resume_based_interview(
             raise HTTPException(status_code=400, detail="Difficulty must be 'easy', 'medium', or 'hard'.")
         
         if not user_response.strip():
-            raise HTTPException(status_code=400, detail="User response cannot be empty.")
-          # Use authenticated user ID - convert back to ObjectId if it's a string
+            raise HTTPException(status_code=400, detail="User response cannot be empty.")        # Use authenticated user ID - convert back to ObjectId if it's a string
         user_id = current_user["_id"]
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
+        
+        print(f"Python service - Processing for user_id: {user_id}, type: {type(user_id)}")
+        print(f"Session parameter: {session}")
         
         # Parse resume content
         from utils.helper import extract_text
@@ -81,38 +83,50 @@ async def resume_based_interview(
         if not resume_content:
             raise HTTPException(status_code=400, detail="Could not extract text from the resume file.")
         
-        # Get or create session
+        # Get database connection
         db = await get_database()
         collection = db['interviews']
         
-        if session:            # Get existing session - Node.js sessions don't filter by user_id in the lookup
-            session_doc = await collection.find_one({"_id": ObjectId(session)})
-            if not session_doc:
-                raise HTTPException(status_code=404, detail="Interview session not found.")
-              # Build conversation history from Node.js QnA structure
-            history = ""
-            if "QnA" in session_doc:
-                for idx, qna in enumerate(session_doc["QnA"]):
-                    # Skip the first exchange which is the initial greeting
-                    user_msg = qna.get('user', '').strip()
-                    if (idx == 0 and (user_msg == "Hello, I am ready to start the interview." or 
-                                     user_msg == "Hello, I'm ready to start the interview. Please begin with your first question.")):
-                        continue
-                    
-                    interviewer_msg = qna.get('bot', '')
-                    candidate_msg = qna.get('user', '')
-                    if interviewer_msg and candidate_msg:
-                        history += f"Interviewer: {interviewer_msg}\\nCandidate: {candidate_msg}\\n"            # Add current user response only if it's not the initial greeting
-            if (user_response.strip() != "Hello, I am ready to start the interview." and
-                user_response.strip() != "Hello, I'm ready to start the interview. Please begin with your first question."):
-                history += f"Candidate: {user_response}\\n"
+        # Build conversation history from existing Node.js session structure
+        history = ""
+          if session:
+            # Find existing Node.js session using the session ID (which is the MongoDB _id)
+            try:
+                session_doc = await collection.find_one({"_id": ObjectId(session)})
+                if not session_doc:
+                    print(f"Session {session} not found in database")
+                    raise HTTPException(status_code=404, detail="Interview session not found.")
+                
+                print(f"Found existing session: {session_doc.get('_id')}")
+                
+                # Build history from Node.js QnA structure, excluding the initial greeting
+                if "QnA" in session_doc:
+                    for idx, qna in enumerate(session_doc["QnA"]):
+                        # Skip the first exchange which is the initial greeting
+                        user_msg = qna.get('user', '').strip()
+                        if (idx == 0 and (user_msg == "Hello, I am ready to start the interview." or 
+                                         user_msg == "Hello, I'm ready to start the interview. Please begin with your first question.")):
+                            continue
+                        
+                        interviewer_msg = qna.get('bot', '')
+                        candidate_msg = qna.get('user', '')
+                        if interviewer_msg and candidate_msg:
+                            history += f"Interviewer: {interviewer_msg}\\nCandidate: {candidate_msg}\\n"
+                
+                # Add current user response only if it's not the initial greeting
+                if (user_response.strip() != "Hello, I am ready to start the interview." and
+                    user_response.strip() != "Hello, I'm ready to start the interview. Please begin with your first question."):
+                    history += f"Candidate: {user_response}\\n"
+                
+            except Exception as e:
+                print(f"Error finding session: {str(e)}")
+                raise HTTPException(status_code=404, detail=f"Session not found: {str(e)}")
         else:
-            # For new interviews, only add the current response if it's not the initial greeting
+            print("No session provided - this should only happen for new interviews")
+            # For new sessions, only add the current response if it's not the initial greeting
             if (user_response.strip() != "Hello, I am ready to start the interview." and
                 user_response.strip() != "Hello, I'm ready to start the interview. Please begin with your first question."):
                 history = f"Candidate: {user_response}\\n"
-            else:
-                history = ""
         
         # Generate next question
         ai_response = await resume_based_interviewer(resume_content, domain, difficulty, history)
