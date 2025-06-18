@@ -490,16 +490,19 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
       ];      // Use a different response based on conversation length
       const responseIndex = interview.QnA.length % fallbackResponses.length;
       aiResponse = fallbackResponses[responseIndex];
-    }
-
-    // Update interview session with new Q&A
+    }    // Update interview session with new Q&A
     // Only add non-greeting messages to the conversation history
     const isGreeting = userResponse.trim() === "Hello, I am ready to start the interview." || 
-                      userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";    if (!isGreeting) {
-      // If this is the first user response, update the existing QnA entry
-      if (interview.QnA.length === 1 && (interview.QnA[0].user === "" || !interview.QnA[0].user)) {
-        interview.QnA[0].user = userResponse;
-        interview.QnA[0].createdAt = new Date();
+                      userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";
+    
+    if (!isGreeting) {
+      // Find the last QnA entry with empty user field and fill it
+      for (let i = interview.QnA.length - 1; i >= 0; i--) {
+        if (interview.QnA[i].user === "" || !interview.QnA[i].user) {
+          interview.QnA[i].user = userResponse;
+          interview.QnA[i].createdAt = new Date();
+          break; // Only update the most recent empty user field
+        }
       }
       
       // Add the new AI response as the next QnA entry
@@ -650,11 +653,15 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
     // Only add non-greeting messages to the conversation history
     const isGreeting = userResponse.trim() === "Hello, I am ready to start the interview." || 
                       userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";
-      if (!isGreeting) {
-      // If this is the first user response, update the existing QnA entry
-      if (interview.QnA.length === 1 && (interview.QnA[0].user === "" || !interview.QnA[0].user)) {
-        interview.QnA[0].user = userResponse;
-        interview.QnA[0].createdAt = new Date();
+    
+    if (!isGreeting) {
+      // Find the last QnA entry with empty user field and fill it
+      for (let i = interview.QnA.length - 1; i >= 0; i--) {
+        if (interview.QnA[i].user === "" || !interview.QnA[i].user) {
+          interview.QnA[i].user = userResponse;
+          interview.QnA[i].createdAt = new Date();
+          break; // Only update the most recent empty user field
+        }
       }
       
       // Add the new AI response as the next QnA entry
