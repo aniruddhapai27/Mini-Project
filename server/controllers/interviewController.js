@@ -362,12 +362,18 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
       pythonSessionId = `fallback_${Date.now()}_${Math.random()
         .toString(36)
         .substr(2, 9)}`;
-    }    // Create interview session in MongoDB
+    }    // Create interview session in MongoDB with initial AI response
     const newInterview = new Interview({
       user: userId,
       domain: domain,
       difficulty: difficulty,
-      QnA: [], // Start with empty QnA array - don't store the initial greeting
+      QnA: [
+        {
+          bot: aiResponse, // Store the initial AI question immediately
+          user: "", // Empty initially - will be filled when user responds
+          createdAt: new Date(),
+        },
+      ],
       sessionId: pythonSessionId,
       resumeUsed: user?.resume || null, // Store which resume was used
     });
@@ -481,21 +487,29 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
         "That's a solid approach. What would you do differently if you had to optimize this further?",
         "Excellent! How do you stay updated with the latest trends in this field?",
         "Thank you for that detailed explanation. What challenges have you faced in similar scenarios?",
-      ];
+      ];      // Use a different response based on conversation length
+      const responseIndex = interview.QnA.length % fallbackResponses.length;
+      aiResponse = fallbackResponses[responseIndex];
+    }
 
-      // Use a different response based on conversation length
-      const responseIndex = interview.QnA.length % fallbackResponses.length;      aiResponse = fallbackResponses[responseIndex];
-    }    // Update interview session with new Q&A
+    // Update interview session with new Q&A
     // Only add non-greeting messages to the conversation history
     const isGreeting = userResponse.trim() === "Hello, I am ready to start the interview." || 
-                      userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";
-    
-    if (!isGreeting) {
-      interview.QnA.push({
-        bot: aiResponse,
-        user: userResponse,
-        createdAt: new Date(),
-      });
+                      userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";    if (!isGreeting) {
+      // If this is the first user response, update the existing QnA entry
+      if (interview.QnA.length === 1 && (interview.QnA[0].user === "" || !interview.QnA[0].user)) {
+        interview.QnA[0].user = userResponse;
+        interview.QnA[0].createdAt = new Date();
+      }
+      
+      // Add the new AI response as the next QnA entry
+      if (aiResponse) {
+        interview.QnA.push({
+          bot: aiResponse,
+          user: "", // Will be filled with next user response
+          createdAt: new Date(),
+        });
+      }
     }
 
     await interview.save();
@@ -522,6 +536,8 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
   const { sessionId } = req.params;
   const { userResponse } = req.body;
   const userId = req.user._id;
+
+  console.log("continueInterviewSession called - sessionId:", sessionId, "userResponse:", userResponse?.substring(0, 50));
 
   if (!userResponse || !userResponse.trim()) {
     return res.status(400).json({
@@ -634,13 +650,21 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
     // Only add non-greeting messages to the conversation history
     const isGreeting = userResponse.trim() === "Hello, I am ready to start the interview." || 
                       userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";
-    
-    if (!isGreeting) {
-      interview.QnA.push({
-        bot: aiResponse,
-        user: userResponse,
-        createdAt: new Date(),
-      });
+      if (!isGreeting) {
+      // If this is the first user response, update the existing QnA entry
+      if (interview.QnA.length === 1 && (interview.QnA[0].user === "" || !interview.QnA[0].user)) {
+        interview.QnA[0].user = userResponse;
+        interview.QnA[0].createdAt = new Date();
+      }
+      
+      // Add the new AI response as the next QnA entry
+      if (aiResponse) {
+        interview.QnA.push({
+          bot: aiResponse,
+          user: "", // Will be filled with next user response
+          createdAt: new Date(),
+        });
+      }
     }
 
     await interview.save();

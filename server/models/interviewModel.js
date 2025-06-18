@@ -19,10 +19,9 @@ const interviewSchema = mongoose.Schema(
             bot:{
                 type: String,
                 required: true
-            },
-            user: {
+            },            user: {
                 type: String,
-                required: true
+                required: false  // Changed to false to allow empty user responses initially
             },
             createdAt: {
                 type: Date,
