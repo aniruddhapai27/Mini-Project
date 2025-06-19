@@ -18,7 +18,8 @@ class FeedbackRequest(BaseModel):
 class ChatRequest(BaseModel):
     user_query: str = Field(..., description="The user's query for the chat")
     subject: str = Field(default='ADA', description="The subject of the chat")
-    session_id: str = Field(..., description="The session ID for the chat")
+    session_id: Optional[str] = Field(None, description="The session ID for the chat")
+    user_id: Optional[str] = Field(None, description="The user ID for the chat")
 
 class ResumeAnalysisRequest(BaseModel):
     pass  # No fields needed since user_id comes from authentication

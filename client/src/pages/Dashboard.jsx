@@ -317,6 +317,38 @@ const Dashboard = () => {
                   className="w-full py-2 px-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 font-medium shadow-lg"
                 >
                   Start Practice
+                </button>              </div>
+
+              {/* Study Assistant */}
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-indigo-500/30 rounded-xl p-6 group hover:border-indigo-500/50 transition-all duration-300">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                    <svg
+                      className="w-5 h-5 text-indigo-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white ml-3">
+                    Study Assistant
+                  </h3>
+                </div>
+                <p className="text-gray-400 mb-4 text-sm">
+                  Get personalized help with CS subjects using AI-powered study companion.
+                </p>
+                <button
+                  onClick={() => navigate('/study-assistant/new')}
+                  className="w-full py-2 px-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 font-medium shadow-lg"
+                >
+                  Start Learning
                 </button>
               </div>
 
