@@ -16,6 +16,7 @@ import MockInterviewSelection from "./pages/MockInterviewSelection";
 import MockInterviewTest from "./pages/MockInterviewTest";
 import MockInterview from "./pages/MockInterview";
 import MockInterviewResults from "./pages/MockInterviewResults";
+import StudyAssistant from "./pages/StudyAssistant";
 import { Route, Routes } from "react-router-dom";
 import { getMe } from "./redux/slices/authSlice";
 import Loading from "./components/Loading";
@@ -95,12 +96,19 @@ const App = () => {
               <MockInterviewTest />
             </ProtectedRoute>
           }
-        />
-        <Route
+        />        <Route
           path="mock-interview-results"
           element={
             <ProtectedRoute>
               <MockInterviewResults />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="study-assistant/:sessionId?"
+          element={
+            <ProtectedRoute>
+              <StudyAssistant />
             </ProtectedRoute>
           }
         />

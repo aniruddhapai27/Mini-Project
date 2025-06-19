@@ -78,6 +78,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/dq", dqRouter);
 app.use("/api/v1/interview", interviewRouter);
+app.use("/api/v1/assistant", require("./routes/assistantRoutes"));
 
 // Global error handling middleware
 app.use(globalErrorHandler);

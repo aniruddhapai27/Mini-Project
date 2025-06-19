@@ -77,4 +77,35 @@ export const interviewApi = {
   },
 };
 
+// Study Assistant API functions
+export const studyAssistantApi = {
+  // Create new study session
+  createSession: async (subject) => {
+    const response = await api.post('/api/v1/assistant/chat', {
+      user_query: "Hello, I'd like to start studying this subject.",
+      subject: subject,
+      session_id: null
+    });
+    return response.data;
+  },
+
+  // Send message to study assistant
+  sendMessage: async (messageData) => {
+    const response = await api.post('/api/v1/assistant/chat', messageData);
+    return response.data;
+  },
+
+  // Get chat history/sessions
+  getHistory: async () => {
+    const response = await api.get('/api/v1/assistant/history');
+    return response.data;
+  },
+
+  // Get specific session messages
+  getSession: async (sessionId) => {
+    const response = await api.get(`/api/v1/assistant/session/${sessionId}`);
+    return response.data;
+  }
+};
+
 export default api;
