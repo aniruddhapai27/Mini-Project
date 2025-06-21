@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
@@ -29,12 +29,12 @@ const StudyAssistant = () => {
     { key: 'SE', name: 'Software Engineering', icon: '⚙️', color: 'from-indigo-500 to-blue-500' },
     { key: 'DS', name: 'Data Structures', icon: '📊', color: 'from-pink-500 to-rose-500' }
   ];
-
   // Fetch chat history
-  const fetchChatHistory = async () => {
+  const fetchChatHistory = useCallback(async () => {
     try {
       setIsLoadingSessions(true);
       const response = await studyAssistantApi.getHistory();
+      console.log('History response:', response);
       setSessions(response.sessions || []);
     } catch (error) {
       console.error('Error fetching chat history:', error);
@@ -42,26 +42,48 @@ const StudyAssistant = () => {
     } finally {
       setIsLoadingSessions(false);
     }
-  };
+  }, []);
 
   // Load session messages
-  const loadSessionMessages = async (sessionIdToLoad) => {
+  const loadSessionMessages = useCallback(async (sessionIdToLoad) => {
     try {
+      console.log('Loading session messages for ID:', sessionIdToLoad);
+      setIsLoading(true);
       const response = await studyAssistantApi.getSession(sessionIdToLoad);
-      setMessages(response.messages || []);
-      setCurrentSession(response.session);
-      setSelectedSubject(response.session?.subject || 'ADA');
+      console.log('Session response:', response);
+      
+      if (response && response.messages) {
+        setMessages(response.messages);
+        setCurrentSession(response.session);
+        setSelectedSubject(response.session?.subject || 'ADA');
+      } else {
+        console.error('Invalid session response format:', response);
+        toast.error('Invalid session data format');
+      }
     } catch (error) {
       console.error('Error loading session:', error);
-      toast.error('Failed to load chat session');
+      toast.error('Failed to load chat session: ' + (error.message || 'Unknown error'));
+      
+      // If the session doesn't exist or can't be loaded, redirect to new session
+      navigate('/study-assistant/new', { replace: true });
+    } finally {
+      setIsLoading(false);
     }
-  };
-
+  }, [navigate]);
   // Create new chat session
-  const createNewSession = async (subject = selectedSubject) => {
+  const createNewSession = useCallback(async (subject = selectedSubject) => {
     try {
+      console.log('Creating new session for subject:', subject);
+      setIsLoading(true);
       const response = await studyAssistantApi.createSession(subject);
+      console.log('Create session response:', response);
+      
+      if (!response || !response.session_id) {
+        throw new Error('Invalid response: Missing session_id');
+      }
+      
       const newSessionId = response.session_id;
+      console.log('New session ID:', newSessionId);
       
       // Update URL and navigate
       navigate(`/study-assistant/${newSessionId}`, { replace: true });
@@ -73,14 +95,18 @@ const StudyAssistant = () => {
       
       // Refresh sessions list
       fetchChatHistory();
+      
+      return newSessionId;
     } catch (error) {
       console.error('Error creating new session:', error);
-      toast.error('Failed to create new chat session');
+      toast.error('Failed to create new chat session: ' + (error.message || 'Unknown error'));
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-  };
-
-  // Send message
-  const sendMessage = async () => {
+  }, [navigate, fetchChatHistory, selectedSubject]);
+    // Send message
+  const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading) return;
 
     const userMessage = inputMessage.trim();
@@ -90,21 +116,27 @@ const StudyAssistant = () => {
     const userMessageObj = {
       type: 'user',
       content: userMessage,
-      timestamp: new Date()
+      timestamp: new Date().toISOString()
     };
     setMessages(prev => [...prev, userMessageObj]);
 
     try {
       setIsLoading(true);
+      console.log('Processing message:', userMessage);
       
       // If no current session, create one
       let sessionIdToUse = currentSession?._id || sessionId;
+      console.log('Session ID to use:', sessionIdToUse);
+      
       if (!sessionIdToUse || sessionIdToUse === 'new') {
-        const response = await studyAssistantApi.createSession(selectedSubject);
-        sessionIdToUse = response.session_id;
-        navigate(`/study-assistant/${sessionIdToUse}`, { replace: true });
-        setCurrentSession({ _id: sessionIdToUse, subject: selectedSubject });
-        fetchChatHistory();
+        console.log('No valid session ID, creating new session');
+        try {
+          sessionIdToUse = await createNewSession(selectedSubject);
+          console.log('Created new session:', sessionIdToUse);
+        } catch (error) {
+          console.error('Failed to create session:', error);
+          throw new Error('Could not create a new session');
+        }
       }
 
       // Send message to API
@@ -118,7 +150,7 @@ const StudyAssistant = () => {
       const aiMessageObj = {
         type: 'assistant',
         content: response.response,
-        timestamp: new Date()
+        timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, aiMessageObj]);
 
@@ -131,7 +163,7 @@ const StudyAssistant = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [inputMessage, isLoading, currentSession, sessionId, selectedSubject, createNewSession]);
 
   // Handle Enter key
   const handleKeyPress = (e) => {
@@ -145,11 +177,10 @@ const StudyAssistant = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
+  
   // Initialize component
   useEffect(() => {
     fetchChatHistory();
@@ -158,7 +189,7 @@ const StudyAssistant = () => {
     if (sessionId && sessionId !== 'new') {
       loadSessionMessages(sessionId);
     }
-  }, [sessionId]);
+  }, [sessionId, navigate, loadSessionMessages, fetchChatHistory]);
   // Get subject info
   const getSubjectInfo = (key) => subjects.find(s => s.key === key) || subjects[0];
 
@@ -372,9 +403,8 @@ const StudyAssistant = () => {
                         : 'bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white'
                     }`}>
                       <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {message.timestamp.toLocaleTimeString()}
+                    </div>                    <div className="text-xs text-gray-500 mt-1">
+                      {new Date(message.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
                 </div>

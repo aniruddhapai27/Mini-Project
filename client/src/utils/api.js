@@ -3,6 +3,10 @@ import axios from "axios";
 const api = axios.create({
   baseURL: import.meta.env.VITE_APP_BACKEND_URL || "http://localhost:5000",
   withCredentials: true,
+  timeout: 30000, // 30-second timeout
+  headers: {
+    'Content-Type': 'application/json',
+  }
 });
 
 // Resume API functions
@@ -81,30 +85,54 @@ export const interviewApi = {
 export const studyAssistantApi = {
   // Create new study session
   createSession: async (subject) => {
-    const response = await api.post('/api/v1/assistant/chat', {
-      user_query: "Hello, I'd like to start studying this subject.",
-      subject: subject,
-      session_id: null
-    });
-    return response.data;
+    try {
+      console.log("Creating session for subject:", subject);
+      const response = await api.post('/api/v1/assistant/chat', {
+        user_query: "Hello, I'd like to start studying this subject.",
+        subject: subject,
+        session_id: null
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error creating session:", error);
+      throw error;
+    }
   },
 
   // Send message to study assistant
   sendMessage: async (messageData) => {
-    const response = await api.post('/api/v1/assistant/chat', messageData);
-    return response.data;
+    try {
+      console.log("Sending message:", messageData);
+      const response = await api.post('/api/v1/assistant/chat', messageData);
+      return response.data;
+    } catch (error) {
+      console.error("Error sending message:", error);
+      throw error;
+    }
   },
 
   // Get chat history/sessions
   getHistory: async () => {
-    const response = await api.get('/api/v1/assistant/history');
-    return response.data;
+    try {
+      console.log("Getting history");
+      const response = await api.get('/api/v1/assistant/history');
+      return response.data;
+    } catch (error) {
+      console.error("Error getting history:", error);
+      throw error;
+    }
   },
 
   // Get specific session messages
   getSession: async (sessionId) => {
-    const response = await api.get(`/api/v1/assistant/session/${sessionId}`);
-    return response.data;
+    try {
+      console.log("Getting session:", sessionId);
+      const response = await api.get(`/api/v1/assistant/session/${sessionId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error getting session:", error);
+      throw error;
+    }
   }
 };
 
