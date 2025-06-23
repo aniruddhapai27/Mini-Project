@@ -46,24 +46,30 @@ const Quiz = () => {
       navigate("/quiz-selection");
       return;
     }
-  }, [subject, navigate]);
-
-  useEffect(() => {
-    // If questions for this subject are already in localStorage, use them
-    const cacheKey = `quiz-questions-${subject}`;
+  }, [subject, navigate]);  useEffect(() => {
+    // Use a versioned cache key to force cache refresh after the 10-question fix
+    const cacheKey = `quiz-questions-${subject}-v2`;
     const cached = localStorage.getItem(cacheKey);
+    
+    // Clear old cache versions
+    localStorage.removeItem(`quiz-questions-${subject}`);
+    localStorage.removeItem(`quiz-questions-${subject}-v1`);
+    
     if (cached) {
       const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed) && parsed.length === 10) { // Only use cache if exactly 10 questions
         dispatch(startQuiz({ questions: parsed, subject }));
         return;
       }
     }
+    
     // Fetch questions for the subject if not active
     if (!currentQuiz.isActive && subject) {
       dispatch(fetchQuestionsBySubject(subject)).then((action) => {
         if (action.payload && Array.isArray(action.payload)) {
-          localStorage.setItem(cacheKey, JSON.stringify(action.payload));
+          // Ensure exactly 10 questions before caching
+          const limitedQuestions = action.payload.slice(0, 10);
+          localStorage.setItem(cacheKey, JSON.stringify(limitedQuestions));
         }
       });
     }
@@ -132,8 +138,7 @@ const Quiz = () => {
   };
   const handlePreviousQuestion = () => {
     dispatch(previousQuestion());
-  };
-  const handleFinishQuiz = async () => {
+  };  const handleFinishQuiz = async () => {
     dispatch(finishQuiz());
 
     try {
@@ -159,11 +164,10 @@ const Quiz = () => {
           subject: currentQuiz.subject,
           questions: currentQuiz.questions,
         })
-      ).unwrap();
-
-      // Validate the results
+      ).unwrap();      // Validate the results
       if (resultAction && resultAction.success) {
         console.log("Quiz submission successful:", resultAction);
+        
         navigate("/quiz-results", {
           state: {
             fromQuiz: true,

@@ -16,10 +16,8 @@ exports.getDQ = async (req, res) => {
     const allQuestions = await DQ.find({})
       .select("-answer -created_at -updated_at ") // Exclude answer and timestamps
       .sort({ created_at: -1 });
-    console.log("Total questions in DB:", allQuestions.length);
-
-    // Filter questions by matching day, month, year
-    const dq = allQuestions.filter((question) => {
+    console.log("Total questions in DB:", allQuestions.length);    // Filter questions by matching day, month, year
+    const filteredQuestions = allQuestions.filter((question) => {
       const questionDate = new Date(question.date);
       const questionDay = questionDate.getDate();
       const questionMonth = questionDate.getMonth() + 1;
@@ -32,7 +30,25 @@ exports.getDQ = async (req, res) => {
       );
     });
 
-    console.log(`Found ${dq.length} questions for today`);
+    console.log(`Found ${filteredQuestions.length} questions for today`);    // Group questions by subject and limit to 10 per subject (case-insensitive)
+    const questionsBySubject = {};
+    filteredQuestions.forEach((question) => {
+      const subjectKey = question.subject.toLowerCase();
+      if (!questionsBySubject[subjectKey]) {
+        questionsBySubject[subjectKey] = [];
+      }
+      if (questionsBySubject[subjectKey].length < 10) {
+        questionsBySubject[subjectKey].push(question);
+      }
+    });
+
+    // Log questions per subject
+    Object.keys(questionsBySubject).forEach(subject => {
+      console.log(`${subject}: ${questionsBySubject[subject].length} questions`);
+    });
+
+    // Flatten the grouped questions back into a single array
+    const dq = Object.values(questionsBySubject).flat();
 
     res.status(200).json({
       success: true,
@@ -64,10 +80,8 @@ exports.getQuestionsBySubject = async (req, res) => {
     const todayYear = today.getFullYear();
 
     // Get all questions for this subject
-    const allQuestionsForSubject = await DQ.find({ subject: subject });
-
-    // Filter questions by matching day, month, year
-    const questions = allQuestionsForSubject.filter((question) => {
+    const allQuestionsForSubject = await DQ.find({ subject: subject });    // Filter questions by matching day, month, year
+    const filteredQuestions = allQuestionsForSubject.filter((question) => {
       const questionDate = new Date(question.date);
       const questionDay = questionDate.getDate();
       const questionMonth = questionDate.getMonth() + 1;
@@ -80,12 +94,15 @@ exports.getQuestionsBySubject = async (req, res) => {
       );
     });
 
-    if (questions.length === 0) {
+    if (filteredQuestions.length === 0) {
       return res.status(404).json({
         success: false,
         message: `No questions available for ${subject} today`,
       });
     }
+
+    // Limit to exactly 10 questions
+    const questions = filteredQuestions.slice(0, 10);
 
     res.status(200).json({
       success: true,

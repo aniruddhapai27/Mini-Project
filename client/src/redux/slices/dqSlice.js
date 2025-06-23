@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 import api from "../../utils/api";
 
 // Async thunk for fetching all daily questions grouped by subject
@@ -249,10 +249,10 @@ const dqSlice = createSlice({
       .addCase(fetchQuestionsBySubject.pending, (state) => {
         state.subjectQuestionsLoading = true;
         state.subjectQuestionsError = null;
-      })
-      .addCase(fetchQuestionsBySubject.fulfilled, (state, action) => {
+      })      .addCase(fetchQuestionsBySubject.fulfilled, (state, action) => {
         state.subjectQuestionsLoading = false;
-        state.subjectQuestions = action.payload.questions;
+        // Ensure exactly 10 questions
+        state.subjectQuestions = action.payload.questions.slice(0, 10);
         state.currentSubject = action.payload.subject;
         state.subjectQuestionsError = null;
       })
@@ -333,17 +333,17 @@ export const selectCurrentQuestion = (state) => {
   const quiz = state.dq.currentQuiz;
   return quiz.questions[quiz.currentIndex] || null;
 };
-export const selectQuizProgress = (state) => {
-  const quiz = state.dq.currentQuiz;
-  return {
+export const selectQuizProgress = createSelector(
+  [(state) => state.dq.currentQuiz],
+  (quiz) => ({
     current: quiz.currentIndex + 1,
     total: quiz.questions.length,
     percentage:
       quiz.questions.length > 0
         ? ((quiz.currentIndex + 1) / quiz.questions.length) * 100
         : 0,
-  };
-};
+  })
+);
 export const selectUserAnswer = (state, questionIndex) => {
   const quiz = state.dq.currentQuiz;
   const question = quiz.questions[questionIndex];

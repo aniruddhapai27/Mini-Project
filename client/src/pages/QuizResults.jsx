@@ -23,8 +23,7 @@ const QuizResults = () => {
   // Get results either from Redux or from location state
   const results = reduxResults || location.state?.quizResults;
 
-  const [showDetailedView, setShowDetailedView] = useState(false);
-  useEffect(() => {
+  const [showDetailedView, setShowDetailedView] = useState(false);  useEffect(() => {
     // Check if we have valid quiz results data to display
     const checkQuizData = () => {
       // First check if we have valid results directly
@@ -55,7 +54,7 @@ const QuizResults = () => {
     };
 
     checkQuizData();
-  }, [results, loading, error, quizState, location.state, navigate]);
+  }, [results, loading, error, quizState, location.state, navigate, reduxResults]);
 
   const handleRetakeQuiz = () => {
     dispatch(resetQuiz());
@@ -169,7 +168,6 @@ const QuizResults = () => {
       </div>
     );
   }
-
   if (!results) {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
@@ -186,8 +184,7 @@ const QuizResults = () => {
               strokeWidth={2}
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L5.232 16.5c-.77.833.192 2.5 1.732 2.5z"
             />
-          </svg>
-          <p className="mt-4 text-black dark:text-white">No quiz results found</p>
+          </svg>          <p className="mt-4 text-black dark:text-white">No quiz results found</p>
           <button
             className="mt-6 py-2 px-6 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
             onClick={handleNewQuiz}
