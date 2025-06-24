@@ -69,43 +69,30 @@ const StudyAssistant = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [navigate]);
-  // Create new chat session
+  }, [navigate]);  // Create new chat session
   const createNewSession = useCallback(async (subject = selectedSubject) => {
     try {
-      console.log('Creating new session for subject:', subject);
-      setIsLoading(true);
-      const response = await studyAssistantApi.createSession(subject);
-      console.log('Create session response:', response);
+      console.log('Starting new session for subject:', subject);
       
-      if (!response || !response.session_id) {
-        throw new Error('Invalid response: Missing session_id');
-      }
-      
-      const newSessionId = response.session_id;
-      console.log('New session ID:', newSessionId);
+      // Don't create session immediately - just reset state and navigate
+      const newSessionUrl = `/study-assistant/new`;
+      console.log('Navigating to new session URL:', newSessionUrl);
       
       // Update URL and navigate
-      navigate(`/study-assistant/${newSessionId}`, { replace: true });
+      navigate(newSessionUrl, { replace: true });
       
-      // Reset current state
-      setCurrentSession({ _id: newSessionId, subject });
+      // Reset current state - no session created yet
+      setCurrentSession(null);
       setMessages([]);
       setSelectedSubject(subject);
       
-      // Refresh sessions list
-      fetchChatHistory();
-      
-      return newSessionId;
+      return 'new'; // Return 'new' as placeholder
     } catch (error) {
-      console.error('Error creating new session:', error);
-      toast.error('Failed to create new chat session: ' + (error.message || 'Unknown error'));
+      console.error('Error setting up new session:', error);
+      toast.error('Failed to start new chat session: ' + (error.message || 'Unknown error'));
       throw error;
-    } finally {
-      setIsLoading(false);
     }
-  }, [navigate, fetchChatHistory, selectedSubject]);
-    // Send message
+  }, [navigate, selectedSubject]);  // Send message
   const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -124,35 +111,59 @@ const StudyAssistant = () => {
       setIsLoading(true);
       console.log('Processing message:', userMessage);
       
-      // If no current session, create one
+      // Determine session ID - create session only when user sends first message
       let sessionIdToUse = currentSession?._id || sessionId;
-      console.log('Session ID to use:', sessionIdToUse);
+      console.log('Current session ID:', sessionIdToUse);
       
+      // If no session exists or it's 'new', create a new session with this first message
       if (!sessionIdToUse || sessionIdToUse === 'new') {
-        console.log('No valid session ID, creating new session');
-        try {
-          sessionIdToUse = await createNewSession(selectedSubject);
-          console.log('Created new session:', sessionIdToUse);
-        } catch (error) {
-          console.error('Failed to create session:', error);
-          throw new Error('Could not create a new session');
-        }
+        console.log('Creating new session with first user message');
+        
+        // Send message to API without session_id - this will create a new session
+        const response = await studyAssistantApi.sendMessage({
+          user_query: userMessage,
+          subject: selectedSubject,
+          session_id: null // null will trigger session creation
+        });
+
+        // Update the session state with the new session ID
+        const newSessionId = response.session_id;
+        console.log('New session created with ID:', newSessionId);
+        
+        setCurrentSession({ _id: newSessionId, subject: selectedSubject });
+        
+        // Update URL to reflect the new session
+        navigate(`/study-assistant/${newSessionId}`, { replace: true });
+        
+        // Refresh sessions list to include the new session
+        fetchChatHistory();
+
+        // Add AI response
+        const aiMessageObj = {
+          type: 'assistant',
+          content: response.response,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, aiMessageObj]);
+        
+      } else {
+        // Session already exists, continue the conversation
+        console.log('Continuing existing session:', sessionIdToUse);
+        
+        const response = await studyAssistantApi.sendMessage({
+          user_query: userMessage,
+          subject: selectedSubject,
+          session_id: sessionIdToUse
+        });
+
+        // Add AI response
+        const aiMessageObj = {
+          type: 'assistant',
+          content: response.response,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, aiMessageObj]);
       }
-
-      // Send message to API
-      const response = await studyAssistantApi.sendMessage({
-        user_query: userMessage,
-        subject: selectedSubject,
-        session_id: sessionIdToUse
-      });
-
-      // Add AI response
-      const aiMessageObj = {
-        type: 'assistant',
-        content: response.response,
-        timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, aiMessageObj]);
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -160,10 +171,19 @@ const StudyAssistant = () => {
       
       // Remove user message on error
       setMessages(prev => prev.slice(0, -1));
-    } finally {
-      setIsLoading(false);
+    } finally {      setIsLoading(false);
     }
-  }, [inputMessage, isLoading, currentSession, sessionId, selectedSubject, createNewSession]);
+  }, [inputMessage, isLoading, currentSession, sessionId, selectedSubject, navigate, fetchChatHistory]);
+
+  // Initialize component
+  useEffect(() => {
+    fetchChatHistory();
+    
+    // Load specific session if sessionId provided
+    if (sessionId && sessionId !== 'new') {
+      loadSessionMessages(sessionId);
+    }
+  }, [sessionId, navigate, loadSessionMessages, fetchChatHistory]);
 
   // Handle Enter key
   const handleKeyPress = (e) => {
@@ -177,19 +197,11 @@ const StudyAssistant = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
-  // Initialize component
-  useEffect(() => {
-    fetchChatHistory();
-    
-    // Load specific session if sessionId provided
-    if (sessionId && sessionId !== 'new') {
-      loadSessionMessages(sessionId);
-    }
-  }, [sessionId, navigate, loadSessionMessages, fetchChatHistory]);
+
   // Get subject info
   const getSubjectInfo = (key) => subjects.find(s => s.key === key) || subjects[0];
 

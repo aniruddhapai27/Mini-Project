@@ -83,23 +83,7 @@ export const interviewApi = {
 
 // Study Assistant API functions
 export const studyAssistantApi = {
-  // Create new study session
-  createSession: async (subject) => {
-    try {
-      console.log("Creating session for subject:", subject);
-      const response = await api.post('/api/v1/assistant/chat', {
-        user_query: "Hello, I'd like to start studying this subject.",
-        subject: subject,
-        session_id: null
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error creating session:", error);
-      throw error;
-    }
-  },
-
-  // Send message to study assistant
+  // Send message to study assistant (creates session if none provided)
   sendMessage: async (messageData) => {
     try {
       console.log("Sending message:", messageData);
