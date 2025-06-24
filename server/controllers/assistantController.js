@@ -100,3 +100,37 @@ exports.getSessionMessages = catchAsync(async (req, res) => {
     }    res.status(500).json({ error: 'Error getting session messages', details: error.message });
   }
 });
+
+exports.deleteSession = catchAsync(async (req, res) => {
+  try {
+    // Extract session ID from request
+    const { sessionId } = req.params;
+    const userId = req.user._id.toString();
+    
+    console.log('Deleting session:', {
+      url: `/api/v1/assistant/session/${sessionId}`,
+      sessionId,
+      userId
+    });
+    
+    // Delete session from Python API
+    const response = await pythonAPI.delete(`/api/v1/assistant/session/${sessionId}`, {
+      headers: {
+        'Authorization': `Bearer ${req.cookies.jwt}`,
+        'x-user-id': userId
+      }
+    });
+    
+    console.log('Python API response:', response.status);
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error in deleteSession:', error.message);
+    if (error.response) {
+      console.error('Python API error:', {
+        status: error.response.status,
+        data: error.response.data
+      });
+    }
+    res.status(500).json({ error: 'Error deleting session', details: error.message });
+  }
+});

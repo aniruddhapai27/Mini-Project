@@ -11,5 +11,6 @@ router.use(isLogin);
 router.post('/chat', assistantController.chatWithAssistant);
 router.get('/history', assistantController.getSessionHistory);
 router.get('/session/:sessionId', assistantController.getSessionMessages);
+router.delete('/session/:sessionId', assistantController.deleteSession);
 
 module.exports = router;
