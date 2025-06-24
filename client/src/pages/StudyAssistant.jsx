@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { studyAssistantApi } from '../utils/api';
-import Navbar from '../components/Navbar';
+import ReactMarkdown from 'react-markdown';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const StudyAssistant = () => {
   const { sessionId } = useParams();
@@ -59,53 +60,47 @@ const StudyAssistant = () => {
       } else {
         console.error('Invalid session response format:', response);
         toast.error('Invalid session data format');
-      }
-    } catch (error) {
+      }    } catch (error) {
       console.error('Error loading session:', error);
-      toast.error('Failed to load chat session: ' + (error.message || 'Unknown error'));
       
-      // If the session doesn't exist or can't be loaded, redirect to new session
-      navigate('/study-assistant/new', { replace: true });
+      // Check if it's a 404 (session not found) vs other errors
+      if (error.response && error.response.status === 404) {
+        toast.error('Chat session not found. Redirecting to new session...');
+      } else {
+        toast.error('Failed to load chat session: ' + (error.message || 'Unknown error'));
+      }
+      
+      // If the session doesn't exist or can't be loaded, redirect to new session after a brief delay
+      setTimeout(() => {
+        navigate('/study-assistant/new', { replace: true });
+      }, 1500);
     } finally {
       setIsLoading(false);
     }
-  }, [navigate]);
-  // Create new chat session
+  }, [navigate]);  // Create new chat session
   const createNewSession = useCallback(async (subject = selectedSubject) => {
     try {
-      console.log('Creating new session for subject:', subject);
-      setIsLoading(true);
-      const response = await studyAssistantApi.createSession(subject);
-      console.log('Create session response:', response);
+      console.log('Starting new session for subject:', subject);
       
-      if (!response || !response.session_id) {
-        throw new Error('Invalid response: Missing session_id');
-      }
-      
-      const newSessionId = response.session_id;
-      console.log('New session ID:', newSessionId);
+      // Don't create session immediately - just reset state and navigate
+      const newSessionUrl = `/study-assistant/new`;
+      console.log('Navigating to new session URL:', newSessionUrl);
       
       // Update URL and navigate
-      navigate(`/study-assistant/${newSessionId}`, { replace: true });
+      navigate(newSessionUrl, { replace: true });
       
-      // Reset current state
-      setCurrentSession({ _id: newSessionId, subject });
+      // Reset current state - no session created yet
+      setCurrentSession(null);
       setMessages([]);
       setSelectedSubject(subject);
       
-      // Refresh sessions list
-      fetchChatHistory();
-      
-      return newSessionId;
+      return 'new'; // Return 'new' as placeholder
     } catch (error) {
-      console.error('Error creating new session:', error);
-      toast.error('Failed to create new chat session: ' + (error.message || 'Unknown error'));
+      console.error('Error setting up new session:', error);
+      toast.error('Failed to start new chat session: ' + (error.message || 'Unknown error'));
       throw error;
-    } finally {
-      setIsLoading(false);
     }
-  }, [navigate, fetchChatHistory, selectedSubject]);
-    // Send message
+  }, [navigate, selectedSubject]);  // Send message
   const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -124,35 +119,59 @@ const StudyAssistant = () => {
       setIsLoading(true);
       console.log('Processing message:', userMessage);
       
-      // If no current session, create one
+      // Determine session ID - create session only when user sends first message
       let sessionIdToUse = currentSession?._id || sessionId;
-      console.log('Session ID to use:', sessionIdToUse);
+      console.log('Current session ID:', sessionIdToUse);
       
+      // If no session exists or it's 'new', create a new session with this first message
       if (!sessionIdToUse || sessionIdToUse === 'new') {
-        console.log('No valid session ID, creating new session');
-        try {
-          sessionIdToUse = await createNewSession(selectedSubject);
-          console.log('Created new session:', sessionIdToUse);
-        } catch (error) {
-          console.error('Failed to create session:', error);
-          throw new Error('Could not create a new session');
-        }
+        console.log('Creating new session with first user message');
+        
+        // Send message to API without session_id - this will create a new session
+        const response = await studyAssistantApi.sendMessage({
+          user_query: userMessage,
+          subject: selectedSubject,
+          session_id: null // null will trigger session creation
+        });
+
+        // Update the session state with the new session ID
+        const newSessionId = response.session_id;
+        console.log('New session created with ID:', newSessionId);
+        
+        setCurrentSession({ _id: newSessionId, subject: selectedSubject });
+        
+        // Update URL to reflect the new session
+        navigate(`/study-assistant/${newSessionId}`, { replace: true });
+        
+        // Refresh sessions list to include the new session
+        fetchChatHistory();
+
+        // Add AI response
+        const aiMessageObj = {
+          type: 'assistant',
+          content: response.response,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, aiMessageObj]);
+        
+      } else {
+        // Session already exists, continue the conversation
+        console.log('Continuing existing session:', sessionIdToUse);
+        
+        const response = await studyAssistantApi.sendMessage({
+          user_query: userMessage,
+          subject: selectedSubject,
+          session_id: sessionIdToUse
+        });
+
+        // Add AI response
+        const aiMessageObj = {
+          type: 'assistant',
+          content: response.response,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, aiMessageObj]);
       }
-
-      // Send message to API
-      const response = await studyAssistantApi.sendMessage({
-        user_query: userMessage,
-        subject: selectedSubject,
-        session_id: sessionIdToUse
-      });
-
-      // Add AI response
-      const aiMessageObj = {
-        type: 'assistant',
-        content: response.response,
-        timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, aiMessageObj]);
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -160,10 +179,19 @@ const StudyAssistant = () => {
       
       // Remove user message on error
       setMessages(prev => prev.slice(0, -1));
-    } finally {
-      setIsLoading(false);
+    } finally {      setIsLoading(false);
     }
-  }, [inputMessage, isLoading, currentSession, sessionId, selectedSubject, createNewSession]);
+  }, [inputMessage, isLoading, currentSession, sessionId, selectedSubject, navigate, fetchChatHistory]);
+
+  // Initialize component
+  useEffect(() => {
+    fetchChatHistory();
+    
+    // Load specific session if sessionId provided
+    if (sessionId && sessionId !== 'new') {
+      loadSessionMessages(sessionId);
+    }
+  }, [sessionId, navigate, loadSessionMessages, fetchChatHistory]);
 
   // Handle Enter key
   const handleKeyPress = (e) => {
@@ -177,26 +205,27 @@ const StudyAssistant = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
-  // Initialize component
-  useEffect(() => {
-    fetchChatHistory();
-    
-    // Load specific session if sessionId provided
-    if (sessionId && sessionId !== 'new') {
-      loadSessionMessages(sessionId);
-    }
-  }, [sessionId, navigate, loadSessionMessages, fetchChatHistory]);
   // Get subject info
   const getSubjectInfo = (key) => subjects.find(s => s.key === key) || subjects[0];
 
+  // Show loading screen when initially loading a session
+  if (isLoading && !currentSession && sessionId && sessionId !== 'new') {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center pt-16">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading chat session...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-black flex relative overflow-hidden pt-16">
+    <div className="min-h-screen bg-black flex relative overflow-hidden pt-16">
       {/* Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 opacity-10">
@@ -400,10 +429,46 @@ const StudyAssistant = () => {
                     <div className={`p-4 rounded-2xl backdrop-blur-sm ${
                       message.type === 'assistant'
                         ? 'bg-gray-800/50 border border-gray-700/50 text-white'
-                        : 'bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white'
-                    }`}>
-                      <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                    </div>                    <div className="text-xs text-gray-500 mt-1">
+                        : 'bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white'                    }`}>                      {message.type === 'assistant' ? (
+                        <ErrorBoundary fallbackMessage="Error rendering AI response">
+                          <div className="markdown-content leading-relaxed prose prose-invert prose-sm max-w-none">
+                            {message.content && typeof message.content === 'string' ? (
+                              <ReactMarkdown 
+                                components={{
+                                  p: ({children, ...props}) => <p className="mb-2 last:mb-0" {...props}>{children}</p>,
+                                  code: ({inline, children, ...props}) => 
+                                    inline ? (
+                                      <code className="bg-gray-700/50 px-1 py-0.5 rounded text-cyan-300" {...props}>
+                                        {children}
+                                      </code>
+                                    ) : (
+                                      <code className="block bg-gray-700/50 p-2 rounded-md text-green-300 overflow-x-auto" {...props}>
+                                        {children}
+                                      </code>
+                                    ),
+                                  pre: ({children, ...props}) => <pre className="bg-gray-700/50 p-2 rounded-md overflow-x-auto" {...props}>{children}</pre>,
+                                  ul: ({children, ...props}) => <ul className="list-disc list-inside mb-2" {...props}>{children}</ul>,
+                                  ol: ({children, ...props}) => <ol className="list-decimal list-inside mb-2" {...props}>{children}</ol>,
+                                  li: ({children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
+                                  h1: ({children, ...props}) => <h1 className="text-lg font-bold mb-2 text-cyan-300" {...props}>{children}</h1>,
+                                  h2: ({children, ...props}) => <h2 className="text-base font-semibold mb-2 text-cyan-300" {...props}>{children}</h2>,
+                                  h3: ({children, ...props}) => <h3 className="text-sm font-semibold mb-1 text-cyan-300" {...props}>{children}</h3>,
+                                  strong: ({children, ...props}) => <strong className="font-semibold text-white" {...props}>{children}</strong>,
+                                  em: ({children, ...props}) => <em className="italic text-gray-300" {...props}>{children}</em>,
+                                  blockquote: ({children, ...props}) => <blockquote className="border-l-2 border-cyan-500 pl-3 italic text-gray-300 mb-2" {...props}>{children}</blockquote>
+                                }}
+                              >
+                                {String(message.content)}
+                              </ReactMarkdown>
+                            ) : (
+                              <p className="leading-relaxed text-red-400">Error: Invalid message content</p>
+                            )}
+                          </div>
+                        </ErrorBoundary>
+                      ) : (
+                        <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      )}
+                    </div><div className="text-xs text-gray-500 mt-1">
                       {new Date(message.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
@@ -472,10 +537,8 @@ const StudyAssistant = () => {
               <span>Press Enter to send, Shift+Enter for new line</span>
               <span>{inputMessage.length}/2000</span>
             </div>
-          </div>
-        </div>      </div>
+          </div>        </div>      </div>
     </div>
-    </>
   );
 };
 
