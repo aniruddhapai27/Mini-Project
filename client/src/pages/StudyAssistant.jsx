@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { studyAssistantApi } from '../utils/api';
 import ReactMarkdown from 'react-markdown';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { FaTrash } from 'react-icons/fa';
 
 const StudyAssistant = () => {
   const { sessionId } = useParams();
@@ -224,6 +225,27 @@ const StudyAssistant = () => {
     );
   }
 
+  const handleDeleteSession = async (sessionIdToDelete) => {
+    if (!window.confirm('Are you sure you want to delete this session?')) return;
+    try {
+      setIsLoadingSessions(true);
+      await studyAssistantApi.deleteSession(sessionIdToDelete);
+      toast.success('Session deleted');
+      // Remove from local state
+      setSessions(prev => prev.filter(s => s._id !== sessionIdToDelete));
+      // If current session is deleted, go to new
+      if (currentSession?._id === sessionIdToDelete) {
+        navigate('/study-assistant/new', { replace: true });
+        setCurrentSession(null);
+        setMessages([]);
+      }    } catch (error) {
+      console.error('Error deleting session:', error);
+      toast.error('Failed to delete session');
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black flex relative overflow-hidden pt-16">
       {/* Background */}
@@ -317,19 +339,21 @@ const StudyAssistant = () => {
                   const isActive = currentSession?._id === session._id;
                   
                   return (
-                    <button
-                      key={session._id}
-                      onClick={() => {
-                        navigate(`/study-assistant/${session._id}`);
-                        loadSessionMessages(session._id);
-                      }}
-                      className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
-                        isActive 
-                          ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30' 
-                          : 'bg-gray-800/30 hover:bg-gray-800/50 border border-transparent'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
+                    <div key={session._id} className="relative group">
+                      <button
+                        onClick={() => {
+                          if (!isActive) {
+                            setIsLoadingSessions(true);
+                            navigate(`/study-assistant/${session._id}`);
+                            loadSessionMessages(session._id).finally(() => setIsLoadingSessions(false));
+                          }
+                        }}
+                        className={`w-full p-3 rounded-lg text-left transition-all duration-200 flex items-center space-x-3 ${
+                          isActive 
+                            ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 ring-2 ring-cyan-400/40' 
+                            : 'bg-gray-800/30 hover:bg-gray-800/50 border border-transparent'
+                        } ${isLoadingSessions && isActive ? 'opacity-60 pointer-events-none' : ''}`}
+                      >
                         <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${subjectInfo.color} flex items-center justify-center text-sm`}>
                           {subjectInfo.icon}
                         </div>
@@ -341,8 +365,28 @@ const StudyAssistant = () => {
                             {new Date(session.created_at).toLocaleDateString()}
                           </p>
                         </div>
-                      </div>
-                    </button>
+                        {/* Trash button, only if 3+ sessions */}
+                        {sessions.length >= 3 && (
+                          <button
+                            className="ml-2 p-1 rounded hover:bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Delete session"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleDeleteSession(session._id);
+                            }}
+                            tabIndex={-1}
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        )}
+                      </button>
+                      {/* Loading indicator for switching */}
+                      {isLoadingSessions && isActive && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
+                          <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
