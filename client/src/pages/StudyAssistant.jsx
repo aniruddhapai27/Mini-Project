@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { studyAssistantApi } from '../utils/api';
-import Navbar from '../components/Navbar';
+import ReactMarkdown from 'react-markdown';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const StudyAssistant = () => {
   const { sessionId } = useParams();
@@ -59,13 +60,20 @@ const StudyAssistant = () => {
       } else {
         console.error('Invalid session response format:', response);
         toast.error('Invalid session data format');
-      }
-    } catch (error) {
+      }    } catch (error) {
       console.error('Error loading session:', error);
-      toast.error('Failed to load chat session: ' + (error.message || 'Unknown error'));
       
-      // If the session doesn't exist or can't be loaded, redirect to new session
-      navigate('/study-assistant/new', { replace: true });
+      // Check if it's a 404 (session not found) vs other errors
+      if (error.response && error.response.status === 404) {
+        toast.error('Chat session not found. Redirecting to new session...');
+      } else {
+        toast.error('Failed to load chat session: ' + (error.message || 'Unknown error'));
+      }
+      
+      // If the session doesn't exist or can't be loaded, redirect to new session after a brief delay
+      setTimeout(() => {
+        navigate('/study-assistant/new', { replace: true });
+      }, 1500);
     } finally {
       setIsLoading(false);
     }
@@ -201,14 +209,23 @@ const StudyAssistant = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
   // Get subject info
   const getSubjectInfo = (key) => subjects.find(s => s.key === key) || subjects[0];
 
+  // Show loading screen when initially loading a session
+  if (isLoading && !currentSession && sessionId && sessionId !== 'new') {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center pt-16">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading chat session...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-black flex relative overflow-hidden pt-16">
+    <div className="min-h-screen bg-black flex relative overflow-hidden pt-16">
       {/* Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 opacity-10">
@@ -412,10 +429,46 @@ const StudyAssistant = () => {
                     <div className={`p-4 rounded-2xl backdrop-blur-sm ${
                       message.type === 'assistant'
                         ? 'bg-gray-800/50 border border-gray-700/50 text-white'
-                        : 'bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white'
-                    }`}>
-                      <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                    </div>                    <div className="text-xs text-gray-500 mt-1">
+                        : 'bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white'                    }`}>                      {message.type === 'assistant' ? (
+                        <ErrorBoundary fallbackMessage="Error rendering AI response">
+                          <div className="markdown-content leading-relaxed prose prose-invert prose-sm max-w-none">
+                            {message.content && typeof message.content === 'string' ? (
+                              <ReactMarkdown 
+                                components={{
+                                  p: ({children, ...props}) => <p className="mb-2 last:mb-0" {...props}>{children}</p>,
+                                  code: ({inline, children, ...props}) => 
+                                    inline ? (
+                                      <code className="bg-gray-700/50 px-1 py-0.5 rounded text-cyan-300" {...props}>
+                                        {children}
+                                      </code>
+                                    ) : (
+                                      <code className="block bg-gray-700/50 p-2 rounded-md text-green-300 overflow-x-auto" {...props}>
+                                        {children}
+                                      </code>
+                                    ),
+                                  pre: ({children, ...props}) => <pre className="bg-gray-700/50 p-2 rounded-md overflow-x-auto" {...props}>{children}</pre>,
+                                  ul: ({children, ...props}) => <ul className="list-disc list-inside mb-2" {...props}>{children}</ul>,
+                                  ol: ({children, ...props}) => <ol className="list-decimal list-inside mb-2" {...props}>{children}</ol>,
+                                  li: ({children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
+                                  h1: ({children, ...props}) => <h1 className="text-lg font-bold mb-2 text-cyan-300" {...props}>{children}</h1>,
+                                  h2: ({children, ...props}) => <h2 className="text-base font-semibold mb-2 text-cyan-300" {...props}>{children}</h2>,
+                                  h3: ({children, ...props}) => <h3 className="text-sm font-semibold mb-1 text-cyan-300" {...props}>{children}</h3>,
+                                  strong: ({children, ...props}) => <strong className="font-semibold text-white" {...props}>{children}</strong>,
+                                  em: ({children, ...props}) => <em className="italic text-gray-300" {...props}>{children}</em>,
+                                  blockquote: ({children, ...props}) => <blockquote className="border-l-2 border-cyan-500 pl-3 italic text-gray-300 mb-2" {...props}>{children}</blockquote>
+                                }}
+                              >
+                                {String(message.content)}
+                              </ReactMarkdown>
+                            ) : (
+                              <p className="leading-relaxed text-red-400">Error: Invalid message content</p>
+                            )}
+                          </div>
+                        </ErrorBoundary>
+                      ) : (
+                        <p className="leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      )}
+                    </div><div className="text-xs text-gray-500 mt-1">
                       {new Date(message.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
@@ -484,10 +537,8 @@ const StudyAssistant = () => {
               <span>Press Enter to send, Shift+Enter for new line</span>
               <span>{inputMessage.length}/2000</span>
             </div>
-          </div>
-        </div>      </div>
+          </div>        </div>      </div>
     </div>
-    </>
   );
 };
 
