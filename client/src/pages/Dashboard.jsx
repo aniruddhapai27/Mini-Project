@@ -1,10 +1,20 @@
-import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
+import { getInterviewStats, getRecentInterviews } from "../redux/slices/interviewSlice";
 
 const Dashboard = () => {
-  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  
+  // Redux state
+  const { user } = useSelector((state) => state.auth);
+  const { 
+    stats, 
+    statsLoading, 
+    recentInterviews, 
+    recentLoading 
+  } = useSelector((state) => state.interview);
 
   // For displaying user data
   const userData = user || {
@@ -13,33 +23,24 @@ const Dashboard = () => {
     profilePic: null,
   };
 
-  const [recentSessions] = useState([
-    {
-      id: 1,
-      type: "Technical",
-      score: 92,
-      date: "2025-06-01",
-      duration: "25 min",
-    },
-    {
-      id: 2,
-      type: "Behavioral",
-      score: 85,
-      date: "2025-05-30",
-      duration: "18 min",
-    },
-    {
-      id: 3,
-      type: "System Design",
-      score: 78,
-      date: "2025-05-28",
-      duration: "32 min",
-    },
-  ]);
+  // Fetch dynamic data on component mount
+  useEffect(() => {
+    dispatch(getInterviewStats());
+    dispatch(getRecentInterviews(5));
+  }, [dispatch]);
 
-  const handleStartPractice = (type) => {
-    // TODO: integrate with interview practice API
-    console.log(`Starting ${type} practice session`);
+  // Helper function to format domain names
+  const formatDomainName = (domain) => {
+    const domainMap = {
+      'hr': 'HR Interview',
+      'dataScience': 'Data Science',
+      'webdev': 'Web Development',
+      'fullTechnical': 'Technical Interview',
+      'technical': 'Technical Interview',
+      'behavioral': 'Behavioral Interview',
+      'systemDesign': 'System Design'
+    };
+    return domainMap[domain] || domain?.charAt(0).toUpperCase() + domain?.slice(1) || "Interview";
   };  return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Pure Black Geometric Background */}
@@ -96,10 +97,10 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-black dark:text-white text-sm">
-                  Practice Sessions
+                  Total Interviews
                 </p>
                 <p className="text-3xl font-bold text-cyan-400">
-                  {userData.practiceCount || 12}
+                  {statsLoading ? "..." : (stats?.totalInterviews || 0)}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 rounded-lg flex items-center justify-center">
@@ -127,7 +128,7 @@ const Dashboard = () => {
                   Average Score
                 </p>
                 <p className="text-3xl font-bold text-purple-400">
-                  {userData.averageScore || 87}%
+                  {statsLoading ? "..." : `${Math.round(stats?.averageScore || 0)}%`}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg flex items-center justify-center">
@@ -152,10 +153,10 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-black dark:text-white text-sm">
-                  Total Practice Time
+                  Questions Answered
                 </p>
                 <p className="text-3xl font-bold text-green-400">
-                  {userData.totalTime || "45h"}
+                  {statsLoading ? "..." : (stats?.totalQuestions || 0)}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-green-500/30 to-emerald-500/30 rounded-lg flex items-center justify-center">
@@ -180,170 +181,57 @@ const Dashboard = () => {
           {/* Practice Types */}
           <div className="lg:col-span-2">
             <h2 className="text-2xl font-bold text-black dark:text-white mb-6">
-              Start New Practice Session
-            </h2>
-
-            {/* Daily Questions Banner */}
-            <div className="mb-8 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 rounded-xl p-6 hover:border-cyan-500/50 transition-all duration-300 group">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/30 to-purple-500/30 rounded-lg flex items-center justify-center mr-4">
-                    <svg
-                      className="w-6 h-6 text-cyan-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      Daily Quiz Challenge
-                    </h3>
-                    <p className="text-gray-400 text-sm">
-                      Test your knowledge with today's practice questions
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  to="/quiz-selection"
-                  className="py-2 px-6 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300"
-                >                  Take Quiz
-                </Link>
-              </div>
-            </div>            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              {/* Technical Interview */}
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-cyan-500/30 rounded-xl p-6 group hover:border-cyan-500/50 transition-all duration-300">
+              Practice Activities
+            </h2>            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              {/* Resume ATS Analysis */}
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-blue-500/30 rounded-xl p-6 group hover:border-blue-500/50 transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-cyan-500/30 to-blue-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-                    <svg
-                      className="w-5 h-5 text-cyan-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                      />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500/30 to-indigo-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-white ml-3">
-                    Technical Interview
-                  </h3>
+                  <h3 className="text-lg font-semibold text-white ml-3">Resume ATS Check</h3>
                 </div>
-                <p className="text-gray-400 mb-4 text-sm">
-                  Practice coding problems, data structures, and algorithms with
-                  AI feedback.
-                </p>
+                <p className="text-gray-400 mb-4 text-sm">Analyze your resume with ATS scoring and get personalized improvement suggestions.</p>
                 <button
-                  onClick={() => handleStartPractice("Technical")}
-                  className="w-full py-2 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 font-medium shadow-lg"
+                  onClick={() => navigate('/resume-ats')}
+                  className="w-full py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 font-medium shadow-lg"
                 >
-                  Start Practice
+                  Check Resume
                 </button>
               </div>
 
-              {/* Behavioral Interview */}
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6 group hover:border-purple-500/50 transition-all duration-300">
+              {/* Daily Questions */}
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-emerald-500/30 rounded-xl p-6 group hover:border-emerald-500/50 transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-                    <svg
-                      className="w-5 h-5 text-purple-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500/30 to-green-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+                    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-white ml-3">
-                    Behavioral Interview
-                  </h3>
+                  <h3 className="text-lg font-semibold text-white ml-3">Daily Questions</h3>
                 </div>
-                <p className="text-gray-400 mb-4 text-sm">
-                  Master storytelling and demonstrate your soft skills with STAR
-                  method practice.
-                </p>
+                <p className="text-gray-400 mb-4 text-sm">Practice with curated daily questions across different CS subjects and difficulty levels.</p>
                 <button
-                  onClick={() => handleStartPractice("Behavioral")}
-                  className="w-full py-2 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-medium shadow-lg"
+                  onClick={() => navigate('/quiz-selection')}
+                  className="w-full py-2 px-4 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-lg hover:from-emerald-600 hover:to-green-600 transition-all duration-300 font-medium shadow-lg"
                 >
-                  Start Practice
+                  Start Questions
                 </button>
               </div>
-
-              {/* System Design */}
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-green-500/30 rounded-xl p-6 group hover:border-green-500/50 transition-all duration-300">
-                <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-500/30 to-emerald-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-                    <svg
-                      className="w-5 h-5 text-green-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                      />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white ml-3">
-                    System Design
-                  </h3>
-                </div>
-                <p className="text-gray-400 mb-4 text-sm">
-                  Learn to design scalable systems and explain complex
-                  architectures.
-                </p>
-                <button
-                  onClick={() => handleStartPractice("System Design")}
-                  className="w-full py-2 px-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 font-medium shadow-lg"
-                >
-                  Start Practice
-                </button>              </div>
 
               {/* Study Assistant */}
               <div className="bg-gray-800/50 backdrop-blur-sm border border-indigo-500/30 rounded-xl p-6 group hover:border-indigo-500/50 transition-all duration-300">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-gradient-to-br from-indigo-500/30 to-purple-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-                    <svg
-                      className="w-5 h-5 text-indigo-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"
-                      />
+                    <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-white ml-3">
-                    Study Assistant
-                  </h3>
+                  <h3 className="text-lg font-semibold text-white ml-3">Study Assistant</h3>
                 </div>
-                <p className="text-gray-400 mb-4 text-sm">
-                  Get personalized help with CS subjects using AI-powered study companion.
-                </p>
+                <p className="text-gray-400 mb-4 text-sm">Get personalized help with CS subjects using AI-powered study companion.</p>
                 <button
                   onClick={() => navigate('/study-assistant/new')}
                   className="w-full py-2 px-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 font-medium shadow-lg"
@@ -352,32 +240,18 @@ const Dashboard = () => {
                 </button>
               </div>
 
-              {/* Mock Interview */}
+              {/* Full Mock Interview */}
               <div className="bg-gray-800/50 backdrop-blur-sm border border-orange-500/30 rounded-xl p-6 group hover:border-orange-500/50 transition-all duration-300">
                 <div className="flex items-center mb-4">
                   <div className="w-10 h-10 bg-gradient-to-br from-orange-500/30 to-red-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
-                    <svg
-                      className="w-5 h-5 text-orange-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
+                    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-white ml-3">
-                    Full Mock Interview
-                  </h3>
+                  <h3 className="text-lg font-semibold text-white ml-3">Full Mock Interview</h3>
                 </div>
-                <p className="text-gray-400 mb-4 text-sm">
-                  Complete interview simulation with multiple rounds and
-                  comprehensive feedback.
-                </p>                <button
+                <p className="text-gray-400 mb-4 text-sm">Complete interview simulation with multiple rounds and comprehensive feedback.</p>
+                <button
                   onClick={() => navigate('/mock-interview-selection')}
                   className="w-full py-2 px-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-medium shadow-lg"
                 >
@@ -389,6 +263,41 @@ const Dashboard = () => {
 
           {/* Recent Sessions & Profile */}
           <div className="space-y-8">
+            {/* Quick Stats */}
+            {stats && !statsLoading && (
+              <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Performance</h3>
+                  <button
+                    onClick={() => {
+                      dispatch(getInterviewStats());
+                      dispatch(getRecentInterviews(5));
+                    }}
+                    className="text-gray-400 hover:text-cyan-400 transition-colors"
+                    title="Refresh data"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-cyan-400">
+                      {Math.round(stats.averageScore || 0)}%
+                    </div>
+                    <div className="text-xs text-gray-400">Avg Score</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-400">
+                      {stats.totalInterviews || 0}
+                    </div>
+                    <div className="text-xs text-gray-400">Total Sessions</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Profile Card */}
             <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
               <h3 className="text-lg font-semibold text-white mb-4">Profile</h3>
@@ -413,12 +322,12 @@ const Dashboard = () => {
                   <p className="font-semibold text-white">{userData.name}</p>
                   <p className="text-gray-400 text-sm">{userData.email}</p>
                 </div>
-              </div>{" "}
+              </div>
               <Link
                 to="/profile"
                 className="w-full py-2 px-4 border border-gray-600 text-gray-300 rounded-lg hover:border-cyan-500 hover:text-cyan-400 transition-all duration-300 block text-center"
               >
-                Edit Profile
+                View Profile
               </Link>
             </div>
 
@@ -427,45 +336,60 @@ const Dashboard = () => {
               <h3 className="text-lg font-semibold text-white mb-4">
                 Recent Sessions
               </h3>
-              <div className="space-y-3">
-                {recentSessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg"
-                  >
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        {session.type}
-                      </p>
-                      <p className="text-gray-400 text-xs">
-                        {session.date} • {session.duration}
-                      </p>
+              
+              {recentLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, index) => (
+                    <div key={index} className="p-3 bg-gray-700/30 rounded-lg animate-pulse">
+                      <div className="h-4 bg-gray-600 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-600 rounded w-1/2"></div>
                     </div>
-                    <div className="text-right">
-                      <p
-                        className={`text-sm font-semibold ${
-                          session.score >= 90
-                            ? "text-green-400"
-                            : session.score >= 80
-                            ? "text-yellow-400"
-                            : "text-red-400"
-                        }`}
-                      >
-                        {session.score}%
-                      </p>
+                  ))}
+                </div>
+              ) : recentInterviews && recentInterviews.length > 0 ? (
+                <div className="space-y-3">
+                  {recentInterviews.map((session) => (
+                    <div
+                      key={session._id}
+                      className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg"
+                    >
+                      <div>
+                        <p className="text-white text-sm font-medium">
+                          {formatDomainName(session.domain)}
+                        </p>
+                        <p className="text-gray-400 text-xs">
+                          {new Date(session.createdAt).toLocaleDateString()} • {session.difficulty}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className={`text-sm font-semibold ${
+                            session.score >= 90
+                              ? "text-green-400"
+                              : session.score >= 80
+                              ? "text-yellow-400"
+                              : "text-red-400"
+                          }`}
+                        >
+                          {session.score ? `${Math.round(session.score)}%` : "N/A"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              <button
-                className="w-full mt-4 py-2 px-4 text-cyan-400 text-sm hover:text-cyan-300 transition-colors duration-300"
-                onClick={() => {
-                  // TODO: integrate view all sessions functionality
-                  console.log("View all sessions clicked");
-                }}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-400 text-sm">No recent sessions yet</p>
+                  <p className="text-gray-500 text-xs mt-1">Start practicing to see your history!</p>
+                </div>
+              )}
+              
+              <Link
+                to="/profile"
+                className="w-full mt-4 py-2 px-4 text-cyan-400 text-sm hover:text-cyan-300 transition-colors duration-300 block text-center"
               >
                 View All Sessions →
-              </button>
+              </Link>
             </div>
           </div>
         </div>
