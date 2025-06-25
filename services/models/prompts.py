@@ -24,12 +24,12 @@ resume_prompt = (
     'Evaluate the resume for ATS (Applicant Tracking System) compatibility and provide an ATS score out of 100. '
     'Return a structured JSON object with the following fields: '
     '{{'
-    '"grammatical_mistakes": "In the markdown format beautifully, dont list give in markdomn list",'
-    '"improvement_suggestions": "In the markdown format paragraph beautifully",'
+    '"grammatical_mistakes": "In the markdown format beautifully, dont list give in markdown list",'
+    '"suggestions": "In the markdown format paragraph beautifully",'
     '"ats_score": 0'
     '}}. '
     'Return only JSON, no extra text. '
-    'you Can give output in as many lines as you want, but it should be a single JSON object and markdown format. '
+    'You can give output in as many lines as you want, but it should be a single JSON object and markdown format. '
     'provided resume: {text}'
 )
 

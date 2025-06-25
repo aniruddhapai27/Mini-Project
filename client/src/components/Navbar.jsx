@@ -108,9 +108,8 @@ const Navbar = () => {
                     Dashboard
                   </Link>                  {/* Activities Dropdown */}
                   <div className="relative" ref={dropdownRef}>
-                    <button
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-1 border ${
-                        isActive("/quiz-selection") || isActive("/mock-interview-selection") || isActive("/mock-interview")
+                    <button                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-1 border ${
+                        isActive("/quiz-selection") || isActive("/mock-interview-selection") || isActive("/mock-interview") || isActive("/resume-ats")
                           ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/30 shadow-lg"
                           : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5 border-transparent hover:border-cyan-500/20"
                       }`}
@@ -188,6 +187,28 @@ const Navbar = () => {
                               <div>
                                 <div className="font-medium">Study Assistant</div>
                                 <div className="text-xs text-gray-400">AI-powered learning</div>
+                              </div>
+                            </div>
+                          </Link>
+
+                          <Link
+                            to="/resume-ats"
+                            className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                              isActive("/resume-ats")
+                                ? "text-purple-400 bg-purple-500/10"
+                                : "text-gray-300 hover:text-purple-400 hover:bg-purple-500/5"
+                            }`}
+                            onClick={() => setActivitiesDropdownOpen(false)}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="font-medium">Resume ATS</div>
+                                <div className="text-xs text-gray-400">Score & suggestions</div>
                               </div>
                             </div>
                           </Link>
@@ -370,6 +391,25 @@ const Navbar = () => {
                           </svg>
                         </div>
                         <span>Study Assistant</span>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/resume-ats"
+                      className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
+                        isActive("/resume-ats")
+                          ? "text-purple-400 bg-purple-500/10 border-purple-500/30"
+                          : "text-gray-300 hover:text-purple-400 hover:bg-purple-500/5 border-transparent hover:border-purple-500/20"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 rounded bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </div>
+                        <span>Resume ATS</span>
                       </div>
                     </Link>
                   </div>

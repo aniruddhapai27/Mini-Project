@@ -17,6 +17,7 @@ import MockInterviewTest from "./pages/MockInterviewTest";
 import MockInterview from "./pages/MockInterview";
 import MockInterviewResults from "./pages/MockInterviewResults";
 import StudyAssistant from "./pages/StudyAssistant";
+import ResumeATSPage from "./pages/ResumeATSPage";
 import { Route, Routes } from "react-router-dom";
 import { getMe } from "./redux/slices/authSlice";
 import Loading from "./components/Loading";
@@ -109,6 +110,13 @@ const App = () => {
           element={
             <ProtectedRoute>
               <StudyAssistant />
+            </ProtectedRoute>
+          }
+        />        <Route
+          path="resume-ats"
+          element={
+            <ProtectedRoute>
+              <ResumeATSPage />
             </ProtectedRoute>
           }
         />

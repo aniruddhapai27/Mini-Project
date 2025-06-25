@@ -141,6 +141,8 @@ async def analyse_resume(file, user_id: str = None):
         )
         resume_analysis = extract_json_objects(response.choices[0].message.content)
         if not resume_analysis:
+            # Print the actual response for debugging
+            print(f"AI Response content: {response.choices[0].message.content}")
             raise HTTPException(status_code=400, detail="Failed to analyze the resume. Please check the content.")
         if len(resume_analysis) > 1:
             raise HTTPException(status_code=400, detail="Multiple JSON objects found in the response. Expected a single object.")
@@ -148,13 +150,16 @@ async def analyse_resume(file, user_id: str = None):
         
         analysis_data = resume_analysis[0]
         
+        # Handle both field name variations
+        suggestions = analysis_data.get("suggestions", "") or analysis_data.get("improvement_suggestions", "")
+        
         db = await get_database()
         collection = db['resumes'] 
         
         resume_document = {
             "fileName": file.filename,
             "grammaticalMistakes": analysis_data.get("grammatical_mistakes", ""),
-            "suggestions": analysis_data.get("suggestions", ""),
+            "suggestions": suggestions,
             "ATS": analysis_data.get("ats_score", 0),
             "createdAt": datetime.datetime.now(),
             "updatedAt": datetime.datetime.now()

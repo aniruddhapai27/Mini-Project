@@ -134,3 +134,55 @@ exports.deleteSession = catchAsync(async (req, res) => {
     res.status(500).json({ error: 'Error deleting session', details: error.message });
   }
 });
+
+exports.analyzeResume = catchAsync(async (req, res) => {
+  try {
+    // Extract user from request (added by isLogin middleware)
+    const userId = req.user._id.toString();
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    
+    console.log('Analyzing resume with Python API:', {
+      url: '/api/v1/assistant/resume',
+      userId,
+      fileName: req.file.originalname,
+      fileSize: req.file.size,
+      mimeType: req.file.mimetype
+    });
+
+    // Create FormData to forward the file to Python API
+    const FormData = require('form-data');
+    const formData = new FormData();
+    
+    // Add the file buffer and metadata to FormData
+    formData.append('file', req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype
+    });
+
+    // Forward the request to Python API with user authentication
+    const response = await pythonAPI.post('/api/v1/assistant/resume', formData, {
+      headers: {
+        ...formData.getHeaders(),
+        'Authorization': `Bearer ${req.cookies.jwt}`,
+        'x-user-id': userId
+      },
+      timeout: 60000 // 60 second timeout for AI analysis
+    });
+    
+    console.log('Python API response:', response.status);
+    res.status(200).json(response.data);
+  } catch (error) {
+    console.error('Error in analyzeResume:', error.message);
+    if (error.response) {
+      console.error('Python API error:', {
+        status: error.response.status,
+        data: error.response.data
+      });
+      return res.status(error.response.status).json(error.response.data);
+    }
+    res.status(500).json({ error: 'Error analyzing resume', details: error.message });
+  }
+});
