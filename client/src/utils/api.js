@@ -106,7 +106,6 @@ export const studyAssistantApi = {
       throw error;
     }
   },
-
   // Get specific session messages
   getSession: async (sessionId) => {
     try {
@@ -115,6 +114,18 @@ export const studyAssistantApi = {
       return response.data;
     } catch (error) {
       console.error("Error getting session:", error);
+      throw error;
+    }
+  },
+
+  // Delete a session
+  deleteSession: async (sessionId) => {
+    try {
+      console.log("Deleting session:", sessionId);
+      const response = await api.delete(`/api/v1/assistant/session/${sessionId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting session:", error);
       throw error;
     }
   }

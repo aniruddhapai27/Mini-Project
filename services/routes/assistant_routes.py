@@ -156,3 +156,47 @@ async def get_session_messages(session_id: str, request: Request, user_id: str =
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching session: {str(e)}")
+
+@assistant_router.delete("/session/{session_id}")
+async def delete_session(session_id: str, request: Request, user_id: str = None):
+    """Delete a specific session"""
+    try:
+        # Use user_id from query parameter or if not available, get it from the request
+        if not user_id:
+            user_id = request.headers.get("x-user-id")
+            
+        if not user_id:
+            raise HTTPException(status_code=403, detail="User ID is required.")
+        
+        db = await get_database()
+        collection = db['assistants']
+        
+        # Validate session_id format
+        try:
+            session_obj_id = ObjectId(session_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid session ID format")
+        
+        # Check if session exists and belongs to user
+        session = await collection.find_one({
+            "_id": session_obj_id,
+            "user": ObjectId(user_id)
+        })
+        
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Delete the session
+        result = await collection.delete_one({
+            "_id": session_obj_id,
+            "user": ObjectId(user_id)
+        })
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Session not found or already deleted")
+        
+        return {"message": "Session deleted successfully", "session_id": session_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting session: {str(e)}")
