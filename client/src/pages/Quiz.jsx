@@ -221,9 +221,26 @@ const Quiz = () => {
           <p className="text-white mb-4">{error}</p>
           <button
             onClick={handleExitQuiz}
-            className="py-2 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 border border-cyan-500/30 shadow-lg"
+            className="group relative py-3 px-6 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 hover:text-cyan-200 rounded-lg font-semibold border border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2 focus:ring-offset-gray-800"
           >
-            Back to Quiz Selection
+            <div className="flex items-center space-x-2">
+              <svg 
+                className="w-4 h-4 transition-transform group-hover:-translate-x-1" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+                />
+              </svg>
+              <span>Back to Quiz Selection</span>
+            </div>
+            {/* Hover glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
           </button>
         </div>      </div>
     );
@@ -251,9 +268,26 @@ const Quiz = () => {
           <p className="text-gray-300 mb-4">Please select a different subject.</p>
           <button
             onClick={() => navigate("/quiz-selection")}
-            className="py-2 px-6 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 border border-cyan-500/30 shadow-lg"
+            className="group relative py-3 px-6 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 hover:text-cyan-200 rounded-lg font-semibold border border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2 focus:ring-offset-gray-800"
           >
-            Back to Quiz Selection
+            <div className="flex items-center space-x-2">
+              <svg 
+                className="w-4 h-4 transition-transform group-hover:-translate-x-1" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+                />
+              </svg>
+              <span>Back to Quiz Selection</span>
+            </div>
+            {/* Hover glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
           </button>
         </div>
       </div>
@@ -332,9 +366,26 @@ const Quiz = () => {
           </h1>
           <button
             onClick={handleExitQuiz}
-            className="text-white/80 hover:text-red-400 font-semibold transition-colors drop-shadow-sm"
+            className="group relative px-4 py-2 bg-gradient-to-r from-red-500/20 to-red-600/20 hover:from-red-500/30 hover:to-red-600/30 text-red-300 hover:text-red-200 font-semibold rounded-lg border border-red-500/30 hover:border-red-400/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-gray-900"
           >
-            Exit Quiz
+            <div className="flex items-center space-x-2">
+              <svg 
+                className="w-4 h-4 transition-transform group-hover:rotate-12" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+                />
+              </svg>
+              <span>Exit Quiz</span>
+            </div>
+            {/* Hover glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
           </button>
         </div>
         
