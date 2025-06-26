@@ -2,6 +2,8 @@ from groq import Groq
 from dotenv import load_dotenv
 import os
 import datetime
+import json
+import re
 from datetime import timezone, timedelta
 from fastapi import HTTPException
 from bson import ObjectId
@@ -139,11 +141,29 @@ async def analyse_resume(file, user_id: str = None):
                 }
             ]
         )
-        resume_analysis = extract_json_objects(response.choices[0].message.content)
+        
+        ai_response_content = response.choices[0].message.content
+        resume_analysis = extract_json_objects(ai_response_content)
+        
         if not resume_analysis:
-            # Print the actual response for debugging
-            print(f"AI Response content: {response.choices[0].message.content}")
-            raise HTTPException(status_code=400, detail="Failed to analyze the resume. Please check the content.")
+            # Try alternative parsing methods for multiline JSON
+            try:
+                # Remove markdown code blocks if present
+                cleaned_content = ai_response_content.strip()
+                if cleaned_content.startswith('```') and cleaned_content.endswith('```'):
+                    # Remove code block markers
+                    cleaned_content = re.sub(r'^```(?:json)?\s*', '', cleaned_content)
+                    cleaned_content = re.sub(r'\s*```$', '', cleaned_content)
+                
+                # Try to parse directly
+                analysis_data = json.loads(cleaned_content)
+                resume_analysis = [analysis_data]
+            except (json.JSONDecodeError, Exception) as e:
+                # Print the actual response for debugging
+                print(f"AI Response content: {ai_response_content}")
+                print(f"JSON parsing error: {str(e)}")
+                raise HTTPException(status_code=400, detail="Failed to analyze the resume. Please check the content.")
+        
         if len(resume_analysis) > 1:
             raise HTTPException(status_code=400, detail="Multiple JSON objects found in the response. Expected a single object.")
         

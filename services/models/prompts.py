@@ -17,21 +17,33 @@ daily_questions_prompt = (
 )
 
 resume_prompt = (
-    'You are an expert in resume analysis. '
-    'Analyze the provided resume and do some strict resume analysis for the engineering student. '
-    'Identify any grammatical mistakes and provide corrections. '
-    'Give suggestions for improving the resume. '
-    'Evaluate the resume for ATS (Applicant Tracking System) compatibility and provide an ATS score out of 100. '
-    'Return a structured JSON object with the following fields: '
-    '{{'
-    '"grammatical_mistakes": "In the markdown format beautifully, dont list give in markdown list",'
-    '"suggestions": "In the markdown format paragraph beautifully",'
-    '"ats_score": 0'
-    '}}. '
-    'Return only JSON, no extra text. '
-    'You can give output in as many lines as you want, but it should be a single JSON object and markdown format. '
-    'provided resume: {text}'
+    "You are an industry-level resume evaluator for engineering and technical roles. "
+    "Analyze the provided resume with strict standards used by top tech recruiters. "
+    "Focus only on the following three aspects:\n\n"
+
+    "1. **Grammatical Mistakes:** Detect and correct all grammatical, spelling, punctuation, and sentence structure issues. "
+    "Format as a clean markdown list with bullet points (use - for bullets). Each mistake should be on a new line with proper corrections. "
+    "If no mistakes, return 'No significant grammatical issues found.' "
+    "IMPORTANT: Use proper markdown list format with \\n for line breaks between items.\n\n"
+
+    "2. **Suggestions:** Give improvement suggestions for the resume in a well-structured markdown format. "
+    "Use bullet points and clear headings. Focus on clarity, technical strength, formatting, and how to make the resume more impactful. "
+    "IMPORTANT: Use proper markdown formatting with \\n for line breaks and \\n\\n for section breaks.\n\n"
+
+    "3. **ATS Score:** Evaluate the resume for ATS (Applicant Tracking System) compatibility and return a strict score out of 100. "
+    "Base the score on key ATS factors like keyword presence, formatting, section structure, and clarity. Don't round off the value, be accurate and strict.\n\n"
+
+    "CRITICAL: Return ONLY a valid JSON object with proper escaping. No markdown code blocks, no extra text. Use \\n for line breaks within strings. Example format:\n\n"
+    "{{\n"
+    "  \"grammatical_mistakes\": \"- 'CGP A' should be 'CGPA'\\n- 'Pre -University' should be 'Pre-University'\\n- 'implement APIs etc .' should be 'implemented APIs, etc.'\",\n"
+    "  \"suggestions\": \"### Formatting and Clarity\\n- Use consistent formatting throughout\\n- Add bullet points for better readability\\n\\n### Technical Strength\\n- Quantify achievements with specific metrics\\n- Highlight relevant technologies used\",\n"
+    "  \"ats_score\": 85.5\n"
+    "}}\n\n"
+
+    "Ensure JSON is valid with proper escaping. Do not wrap in code blocks or add any text outside the JSON.\n\n"
+    "provided resume: {text}"
 )
+
 
 study_assistant_prompt = (
     'You are a study assistant for {subject}, using "{textbook}" as your only reference. '

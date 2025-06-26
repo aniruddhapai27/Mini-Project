@@ -110,10 +110,62 @@ const ResumeATS = () => {
         },
       });      if (response.data && response.data.content && response.data.content.length > 0) {
         const analysisData = response.data.content[0];
+        
+        // Parse and format the response data
+        const formatResponse = (text) => {
+          if (!text) return "";
+          
+          // If it's already formatted or doesn't need processing, return as is
+          if (typeof text !== 'string') return text;
+          
+          // Clean up any escaped characters or JSON formatting issues
+          let cleaned = text
+            .replace(/\\n/g, '\n')
+            .replace(/\\"/g, '"')
+            .replace(/\\\\/g, '\\')
+            .trim();
+          
+          // If the text starts and ends with quotes, remove them
+          if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+            cleaned = cleaned.slice(1, -1);
+          }
+          
+          return cleaned;
+        };
+
+        // Enhanced function to parse grammatical mistakes into a readable format
+        const parseGrammaticalMistakes = (text) => {
+          if (!text || typeof text !== 'string') return "";
+          
+          let formatted = formatResponse(text);
+          
+          // If the text contains bullet points with corrections, format them nicely
+          if (formatted.includes('should be')) {
+            // Split by common patterns and create proper markdown list
+            const mistakes = formatted.split(/(?=- ')|(?=\n- )/).filter(item => item.trim());
+            
+            if (mistakes.length > 1) {
+              return mistakes
+                .map(mistake => {
+                  // Clean up each mistake item
+                  let cleanMistake = mistake.replace(/^- '/, '').replace(/'$/, '').trim();
+                  if (cleanMistake.startsWith("'")) cleanMistake = cleanMistake.slice(1);
+                  if (cleanMistake.endsWith("'")) cleanMistake = cleanMistake.slice(0, -1);
+                  
+                  // Format as a proper bullet point
+                  return cleanMistake.startsWith('-') ? cleanMistake : `• ${cleanMistake}`;
+                })
+                .join('\n');
+            }
+          }
+          
+          return formatted;
+        };
+
         setAtsResult({
-          ats_score: analysisData.ats_score || 0,
-          grammatical_mistakes: analysisData.grammatical_mistakes || "",
-          suggestions: analysisData.suggestions || analysisData.improvement_suggestions || ""
+          ats_score: Number(analysisData.ats_score) || 0,
+          grammatical_mistakes: parseGrammaticalMistakes(analysisData.grammatical_mistakes || ""),
+          suggestions: formatResponse(analysisData.suggestions || analysisData.improvement_suggestions || "")
         });
         setShowSuccess(true);
       } else {
@@ -122,7 +174,35 @@ const ResumeATS = () => {
 
     } catch (error) {
       console.error('Resume analysis error:', error);
-      setError(error.message || 'Failed to analyze resume');
+      
+      // Handle specific error cases
+      let errorMessage = 'Failed to analyze resume';
+      
+      if (error.response) {
+        if (error.response.status === 400) {
+          if (error.response.data?.detail?.includes('Failed to analyze the resume')) {
+            errorMessage = 'The AI had trouble parsing your resume content. Please ensure your resume has clear, readable text and try again.';
+          } else if (error.response.data?.detail?.includes('Unsupported file type')) {
+            errorMessage = 'Please upload a PDF, DOCX, or TXT file.';
+          } else if (error.response.data?.detail?.includes('empty')) {
+            errorMessage = 'The uploaded file appears to be empty or unreadable. Please try a different file.';
+          } else {
+            errorMessage = error.response.data?.detail || 'Invalid file or content format.';
+          }
+        } else if (error.response.status === 500) {
+          errorMessage = 'Server error during analysis. Please try again in a moment.';
+        } else {
+          errorMessage = error.response.data?.detail || `Server error (${error.response.status})`;
+        }
+      } else if (error.message?.includes('Network Error')) {
+        errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'Analysis is taking longer than expected. Please try again with a smaller file.';
+      } else {
+        errorMessage = error.message || 'An unexpected error occurred during analysis.';
+      }
+      
+      setError(errorMessage);
     } finally {
       setAnalyzing(false);
     }
@@ -130,6 +210,41 @@ const ResumeATS = () => {
 
   const handleSuccessComplete = () => {
     setShowSuccess(false);
+  };
+
+  const downloadAnalysis = () => {
+    if (!atsResult) return;
+
+    const analysisText = `
+RESUME ATS ANALYSIS REPORT
+Generated on: ${new Date().toLocaleDateString()}
+
+ATS SCORE: ${atsResult.ats_score}%
+Status: ${atsResult.ats_score >= 80 ? "Excellent" : atsResult.ats_score >= 60 ? "Good" : "Needs Improvement"}
+
+GRAMMATICAL ISSUES:
+${atsResult.grammatical_mistakes && atsResult.grammatical_mistakes.trim() !== "" 
+  ? atsResult.grammatical_mistakes 
+  : "No significant grammatical issues found."}
+
+IMPROVEMENT SUGGESTIONS:
+${atsResult.suggestions && atsResult.suggestions.trim() !== "" 
+  ? atsResult.suggestions 
+  : "Your resume is well-optimized. Keep up the good work!"}
+
+---
+Generated by Skill Wise AI Resume ATS Analyzer
+    `.trim();
+
+    const blob = new Blob([analysisText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `resume-ats-analysis-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   const getScoreColor = (score) => {
@@ -172,10 +287,58 @@ const ResumeATS = () => {
 
         {atsResult ? (
           <div className="space-y-6">
+            {/* Analysis Summary */}
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 rounded-lg p-6">
+              <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Resume Analysis Summary
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className={`text-3xl font-bold ${getScoreColor(atsResult.ats_score)} mb-1`}>
+                    {atsResult.ats_score}%
+                  </div>
+                  <div className="text-gray-400 text-sm">ATS Score</div>
+                </div>
+                <div className="text-center">
+                  <div className={`text-3xl font-bold ${atsResult.grammatical_mistakes && atsResult.grammatical_mistakes.trim() !== "" ? 'text-yellow-400' : 'text-green-400'} mb-1`}>
+                    {atsResult.grammatical_mistakes && atsResult.grammatical_mistakes.trim() !== "" ? '⚠️' : '✅'}
+                  </div>
+                  <div className="text-gray-400 text-sm">Grammar Check</div>
+                </div>
+                <div className="text-center">
+                  <div className={`text-3xl font-bold ${atsResult.suggestions && atsResult.suggestions.trim() !== "" ? 'text-blue-400' : 'text-green-400'} mb-1`}>
+                    {atsResult.suggestions && atsResult.suggestions.trim() !== "" ? '💡' : '🎯'}
+                  </div>
+                  <div className="text-gray-400 text-sm">
+                    {atsResult.suggestions && atsResult.suggestions.trim() !== "" ? 'Has Suggestions' : 'Well Optimized'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* ATS Score Display */}
             <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 border border-gray-700/50 rounded-lg p-6">
               <div className="text-center mb-4">
-                <h4 className="text-lg font-semibold text-white mb-2">ATS Score</h4>
+                <h4 className="text-lg font-semibold text-white mb-2 flex items-center justify-center gap-2">
+                  ATS Score
+                  <div className="group relative">
+                    <svg className="w-4 h-4 text-gray-400 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                      <div className="text-center">
+                        <div className="font-semibold mb-1">ATS Score Meaning:</div>
+                        <div>80-100: Excellent compatibility</div>
+                        <div>60-79: Good with minor improvements</div>
+                        <div>0-59: Needs significant optimization</div>
+                      </div>
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                    </div>
+                  </div>
+                </h4>
                 <div className="relative w-32 h-32 mx-auto">
                   <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
                     <circle
@@ -210,7 +373,7 @@ const ResumeATS = () => {
                 </div>
               </div>
             </div>            {/* Grammatical Mistakes */}
-            {atsResult.grammatical_mistakes && (
+            {atsResult.grammatical_mistakes && atsResult.grammatical_mistakes.trim() !== "" ? (
               <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30 rounded-lg p-6">
                 <h4 className="text-lg font-semibold text-yellow-400 mb-3 flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,21 +384,34 @@ const ResumeATS = () => {
                 <div className="text-gray-300 text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
-                      p: ({ children }) => <p className="text-gray-300 mb-2">{children}</p>,
-                      ul: ({ children }) => <ul className="text-gray-300 list-disc list-inside mb-2 space-y-1">{children}</ul>,
-                      ol: ({ children }) => <ol className="text-gray-300 list-decimal list-inside mb-2 space-y-1">{children}</ol>,
-                      li: ({ children }) => <li className="text-gray-300">{children}</li>,
+                      p: ({ children }) => <p className="text-gray-300 mb-2 last:mb-0">{children}</p>,
+                      ul: ({ children }) => <ul className="text-gray-300 list-disc list-inside mb-2 space-y-1 last:mb-0">{children}</ul>,
+                      ol: ({ children }) => <ol className="text-gray-300 list-decimal list-inside mb-2 space-y-1 last:mb-0">{children}</ol>,
+                      li: ({ children }) => <li className="text-gray-300 pl-1">{children}</li>,
                       strong: ({ children }) => <strong className="text-yellow-300 font-semibold">{children}</strong>,
                       em: ({ children }) => <em className="text-yellow-200 italic">{children}</em>,
                       code: ({ children }) => <code className="bg-yellow-900/30 text-yellow-200 px-2 py-1 rounded text-xs font-mono">{children}</code>,
+                      h1: ({ children }) => <h1 className="text-yellow-300 text-lg font-bold mb-2">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-yellow-300 text-base font-semibold mb-2">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-yellow-300 text-sm font-semibold mb-1">{children}</h3>,
                     }}
                   >
                     {atsResult.grammatical_mistakes}
                   </ReactMarkdown>
                 </div>
               </div>
+            ) : (
+              <div className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 border border-green-500/30 rounded-lg p-6">
+                <h4 className="text-lg font-semibold text-green-400 mb-3 flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Grammar Check
+                </h4>
+                <p className="text-green-300 text-sm">Great! No significant grammatical issues were found in your resume.</p>
+              </div>
             )}            {/* Suggestions */}
-            {atsResult.suggestions && (
+            {atsResult.suggestions && atsResult.suggestions.trim() !== "" && (
               <div className="bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border border-blue-500/30 rounded-lg p-6">
                 <h4 className="text-lg font-semibold text-blue-400 mb-3 flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,16 +422,22 @@ const ResumeATS = () => {
                 <div className="text-gray-300 text-sm leading-relaxed prose prose-invert prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
-                      p: ({ children }) => <p className="text-gray-300 mb-2">{children}</p>,
-                      ul: ({ children }) => <ul className="text-gray-300 list-disc list-inside mb-2 space-y-1">{children}</ul>,
-                      ol: ({ children }) => <ol className="text-gray-300 list-decimal list-inside mb-2 space-y-1">{children}</ol>,
-                      li: ({ children }) => <li className="text-gray-300">{children}</li>,
+                      p: ({ children }) => <p className="text-gray-300 mb-2 last:mb-0">{children}</p>,
+                      ul: ({ children }) => <ul className="text-gray-300 list-disc list-inside mb-2 space-y-1 last:mb-0">{children}</ul>,
+                      ol: ({ children }) => <ol className="text-gray-300 list-decimal list-inside mb-2 space-y-1 last:mb-0">{children}</ol>,
+                      li: ({ children }) => <li className="text-gray-300 pl-1">{children}</li>,
                       strong: ({ children }) => <strong className="text-blue-300 font-semibold">{children}</strong>,
                       em: ({ children }) => <em className="text-blue-200 italic">{children}</em>,
                       code: ({ children }) => <code className="bg-blue-900/30 text-blue-200 px-2 py-1 rounded text-xs font-mono">{children}</code>,
                       h1: ({ children }) => <h1 className="text-blue-300 text-lg font-bold mb-2">{children}</h1>,
                       h2: ({ children }) => <h2 className="text-blue-300 text-base font-semibold mb-2">{children}</h2>,
                       h3: ({ children }) => <h3 className="text-blue-300 text-sm font-semibold mb-1">{children}</h3>,
+                      h4: ({ children }) => <h4 className="text-blue-300 text-sm font-medium mb-1">{children}</h4>,
+                      blockquote: ({ children }) => (
+                        <blockquote className="border-l-4 border-blue-500/50 pl-4 py-2 bg-blue-900/10 rounded-r text-blue-200 italic mb-2">
+                          {children}
+                        </blockquote>
+                      ),
                     }}
                   >
                     {atsResult.suggestions}
@@ -264,15 +446,24 @@ const ResumeATS = () => {
               </div>
             )}
 
-            {/* Analyze Another Resume Button */}
-            <div className="text-center">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={downloadAnalysis}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Analysis
+              </button>
               <button
                 onClick={() => {
                   setAtsResult(null);
                   setError(null);
                   fileInputRef.current?.click();
                 }}
-                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 mx-auto"
+                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
