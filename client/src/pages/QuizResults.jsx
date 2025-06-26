@@ -23,7 +23,9 @@ const QuizResults = () => {
   // Get results either from Redux or from location state
   const results = reduxResults || location.state?.quizResults;
 
-  const [showDetailedView, setShowDetailedView] = useState(false);  useEffect(() => {
+  const [showDetailedView, setShowDetailedView] = useState(true); // Show by default
+
+  useEffect(() => {
     // Check if we have valid quiz results data to display
     const checkQuizData = () => {
       // First check if we have valid results directly
@@ -195,6 +197,7 @@ const QuizResults = () => {
       </div>
     );
   }
+  
   return (
     <div className="min-h-screen bg-black relative overflow-hidden py-8">
       {/* Pure Black Geometric Background */}
@@ -374,7 +377,7 @@ const QuizResults = () => {
         {showDetailedView && results.detailedResults && (
           <div className="space-y-6 animate-fadeIn">
             <h2 className="text-2xl font-bold text-white mb-6">
-              Question by Question Review
+              Question by Question Review ({results.detailedResults.length} questions)
             </h2>
             {results.detailedResults.map((result, index) => (
               <div

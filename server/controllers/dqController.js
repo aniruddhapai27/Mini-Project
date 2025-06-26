@@ -79,8 +79,10 @@ exports.getQuestionsBySubject = async (req, res) => {
     const todayMonth = today.getMonth() + 1; // getMonth() returns 0-11
     const todayYear = today.getFullYear();
 
-    // Get all questions for this subject
-    const allQuestionsForSubject = await DQ.find({ subject: subject });    // Filter questions by matching day, month, year
+    // Get all questions for this subject (case-insensitive)
+    const allQuestionsForSubject = await DQ.find({ 
+      subject: { $regex: new RegExp(`^${subject}$`, 'i') }
+    });    // Filter questions by matching day, month, year
     const filteredQuestions = allQuestionsForSubject.filter((question) => {
       const questionDate = new Date(question.date);
       const questionDay = questionDate.getDate();
@@ -146,33 +148,67 @@ exports.submitQuizAnswers = async (req, res) => {
       const question = await DQ.findById(questionId);
 
       if (question) {
-        // Convert option index to option key (0->option1, 1->option2, etc.)
-        const selectedOptionKey = `option${selectedOption + 1}`;
-        const isCorrect = selectedOptionKey === question.answer;
+        // The answer field might be in different formats:
+        // Format 1: "option1", "option2", etc.
+        // Format 2: Literal answer text like "O(log n)", "Stack", etc.
+        // Format 3: Numeric like "1", "2", "3", "4" (1-based index)
+        
+        const options = [question.option1, question.option2, question.option3, question.option4];
+        let correctAnswerIndex = -1;
+        let isCorrect = false;
+
+        // Method 1: Check if answer is in "optionX" format
+        if (question.answer && question.answer.toLowerCase().startsWith('option')) {
+          const optionNumber = parseInt(question.answer.toLowerCase().replace('option', ''));
+          if (!isNaN(optionNumber) && optionNumber >= 1 && optionNumber <= 4) {
+            correctAnswerIndex = optionNumber - 1; // Convert to 0-based index
+          }
+        } 
+        // Method 2: Check if answer is a numeric string (1-4)
+        else if (question.answer && /^[1-4]$/.test(question.answer.toString().trim())) {
+          const optionNumber = parseInt(question.answer);
+          if (!isNaN(optionNumber) && optionNumber >= 1 && optionNumber <= 4) {
+            correctAnswerIndex = optionNumber - 1; // Convert to 0-based index
+          }
+        }
+        // Method 3: Try to find the literal answer in options (exact match)
+        else if (question.answer) {
+          correctAnswerIndex = options.findIndex(opt => 
+            opt && opt.trim() === question.answer.trim()
+          );
+        }
+
+        // Method 4: Try case-insensitive match
+        if (correctAnswerIndex === -1 && question.answer) {
+          correctAnswerIndex = options.findIndex(opt => 
+            opt && question.answer && opt.trim().toLowerCase() === question.answer.trim().toLowerCase()
+          );
+        }
+
+        // Method 5: Try partial matching (useful for long answers)
+        if (correctAnswerIndex === -1 && question.answer) {
+          correctAnswerIndex = options.findIndex(opt => 
+            opt && (opt.includes(question.answer) || question.answer.includes(opt))
+          );
+        }
+
+        // Calculate if user's answer is correct
+        isCorrect = selectedOption === correctAnswerIndex;
 
         if (isCorrect) {
           correctAnswers++;
         }
-
-        // Get the correct answer index (option1->0, option2->1, etc.)
-        const correctAnswerIndex =
-          parseInt(question.answer.replace("option", "")) - 1;
 
         // Prepare detailed result for this question
         detailedResults.push({
           questionId: question._id,
           questionIndex: questionIndex || detailedResults.length,
           question: question.question,
-          options: [
-            question.option1,
-            question.option2,
-            question.option3,
-            question.option4,
-          ],
+          options: options,
           userSelectedOption: selectedOption,
-          userSelectedText: question[selectedOptionKey],
+          userSelectedText: options[selectedOption] || 'Unknown',
           correctOption: correctAnswerIndex,
-          correctOptionText: question[question.answer],
+          correctOptionText: correctAnswerIndex >= 0 ? options[correctAnswerIndex] : question.answer,
           isCorrect,
           subject: question.subject,
         });
@@ -229,6 +265,107 @@ exports.submitQuizAnswers = async (req, res) => {
         totalQuestions,
         timeTaken: null, // Can be added if tracking time
         averageTimePerQuestion: null, // Can be calculated if tracking time
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Test endpoint to check answer formats
+exports.testAnswerFormats = async (req, res) => {
+  try {
+    const subjects = ['os', 'dbms', 'ds', 'ada', 'se', 'cn', 'operating systems', 'data structures', 'computer networks', 'database management systems', 'software engineering', 'algorithm design and analysis'];
+    const results = {};
+
+    for (const subject of subjects) {
+      // Try both exact match and case-insensitive regex match
+      let samples = await DQ.find({ subject: subject }).limit(3);
+      if (samples.length === 0) {
+        samples = await DQ.find({ 
+          subject: { $regex: new RegExp(`^${subject}$`, 'i') }
+        }).limit(3);
+      }
+      
+      results[subject] = samples.map(q => {
+        const options = [q.option1, q.option2, q.option3, q.option4];
+        let answerFormat = 'unknown';
+        let correctIndex = -1;
+        
+        // Determine the answer format
+        if (q.answer && q.answer.toLowerCase().startsWith('option')) {
+          answerFormat = 'optionX';
+          const optionNumber = parseInt(q.answer.toLowerCase().replace('option', ''));
+          if (!isNaN(optionNumber) && optionNumber >= 1 && optionNumber <= 4) {
+            correctIndex = optionNumber - 1;
+          }
+        } else if (q.answer && /^[1-4]$/.test(q.answer.toString().trim())) {
+          answerFormat = 'numeric';
+          const optionNumber = parseInt(q.answer);
+          if (!isNaN(optionNumber) && optionNumber >= 1 && optionNumber <= 4) {
+            correctIndex = optionNumber - 1;
+          }
+        } else {
+          answerFormat = 'literal';
+          correctIndex = options.findIndex(opt => 
+            opt && q.answer && opt.trim().toLowerCase() === q.answer.trim().toLowerCase()
+          );
+        }
+        
+        return {
+          id: q._id,
+          question: q.question.substring(0, 80) + '...',
+          answer: q.answer,
+          answerFormat: answerFormat,
+          correctIndex: correctIndex,
+          options: options.map(opt => opt ? opt.substring(0, 30) + '...' : 'N/A')
+        };
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Answer format test results",
+      data: results,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Test endpoint to check what's in the database
+exports.testDatabase = async (req, res) => {
+  try {
+    // Get total count
+    const totalCount = await DQ.countDocuments();
+    
+    // Get all unique subjects
+    const subjects = await DQ.distinct('subject');
+    
+    // Get sample documents
+    const samples = await DQ.find({}).limit(5);
+    
+    res.status(200).json({
+      success: true,
+      message: "Database test results",
+      data: {
+        totalQuestions: totalCount,
+        uniqueSubjects: subjects,
+        sampleQuestions: samples.map(q => ({
+          id: q._id,
+          subject: q.subject,
+          question: q.question.substring(0, 100) + '...',
+          answer: q.answer,
+          answerType: typeof q.answer,
+          date: q.date,
+          options: [q.option1, q.option2, q.option3, q.option4].map(opt => opt.substring(0, 30) + '...')
+        }))
       },
     });
   } catch (error) {
