@@ -38,6 +38,17 @@ const QuizSelection = () => {
       alert("Please select a subject to start the quiz.");
       return;
     }
+    
+    // Clear any existing quiz cache to prevent stale data
+    const subjects = ['data structures', 'operating systems', 'computer networks', 'database management systems', 'software engineering', 'algorithm design and analysis'];
+    subjects.forEach(subj => {
+      if (subj !== selectedSubject.toLowerCase()) {
+        localStorage.removeItem(`quiz-questions-${subj}`);
+        localStorage.removeItem(`quiz-questions-${subj}-v1`);
+        localStorage.removeItem(`quiz-questions-${subj}-v2`);
+      }
+    });
+    
     navigate(`/quiz/${selectedSubject}`);
   };
 

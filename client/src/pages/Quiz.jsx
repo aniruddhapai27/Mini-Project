@@ -16,6 +16,7 @@ import {
   finishQuiz,
   startQuiz,
   resetQuiz,
+  resetForNewSubject,
   submitQuizAnswers,
 } from "../redux/slices/dqSlice";
 
@@ -39,54 +40,110 @@ const Quiz = () => {
     selectUserAnswer(state, currentQuiz.currentIndex)
   );
 
-  // Check if this is an unauthorized direct navigation
+  // Function to clear quiz cache for all subjects
+  const clearQuizCache = () => {
+    const subjects = ['data structures', 'operating systems', 'computer networks', 'database management systems', 'software engineering', 'algorithm design and analysis'];
+    subjects.forEach(subj => {
+      localStorage.removeItem(`quiz-questions-${subj}`);
+      localStorage.removeItem(`quiz-questions-${subj}-v1`);
+      localStorage.removeItem(`quiz-questions-${subj}-v2`);
+    });
+  };
+
+  // Check if this is an unauthorized direct navigation or subject change
   useEffect(() => {
     // If there's no subject, redirect to quiz selection
     if (!subject) {
       navigate("/quiz-selection");
       return;
     }
-  }, [subject, navigate]);  useEffect(() => {
+
+    // Reset quiz state when subject changes
+    if (currentQuiz.subject && currentQuiz.subject !== subject) {
+      console.log(`Subject changed from ${currentQuiz.subject} to ${subject}, resetting quiz`);
+      dispatch(resetForNewSubject());
+      clearQuizCache();
+    }
+  }, [subject, navigate, currentQuiz.subject, dispatch]);  useEffect(() => {
+    // Only proceed if we have a valid subject and no active quiz
+    if (!subject) return;
+
+    // If there's an active quiz for a different subject, reset it first
+    if (currentQuiz.isActive && currentQuiz.subject !== subject) {
+      dispatch(resetQuiz());
+      return;
+    }
+
     // Use a versioned cache key to force cache refresh after the 10-question fix
     const cacheKey = `quiz-questions-${subject}-v2`;
     const cached = localStorage.getItem(cacheKey);
     
-    // Clear old cache versions
+    // Clear old cache versions for this subject
     localStorage.removeItem(`quiz-questions-${subject}`);
     localStorage.removeItem(`quiz-questions-${subject}-v1`);
     
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed) && parsed.length === 10) { // Only use cache if exactly 10 questions
-        dispatch(startQuiz({ questions: parsed, subject }));
-        return;
+    // Only use cache if we don't have an active quiz and the cache is for the current subject
+    if (cached && !currentQuiz.isActive) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length === 10) {
+          // Verify that cached questions are for the current subject
+          const isCorrectSubject = parsed.every(q => 
+            q.subject && q.subject.toLowerCase() === subject.toLowerCase()
+          );
+          
+          if (isCorrectSubject) {
+            dispatch(startQuiz({ questions: parsed, subject }));
+            return;
+          } else {
+            // Cache is for wrong subject, remove it
+            localStorage.removeItem(cacheKey);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing cached questions:', error);
+        localStorage.removeItem(cacheKey);
       }
     }
     
-    // Fetch questions for the subject if not active
+    // Fetch questions for the subject if not active or cache is invalid
     if (!currentQuiz.isActive && subject) {
       dispatch(fetchQuestionsBySubject(subject)).then((action) => {
-        if (action.payload && Array.isArray(action.payload)) {
+        if (action.payload && action.payload.questions && Array.isArray(action.payload.questions)) {
           // Ensure exactly 10 questions before caching
-          const limitedQuestions = action.payload.slice(0, 10);
-          localStorage.setItem(cacheKey, JSON.stringify(limitedQuestions));
+          const limitedQuestions = action.payload.questions.slice(0, 10);
+          // Only cache if questions are for the correct subject
+          if (limitedQuestions.length > 0 && limitedQuestions[0].subject) {
+            localStorage.setItem(cacheKey, JSON.stringify(limitedQuestions));
+          }
         }
       });
     }
-  }, [dispatch, subject, currentQuiz.isActive]);
+  }, [dispatch, subject, currentQuiz.isActive, currentQuiz.subject]);
 
   useEffect(() => {
-    // Start quiz when questions are loaded
+    // Start quiz when questions are loaded and we don't have an active quiz
     if (subjectQuestions.length > 0 && !currentQuiz.isActive && subject) {
-      dispatch(startQuiz({ questions: subjectQuestions, subject }));
+      // Double-check that the loaded questions are for the current subject
+      const questionsForCurrentSubject = subjectQuestions.filter(q => 
+        q.subject && q.subject.toLowerCase() === subject.toLowerCase()
+      );
+      
+      if (questionsForCurrentSubject.length > 0) {
+        dispatch(startQuiz({ questions: questionsForCurrentSubject, subject }));
+      } else {
+        // Questions don't match current subject, fetch new ones
+        dispatch(fetchQuestionsBySubject(subject));
+      }
     }
 
     // If no questions are available after a timeout, redirect back to selection
     const timer = setTimeout(() => {
-      if (subjectQuestions.length === 0 && !loading && !currentQuiz.isActive) {
+      if (subjectQuestions.length === 0 && !loading && !currentQuiz.isActive && subject) {
+        console.log('No questions found for subject:', subject);
         navigate("/quiz-selection");
       }
-    }, 3000); // 3 seconds timeout
+    }, 5000); // Increased timeout to 5 seconds
 
     return () => clearTimeout(timer);
   }, [
@@ -186,6 +243,8 @@ const Quiz = () => {
   };
 
   const handleExitQuiz = () => {
+    // Clear quiz cache to prevent stale data
+    clearQuizCache();
     // Reset quiz state
     dispatch(resetQuiz());
     navigate("/quiz-selection");
@@ -246,7 +305,7 @@ const Quiz = () => {
     );
   }
 
-  // Check if we have a current question to display
+  // Check if we have a current question to display and it matches the current subject
   if (!currentQuestion) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-white dark:bg-black">
@@ -289,6 +348,21 @@ const Quiz = () => {
             {/* Hover glow effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Additional safety check: ensure current question belongs to current subject
+  if (currentQuestion && currentQuestion.subject && subject && 
+      currentQuestion.subject.toLowerCase() !== subject.toLowerCase()) {
+    console.log(`Question subject mismatch: ${currentQuestion.subject} !== ${subject}, resetting...`);
+    dispatch(resetForNewSubject());
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
+        <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-8 shadow-xl">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+          <p className="text-white">Loading quiz...</p>
         </div>
       </div>
     );

@@ -196,6 +196,25 @@ const dqSlice = createSlice({
       };
       state.quizResults = null;
       state.submissionError = null;
+      // Also clear subject questions to prevent stale data
+      state.subjectQuestions = [];
+      state.currentSubject = null;
+    },
+
+    resetForNewSubject: (state) => {
+      // More aggressive reset for subject changes
+      state.currentQuiz = {
+        questions: [],
+        currentIndex: 0,
+        answers: [],
+        subject: null,
+        isActive: false,
+      };
+      state.subjectQuestions = [];
+      state.currentSubject = null;
+      state.quizResults = null;
+      state.submissionError = null;
+      state.subjectQuestionsError = null;
     }, // Clear errors
     clearDailyQuestionsError: (state) => {
       state.dailyQuestionsError = null;
@@ -304,6 +323,7 @@ export const {
   selectAnswer,
   finishQuiz,
   resetQuiz,
+  resetForNewSubject,
   clearDailyQuestionsError,
   clearSubjectsError,
   clearSubjectQuestionsError,
