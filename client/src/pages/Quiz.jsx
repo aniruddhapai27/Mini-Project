@@ -34,6 +34,7 @@ const Quiz = () => {
 
   // Local state for current question's selected option
   const [selectedOption, setSelectedOption] = useState(null);
+  const [isFinishing, setIsFinishing] = useState(false);
 
   // Get current user answer for the current question
   const userAnswer = useSelector((state) =>
@@ -196,6 +197,10 @@ const Quiz = () => {
   const handlePreviousQuestion = () => {
     dispatch(previousQuestion());
   };  const handleFinishQuiz = async () => {
+    // Set finishing state to prevent UI flickering
+    setIsFinishing(true);
+    
+    // First, mark the quiz as inactive to prevent UI flickering
     dispatch(finishQuiz());
 
     try {
@@ -239,6 +244,7 @@ const Quiz = () => {
     } catch (error) {
       console.error("Failed to submit quiz answers:", error);
       alert("Failed to submit quiz. Please try again.");
+      setIsFinishing(false); // Reset finishing state on error
     }
   };
 
@@ -255,6 +261,17 @@ const Quiz = () => {
         <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-8 shadow-xl">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
           <p className="text-white">Loading quiz...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isFinishing) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
+        <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-green-500/30 rounded-2xl p-8 shadow-xl">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-white">Processing quiz results...</p>
         </div>
       </div>
     );
@@ -306,7 +323,7 @@ const Quiz = () => {
   }
 
   // Check if we have a current question to display and it matches the current subject
-  if (!currentQuestion) {
+  if (!currentQuestion || !currentQuiz.isActive) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-white dark:bg-black">
         <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-yellow-500/30 rounded-2xl p-8 shadow-xl max-w-md">
@@ -323,8 +340,12 @@ const Quiz = () => {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
             />
           </svg>
-          <h1 className="text-xl font-bold text-white mb-2">No Questions Available</h1>
-          <p className="text-gray-300 mb-4">Please select a different subject.</p>
+          <h1 className="text-xl font-bold text-white mb-2">
+            {!currentQuiz.isActive ? "Quiz Completed" : "No Questions Available"}
+          </h1>
+          <p className="text-gray-300 mb-4">
+            {!currentQuiz.isActive ? "Redirecting to results..." : "Please select a different subject."}
+          </p>
           <button
             onClick={() => navigate("/quiz-selection")}
             className="group relative py-3 px-6 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-300 hover:text-cyan-200 rounded-lg font-semibold border border-cyan-500/30 hover:border-cyan-400/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-cyan-500/20 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2 focus:ring-offset-gray-800"
