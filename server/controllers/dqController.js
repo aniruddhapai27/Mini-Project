@@ -123,7 +123,7 @@ exports.getQuestionsBySubject = async (req, res) => {
 // Submit answers and get score
 exports.submitQuizAnswers = async (req, res) => {
   try {
-    const { answers, subject } = req.body;
+    const { answers, subject, totalTime, timePerQuestion } = req.body;
 
     if (!answers || !Array.isArray(answers) || !subject) {
       return res.status(400).json({
@@ -137,7 +137,15 @@ exports.submitQuizAnswers = async (req, res) => {
     let totalQuestions = answers.length;
     const detailedResults = [];
 
-    for (const answer of answers) {
+    // Sort answers by questionIndex to maintain proper order
+    const sortedAnswers = answers.sort((a, b) => {
+      const indexA = a.questionIndex !== undefined ? a.questionIndex : 0;
+      const indexB = b.questionIndex !== undefined ? b.questionIndex : 0;
+      return indexA - indexB;
+    });
+
+    for (let i = 0; i < sortedAnswers.length; i++) {
+      const answer = sortedAnswers[i];
       const { questionId, selectedOption, questionIndex } = answer;
 
       if (!questionId || selectedOption === undefined) {
@@ -202,7 +210,7 @@ exports.submitQuizAnswers = async (req, res) => {
         // Prepare detailed result for this question
         detailedResults.push({
           questionId: question._id,
-          questionIndex: questionIndex || detailedResults.length,
+          questionIndex: questionIndex !== undefined ? questionIndex : i,
           question: question.question,
           options: options,
           userSelectedOption: selectedOption,
@@ -215,8 +223,7 @@ exports.submitQuizAnswers = async (req, res) => {
       }
     }
 
-    // Sort detailed results by question index to maintain order
-    detailedResults.sort((a, b) => a.questionIndex - b.questionIndex);
+    // Detailed results are already in correct order due to sorting at the beginning
 
     // Calculate percentage score
     const score = Math.round((correctAnswers / totalQuestions) * 100);
@@ -258,13 +265,16 @@ exports.submitQuizAnswers = async (req, res) => {
       subject,
       completedAt: new Date().toISOString(),
       detailedResults,
+      totalTime: totalTime || null,
+      timePerQuestion: timePerQuestion || null,
+      timeTaken: totalTime ? Math.floor(totalTime / 1000) : null, // in seconds
       summary: {
         percentage: score,
         questionsCorrect: correctAnswers,
         questionsIncorrect: totalQuestions - correctAnswers,
         totalQuestions,
-        timeTaken: null, // Can be added if tracking time
-        averageTimePerQuestion: null, // Can be calculated if tracking time
+        timeTaken: totalTime ? Math.floor(totalTime / 1000) : null,
+        averageTimePerQuestion: totalTime ? Math.floor(totalTime / 1000 / totalQuestions) : null,
       },
     });
   } catch (error) {

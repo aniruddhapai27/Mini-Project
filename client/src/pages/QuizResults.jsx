@@ -70,6 +70,21 @@ const QuizResults = () => {
     navigate("/quiz-selection");
   };
 
+  // Helper function to format time
+  const formatTime = (milliseconds) => {
+    const seconds = Math.floor(milliseconds / 1000);
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to format time in seconds
+  const formatTimeSeconds = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const getPerformanceIcon = (performance) => {
     switch (performance) {
       case "Excellent":
@@ -354,6 +369,44 @@ const QuizResults = () => {
           </div>
         </div>
 
+        {/* Timing Information */}
+        {(results.timeTaken || results.totalTime) && (
+          <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/20 rounded-xl p-6 mb-8 shadow-md animate-fadeIn">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center">
+              <svg className="w-6 h-6 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Timing Analysis
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-gray-800/30 rounded-lg">
+                <div className="text-2xl font-bold text-blue-400 mb-1">
+                  {results.timeTaken ? formatTimeSeconds(results.timeTaken) : formatTime(results.totalTime)}
+                </div>
+                <div className="text-sm text-gray-300">Total Time</div>
+              </div>
+              <div className="text-center p-4 bg-gray-800/30 rounded-lg">
+                <div className="text-2xl font-bold text-green-400 mb-1">
+                  {results.timeTaken ? 
+                    formatTimeSeconds(Math.floor(results.timeTaken / results.totalQuestions)) :
+                    formatTime(Math.floor((results.totalTime || 0) / results.totalQuestions))
+                  }
+                </div>
+                <div className="text-sm text-gray-300">Avg per Question</div>
+              </div>
+              <div className="text-center p-4 bg-gray-800/30 rounded-lg">
+                <div className="text-2xl font-bold text-purple-400 mb-1">
+                  {results.timeTaken ? 
+                    `${Math.floor((results.timeTaken / 180) * 100)}%` :
+                    `${Math.floor(((results.totalTime || 0) / 180000) * 100)}%`
+                  }
+                </div>
+                <div className="text-sm text-gray-300">Time Used</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8 animate-fadeIn">          <button
             onClick={() => setShowDetailedView(!showDetailedView)}
@@ -394,6 +447,12 @@ const QuizResults = () => {
                       <span className="text-sm font-medium text-black/70 dark:text-white/70 mr-3">
                         Question {index + 1}
                       </span>
+                      {/* Question timing */}
+                      {results.timePerQuestion && results.timePerQuestion[index] && (
+                        <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full mr-3">
+                          {formatTime(results.timePerQuestion[index])}
+                        </span>
+                      )}
                       {result.isCorrect ? (
                         <div className="flex items-center text-green-500">
                           <svg
