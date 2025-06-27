@@ -123,7 +123,7 @@ exports.getQuestionsBySubject = async (req, res) => {
 // Submit answers and get score
 exports.submitQuizAnswers = async (req, res) => {
   try {
-    const { answers, subject } = req.body;
+    const { answers, subject, totalTime, timePerQuestion } = req.body;
 
     if (!answers || !Array.isArray(answers) || !subject) {
       return res.status(400).json({
@@ -265,13 +265,16 @@ exports.submitQuizAnswers = async (req, res) => {
       subject,
       completedAt: new Date().toISOString(),
       detailedResults,
+      totalTime: totalTime || null,
+      timePerQuestion: timePerQuestion || null,
+      timeTaken: totalTime ? Math.floor(totalTime / 1000) : null, // in seconds
       summary: {
         percentage: score,
         questionsCorrect: correctAnswers,
         questionsIncorrect: totalQuestions - correctAnswers,
         totalQuestions,
-        timeTaken: null, // Can be added if tracking time
-        averageTimePerQuestion: null, // Can be calculated if tracking time
+        timeTaken: totalTime ? Math.floor(totalTime / 1000) : null,
+        averageTimePerQuestion: totalTime ? Math.floor(totalTime / 1000 / totalQuestions) : null,
       },
     });
   } catch (error) {

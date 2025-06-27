@@ -39,6 +39,8 @@ const QuizSelection = () => {
       return;
     }
     
+    console.log('Starting quiz for subject:', selectedSubject);
+    
     // Clear any existing quiz cache to prevent stale data
     const subjects = ['data structures', 'operating systems', 'computer networks', 'database management systems', 'software engineering', 'algorithm design and analysis'];
     subjects.forEach(subj => {
@@ -49,7 +51,11 @@ const QuizSelection = () => {
       }
     });
     
-    navigate(`/quiz/${selectedSubject}`);
+    // URL encode the subject to handle spaces and special characters
+    const encodedSubject = encodeURIComponent(selectedSubject);
+    console.log('Navigating to:', `/quiz/${encodedSubject}`);
+    
+    navigate(`/quiz/${encodedSubject}`);
   };
 
   const getSubjectsFromQuestions = () => {

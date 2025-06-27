@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -21,7 +21,8 @@ import {
 } from "../redux/slices/dqSlice";
 
 const Quiz = () => {
-  const { subject } = useParams();
+  const { subject: encodedSubject } = useParams();
+  const subject = encodedSubject ? decodeURIComponent(encodedSubject) : null;
   const navigate = useNavigate();
   const dispatch = useDispatch();
   // Redux state
@@ -35,11 +36,32 @@ const Quiz = () => {
   // Local state for current question's selected option
   const [selectedOption, setSelectedOption] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
+  
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes = 120 seconds
+  const [startTime, setStartTime] = useState(null);
+  const [timePerQuestion, setTimePerQuestion] = useState([]);
+  const currentQuestionStartTimeRef = useRef(null);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
 
   // Get current user answer for the current question
   const userAnswer = useSelector((state) =>
     selectUserAnswer(state, currentQuiz.currentIndex)
   );
+
+  // Helper function to format time
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Helper function to get timer color based on remaining time
+  const getTimerColor = () => {
+    if (timeLeft > 40) return 'text-green-400 border-green-400';
+    if (timeLeft > 20) return 'text-yellow-400 border-yellow-400 animate-timer-pulse';
+    return 'text-red-400 border-red-400 animate-timer-critical';
+  };
 
   // Function to clear quiz cache for all subjects
   const clearQuizCache = () => {
@@ -119,8 +141,83 @@ const Quiz = () => {
           }
         }
       });
+    }  }, [dispatch, subject, currentQuiz.isActive, currentQuiz.subject, subjectQuestions.length]);
+
+  // Define handleFinishQuiz before it's used in useEffect
+  const handleFinishQuiz = useCallback(async () => {
+    // Set finishing state to prevent UI flickering
+    setIsFinishing(true);
+    
+    // Record time spent on last question
+    if (currentQuestionStartTimeRef.current) {
+      const now = Date.now();
+      const timeSpent = now - currentQuestionStartTimeRef.current;
+      setTimePerQuestion(prev => {
+        const updated = [...prev];
+        updated[currentQuiz.currentIndex] = timeSpent;
+        return updated;
+      });
     }
-  }, [dispatch, subject, currentQuiz.isActive, currentQuiz.subject]);
+    
+    // First, mark the quiz as inactive to prevent UI flickering
+    dispatch(finishQuiz());
+
+    try {
+      // Check if we have all answers
+      if (currentQuiz.answers.length !== currentQuiz.questions.length) {
+        console.warn(`Not all questions answered: 
+          ${currentQuiz.answers.length} answers for ${currentQuiz.questions.length} questions`);
+      }
+
+      // Calculate total time taken
+      const totalTime = startTime ? Date.now() - startTime : 0;
+
+      // Format answers for backend submission
+      const formattedAnswers = currentQuiz.answers.map((answer) => ({
+        questionId: answer.questionId,
+        selectedOption: answer.selectedOption,
+        questionIndex: answer.questionIndex,
+      }));
+
+      console.log("Submitting answers:", formattedAnswers);
+
+      // Submit the quiz answers
+      const resultAction = await dispatch(
+        submitQuizAnswers({
+          answers: formattedAnswers,
+          subject: currentQuiz.subject,
+          questions: currentQuiz.questions,
+          totalTime,
+          timePerQuestion,
+        })
+      ).unwrap();
+
+      // Validate the results
+      if (resultAction && resultAction.success) {
+        console.log("Quiz submission successful:", resultAction);
+        
+        navigate("/quiz-results", {
+          state: {
+            fromQuiz: true,
+            quizResults: {
+              ...resultAction,
+              totalTime,
+              timePerQuestion,
+              timeTaken: Math.floor(totalTime / 1000), // in seconds
+            },
+          },
+        });
+      } else {
+        throw new Error(
+          resultAction?.message || "Failed to process quiz results"
+        );
+      }
+    } catch (error) {
+      console.error("Failed to submit quiz answers:", error);
+      alert("Failed to submit quiz. Please try again.");
+      setIsFinishing(false); // Reset finishing state on error
+    }
+  }, [currentQuiz, dispatch, navigate, startTime, timePerQuestion]);
 
   useEffect(() => {
     // Start quiz when questions are loaded and we don't have an active quiz
@@ -154,7 +251,67 @@ const Quiz = () => {
     subject,
     dispatch,
     navigate,
+    error,
   ]);
+  // Timer useEffect - countdown and auto-submit
+  useEffect(() => {
+    if (!currentQuiz.isActive || isFinishing) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime <= 1) {
+          // Time's up! Auto-submit the quiz
+          handleFinishQuiz();
+          return 0;
+        }
+        
+        // Show warning at 20 seconds
+        if (prevTime === 21) {
+          setShowTimeWarning(true);
+          setTimeout(() => setShowTimeWarning(false), 4000); // Hide after 4 seconds
+        }
+        
+        // Show final warning at 10 seconds
+        if (prevTime === 11) {
+          setShowTimeWarning(true);
+          setTimeout(() => setShowTimeWarning(false), 3000); // Hide after 3 seconds
+        }
+        
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [currentQuiz.isActive, isFinishing, handleFinishQuiz]);
+
+  // Start timer when quiz becomes active
+  useEffect(() => {
+    if (currentQuiz.isActive && !startTime) {
+      const now = Date.now();
+      setStartTime(now);
+      currentQuestionStartTimeRef.current = now;
+      setTimeLeft(120); // Reset timer to 2 minutes
+    }
+  }, [currentQuiz.isActive, startTime]);
+
+  // Track time per question when question changes
+  useEffect(() => {
+    if (currentQuiz.isActive && currentQuestionStartTimeRef.current) {
+      const now = Date.now();
+      const timeSpent = now - currentQuestionStartTimeRef.current;
+      
+      if (currentQuiz.currentIndex > 0) {
+        setTimePerQuestion(prev => {
+          const updated = [...prev];
+          updated[currentQuiz.currentIndex - 1] = timeSpent;
+          return updated;
+        });
+      }
+      
+      currentQuestionStartTimeRef.current = now;
+    }
+  }, [currentQuiz.currentIndex, currentQuiz.isActive]);
+
   // Clean up when leaving the quiz page without completing
   useEffect(() => {
     return () => {
@@ -196,56 +353,6 @@ const Quiz = () => {
   };
   const handlePreviousQuestion = () => {
     dispatch(previousQuestion());
-  };  const handleFinishQuiz = async () => {
-    // Set finishing state to prevent UI flickering
-    setIsFinishing(true);
-    
-    // First, mark the quiz as inactive to prevent UI flickering
-    dispatch(finishQuiz());
-
-    try {
-      // Check if we have all answers
-      if (currentQuiz.answers.length !== currentQuiz.questions.length) {
-        console.warn(`Not all questions answered: 
-          ${currentQuiz.answers.length} answers for ${currentQuiz.questions.length} questions`);
-      }
-
-      // Format answers for backend submission
-      const formattedAnswers = currentQuiz.answers.map((answer) => ({
-        questionId: answer.questionId,
-        selectedOption: answer.selectedOption,
-        questionIndex: answer.questionIndex,
-      }));
-
-      console.log("Submitting answers:", formattedAnswers);
-
-      // Submit the quiz answers
-      const resultAction = await dispatch(
-        submitQuizAnswers({
-          answers: formattedAnswers,
-          subject: currentQuiz.subject,
-          questions: currentQuiz.questions,
-        })
-      ).unwrap();      // Validate the results
-      if (resultAction && resultAction.success) {
-        console.log("Quiz submission successful:", resultAction);
-        
-        navigate("/quiz-results", {
-          state: {
-            fromQuiz: true,
-            quizResults: resultAction,
-          },
-        });
-      } else {
-        throw new Error(
-          resultAction?.message || "Failed to process quiz results"
-        );
-      }
-    } catch (error) {
-      console.error("Failed to submit quiz answers:", error);
-      alert("Failed to submit quiz. Please try again.");
-      setIsFinishing(false); // Reset finishing state on error
-    }
   };
 
   const handleExitQuiz = () => {
@@ -449,6 +556,27 @@ const Quiz = () => {
         <div className="absolute left-0 top-1/4 w-full h-px bg-gradient-to-r from-transparent via-gray-700/20 to-transparent animate-pulse" style={{ animationDelay: "2s" }}></div>
         <div className="absolute left-0 bottom-1/3 w-full h-px bg-gradient-to-r from-transparent via-gray-600/15 to-transparent animate-pulse" style={{ animationDelay: "3s" }}></div>      </div>
 
+      {/* Time Warning Modal */}
+      {showTimeWarning && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-red-500/90 backdrop-blur-xl border-2 border-red-400 rounded-2xl p-8 shadow-xl animate-bounce max-w-md mx-4">
+            <div className="text-center">
+              <svg className="w-16 h-16 text-white mx-auto mb-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <h2 className="text-2xl font-bold text-white mb-2">⚠️ Time Warning!</h2>
+              <p className="text-white/90 text-lg">
+                {timeLeft > 15 ? 'Only 20 seconds remaining!' : 'Only 10 seconds remaining!'}
+              </p>
+              <p className="text-white/80 text-sm mt-2">Quiz will auto-submit when time runs out</p>
+              <div className="mt-4 text-white font-mono text-xl animate-pulse">
+                {formatTime(timeLeft)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Quiz Container */}
       <div className="w-full max-w-2xl mx-auto bg-gray-900/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden animate-fadeIn relative z-10 border border-white/10">
         {/* Container Inner Glow */}
@@ -459,29 +587,41 @@ const Quiz = () => {
           <h1 className="text-2xl font-bold text-white mb-2 md:mb-0 drop-shadow-lg">
             {subject?.charAt(0).toUpperCase() + subject?.slice(1)} Quiz
           </h1>
-          <button
-            onClick={handleExitQuiz}
-            className="group relative px-4 py-2 bg-gradient-to-r from-red-500/20 to-red-600/20 hover:from-red-500/30 hover:to-red-600/30 text-red-300 hover:text-red-200 font-semibold rounded-lg border border-red-500/30 hover:border-red-400/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-gray-900"
-          >
+          
+          {/* Timer Display */}
+          <div className={`flex items-center space-x-4 ${getTimerColor()}`}>
             <div className="flex items-center space-x-2">
-              <svg 
-                className="w-4 h-4 transition-transform group-hover:rotate-12" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>Exit Quiz</span>
+              <span className="text-lg font-bold font-mono">
+                {formatTime(timeLeft)}
+              </span>
             </div>
-            {/* Hover glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-          </button>
+            <button
+              onClick={handleExitQuiz}
+              className="group relative px-4 py-2 bg-gradient-to-r from-red-500/20 to-red-600/20 hover:from-red-500/30 hover:to-red-600/30 text-red-300 hover:text-red-200 font-semibold rounded-lg border border-red-500/30 hover:border-red-400/50 transition-all duration-300 backdrop-blur-sm shadow-lg hover:shadow-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-gray-900"
+            >
+              <div className="flex items-center space-x-2">
+                <svg 
+                  className="w-4 h-4 transition-transform group-hover:rotate-12" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+                  />
+                </svg>
+                <span>Exit Quiz</span>
+              </div>
+              {/* Hover glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+            </button>
+          </div>
         </div>
         
         {/* Progress Bar */}
@@ -490,9 +630,42 @@ const Quiz = () => {
             <span className="text-white/80 text-sm">
               Question {currentQuiz.currentIndex + 1} of {currentQuiz.questions.length}
             </span>
-            <span className="text-white/80 text-sm">
-              {Math.round(progressInfo.percentage)}%
-            </span>
+            <div className="flex items-center space-x-4">
+              <span className="text-white/80 text-sm">
+                {Math.round(progressInfo.percentage)}%
+              </span>
+              {/* Circular Timer */}
+              <div className="relative w-8 h-8">
+                <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 36 36">
+                  <path
+                    className="stroke-white/20"
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    strokeWidth="3"
+                  />
+                  <path
+                    className={`stroke-current ${getTimerColor().split(' ')[0]}`}
+                    d="M18 2.0845
+                      a 15.9155 15.9155 0 0 1 0 31.831
+                      a 15.9155 15.9155 0 0 1 0 -31.831"
+                    fill="none"
+                    strokeWidth="3"
+                    strokeDasharray={`${(timeLeft / 120) * 100} 100`}
+                    strokeLinecap="round"
+                    style={{
+                      transition: 'stroke-dasharray 1s ease-in-out'
+                    }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className={`text-xs font-bold ${getTimerColor().split(' ')[0]}`}>
+                    {Math.ceil(timeLeft / 60)}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="w-full bg-white/10 rounded-full h-2.5">
             <div
