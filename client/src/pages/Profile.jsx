@@ -8,6 +8,7 @@ import {
   getMe,
 } from "../redux/slices/authSlice";
 import ChangePasswordModal from "../components/ChangePasswordModal";
+import QuizPerformanceGraph from "../components/QuizPerformanceGraph";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -539,7 +540,7 @@ const Profile = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 012 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                   />
                 </svg>
                 Performance by Category
@@ -592,7 +593,12 @@ const Profile = () => {
                   </div>
                 </div>
               </div>
-            </div>{/* Recent Performance */}
+            </div>
+
+            {/* Quiz Performance Graph */}
+            <QuizPerformanceGraph />
+
+            {/* Recent Performance */}
             <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-5 mb-4">
               <h3 className="text-sm font-semibold text-white mb-4 flex items-center">
                 <svg
