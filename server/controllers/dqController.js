@@ -1,4 +1,5 @@
 const DQ = require("../models/dqModel");
+const QuizHistory = require("../models/quizHistoryModel");
 
 exports.getDQ = async (req, res) => {
   try {
@@ -124,6 +125,7 @@ exports.getQuestionsBySubject = async (req, res) => {
 exports.submitQuizAnswers = async (req, res) => {
   try {
     const { answers, subject, totalTime, timePerQuestion } = req.body;
+    const userId = req.user ? req.user._id : null; // Get user ID if authenticated
 
     if (!answers || !Array.isArray(answers) || !subject) {
       return res.status(400).json({
@@ -255,6 +257,30 @@ exports.submitQuizAnswers = async (req, res) => {
     //   $inc: { current_streak: 1 }
     // });
 
+    // Save quiz history if user is authenticated
+    if (userId) {
+      try {
+        console.log('Saving quiz history with subject:', subject);
+        const quizHistory = new QuizHistory({
+          user: userId,
+          subject,
+          score,
+          correctAnswers,
+          totalQuestions,
+          grade,
+          performance,
+          totalTime: totalTime || 0,
+          timeTaken: totalTime ? Math.floor(totalTime / 1000) : 0,
+          detailedResults,
+        });
+        const savedHistory = await quizHistory.save();
+        console.log('Quiz history saved successfully:', { id: savedHistory._id, subject: savedHistory.subject });
+      } catch (historyError) {
+        console.error('Error saving quiz history:', historyError);
+        // Don't fail the request if history saving fails
+      }
+    }
+
     res.status(200).json({
       success: true,
       score,
@@ -376,6 +402,192 @@ exports.testDatabase = async (req, res) => {
           date: q.date,
           options: [q.option1, q.option2, q.option3, q.option4].map(opt => opt.substring(0, 30) + '...')
         }))
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get user's quiz history
+exports.getUserQuizHistory = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { page = 1, limit = 50, subject } = req.query;
+
+    // Build query
+    const query = { user: userId };
+    if (subject) {
+      query.subject = subject;
+    }
+
+    const quizzes = await QuizHistory.find(query)
+      .sort({ date: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .select('subject score correctAnswers totalQuestions grade performance date timeTaken');
+
+    const total = await QuizHistory.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        quizzes,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+        totalQuizzes: total,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get quiz statistics for graphs
+exports.getQuizStats = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { timeframe = '30d', subject } = req.query;
+
+    console.log('getQuizStats called with:', { userId, timeframe, subject });
+
+    // Calculate date range
+    const now = new Date();
+    let startDate;
+    
+    switch (timeframe) {
+      case '7d':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case '30d':
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case '90d':
+        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+        break;
+      case '1y':
+        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+
+    // Debug: Check what quiz history exists for this user
+    const allUserQuizzes = await QuizHistory.find({ user: userId }).select('subject date score');
+    console.log('All quiz history for user:', allUserQuizzes);
+
+    // Debug: Also check what subjects are in the DQ model
+    const allSubjects = await DQ.distinct('subject');
+    console.log('All subjects in DQ collection:', allSubjects);
+
+    // Build query
+    const query = {
+      user: userId,
+      date: { $gte: startDate }
+    };
+    
+    if (subject) {
+      // Make subject matching case-insensitive
+      query.subject = { $regex: new RegExp(`^${subject}$`, 'i') };
+      console.log('Filtering by subject (case-insensitive):', subject);
+    }
+
+    console.log('Query:', query);
+
+    // Get daily best scores
+    const dailyScores = await QuizHistory.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$date' },
+            month: { $month: '$date' },
+            day: { $dayOfMonth: '$date' },
+            subject: '$subject'
+          },
+          bestScore: { $max: '$score' },
+          quizCount: { $sum: 1 },
+          avgScore: { $avg: '$score' },
+          date: { $first: '$date' }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: '$_id.year',
+            month: '$_id.month',
+            day: '$_id.day'
+          },
+          date: { $first: '$date' },
+          subjects: {
+            $push: {
+              subject: '$_id.subject',
+              bestScore: '$bestScore',
+              quizCount: '$quizCount',
+              avgScore: '$avgScore'
+            }
+          },
+          overallBestScore: { $max: '$bestScore' },
+          totalQuizzes: { $sum: '$quizCount' }
+        }
+      },
+      { $sort: { date: 1 } }
+    ]);
+
+    console.log('Daily scores aggregation result:', JSON.stringify(dailyScores, null, 2));
+
+    // Get subject-wise statistics
+    const subjectStats = await QuizHistory.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: '$subject',
+          totalQuizzes: { $sum: 1 },
+          bestScore: { $max: '$score' },
+          avgScore: { $avg: '$score' },
+          totalCorrect: { $sum: '$correctAnswers' },
+          totalQuestions: { $sum: '$totalQuestions' },
+          lastQuizDate: { $max: '$date' }
+        }
+      },
+      { $sort: { avgScore: -1 } }
+    ]);
+
+    // Get overall stats
+    const overallStats = await QuizHistory.aggregate([
+      { $match: { user: userId } },
+      {
+        $group: {
+          _id: null,
+          totalQuizzes: { $sum: 1 },
+          bestScore: { $max: '$score' },
+          avgScore: { $avg: '$score' },
+          totalCorrect: { $sum: '$correctAnswers' },
+          totalQuestions: { $sum: '$totalQuestions' }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        dailyScores,
+        subjectStats,
+        overallStats: overallStats[0] || {
+          totalQuizzes: 0,
+          bestScore: 0,
+          avgScore: 0,
+          totalCorrect: 0,
+          totalQuestions: 0
+        },
+        timeframe,
+        dateRange: { start: startDate, end: now }
       },
     });
   } catch (error) {
