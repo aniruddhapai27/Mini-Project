@@ -24,6 +24,9 @@ const StudyAssistant = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [typewriterActive, setTypewriterActive] = useState(false);
+  const [typewriterText, setTypewriterText] = useState('');
+  const [isThinking, setIsThinking] = useState(false);
 
   const subjects = [
     { key: 'ADA', name: 'Algorithm Design & Analysis', icon: '🔢', color: 'from-blue-500 to-cyan-500' },
@@ -122,6 +125,19 @@ const StudyAssistant = () => {
 
     try {
       setIsLoading(true);
+      setIsThinking(true);
+      setTypewriterActive(false);
+      setTypewriterText('');
+      
+      // Add thinking message
+      const thinkingMessageObj = {
+        type: 'assistant',
+        content: '',
+        timestamp: new Date().toISOString(),
+        isThinking: true
+      };
+      setMessages(prev => [...prev, thinkingMessageObj]);
+      
       console.log('Processing message:', userMessage);
       
       // Determine session ID - create session only when user sends first message
@@ -152,13 +168,18 @@ const StudyAssistant = () => {
         // Refresh sessions list to include the new session
         fetchChatHistory();
 
-        // Add AI response
-        const aiMessageObj = {
-          type: 'assistant',
-          content: response.response,
-          timestamp: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, aiMessageObj]);
+        // Replace thinking message with AI response with typewriter effect
+        setIsThinking(false);
+        setTypewriterText(response.response);
+        setTypewriterActive(true);
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          const thinkingIndex = newMsgs.findIndex(m => m.isThinking);
+          if (thinkingIndex !== -1) {
+            newMsgs[thinkingIndex] = { type: 'assistant', content: '', timestamp: new Date().toISOString(), isTypewriter: true };
+          }
+          return newMsgs;
+        });
         
       } else {
         // Session already exists, continue the conversation
@@ -170,24 +191,55 @@ const StudyAssistant = () => {
           session_id: sessionIdToUse
         });
 
-        // Add AI response
-        const aiMessageObj = {
-          type: 'assistant',
-          content: response.response,
-          timestamp: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, aiMessageObj]);
+        // Add AI response with typewriter effect
+        setIsThinking(false);
+        setTypewriterText(response.response);
+        setTypewriterActive(true);
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          const thinkingIndex = newMsgs.findIndex(m => m.isThinking);
+          if (thinkingIndex !== -1) {
+            newMsgs[thinkingIndex] = { type: 'assistant', content: '', timestamp: new Date().toISOString(), isTypewriter: true };
+          }
+          return newMsgs;
+        });
       }
 
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
       
-      // Remove user message on error
-      setMessages(prev => prev.slice(0, -1));
-    } finally {      setIsLoading(false);
+      // Remove user message and thinking message on error
+      setMessages(prev => prev.slice(0, -2));
+      setIsThinking(false);
+    } finally {
+      setIsLoading(false);
     }
   }, [inputMessage, isLoading, currentSession, sessionId, selectedSubject, navigate, fetchChatHistory]);
+
+  // Typewriter effect for last assistant message
+  useEffect(() => {
+    if (!typewriterActive || !typewriterText) return;
+    let idx = messages.findIndex(m => m.isTypewriter);
+    if (idx === -1) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      setMessages(prev => {
+        const newMsgs = [...prev];
+        if (newMsgs[idx]) newMsgs[idx].content = typewriterText.slice(0, i + 1);
+        return newMsgs;
+      });
+      i++;
+      if (i >= typewriterText.length) {
+        clearInterval(interval);
+        setTypewriterActive(false);
+        setTypewriterText('');
+        setMessages(prev => prev.map(m => ({ ...m, isTypewriter: false })));
+      }
+    }, 3);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line
+  }, [typewriterActive, typewriterText]);
 
   // Initialize component
   useEffect(() => {
@@ -504,38 +556,52 @@ const StudyAssistant = () => {
                       }`}>
                         {message.type === 'assistant' ? (
                           <ErrorBoundary fallbackMessage="Error rendering AI response">
-                            <div className="markdown-content leading-relaxed prose prose-invert prose-sm max-w-none">
-                              {message.content && typeof message.content === 'string' ? (
-                                <ReactMarkdown 
-                                  components={{
-                                    p: ({children, ...props}) => <p className="mb-2 last:mb-0" {...props}>{children}</p>,
-                                    code: ({inline, children, ...props}) => 
-                                      inline ? (
-                                        <code className="bg-gray-700/50 px-1 py-0.5 rounded text-cyan-300" {...props}>
-                                          {children}
-                                        </code>
-                                      ) : (
-                                        <code className="block bg-gray-700/50 p-2 rounded-md text-green-300 overflow-x-auto" {...props}>
-                                          {children}
-                                        </code>
-                                      ),
-                                    pre: ({children, ...props}) => <pre className="bg-gray-700/50 p-2 rounded-md overflow-x-auto" {...props}>{children}</pre>,
-                                    ul: ({children, ...props}) => <ul className="list-disc list-inside mb-2" {...props}>{children}</ul>,
-                                    ol: ({children, ...props}) => <ol className="list-decimal list-inside mb-2" {...props}>{children}</ol>,
-                                    li: ({children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
-                                    h1: ({children, ...props}) => <h1 className="text-lg font-bold mb-2 text-cyan-300" {...props}>{children}</h1>,
-                                    h2: ({children, ...props}) => <h2 className="text-base font-semibold mb-2 text-cyan-300" {...props}>{children}</h2>,
-                                    h3: ({children, ...props}) => <h3 className="text-sm font-semibold mb-1 text-cyan-300" {...props}>{children}</h3>,
-                                    strong: ({children, ...props}) => <strong className="font-semibold text-white" {...props}>{children}</strong>,
-                                    em: ({children, ...props}) => <em className="italic text-gray-300" {...props}>{children}</em>,
-                                  }}
-                                >
-                                  {message.content}
-                                </ReactMarkdown>
-                              ) : (
-                                <p>Received non-string content.</p>
-                              )}
-                            </div>
+                            {message.isThinking ? (
+                              <div className="flex items-center space-x-2 py-2">
+                                <div className="flex space-x-1">
+                                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                  <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                </div>
+                                <span className="text-gray-400 text-sm">Assistant is thinking...</span>
+                              </div>
+                            ) : (
+                              <div className="markdown-content leading-relaxed prose prose-invert prose-sm max-w-none">
+                                {message.content && typeof message.content === 'string' ? (
+                                  <ReactMarkdown 
+                                    components={{
+                                      p: ({children, ...props}) => <p className="mb-2 last:mb-0" {...props}>{children}</p>,
+                                      code: ({inline, children, ...props}) => 
+                                        inline ? (
+                                          <code className="bg-gray-700/50 px-1 py-0.5 rounded text-cyan-300" {...props}>
+                                            {children}
+                                          </code>
+                                        ) : (
+                                          <code className="block bg-gray-700/50 p-2 rounded-md text-green-300 overflow-x-auto" {...props}>
+                                            {children}
+                                          </code>
+                                        ),
+                                      pre: ({children, ...props}) => <pre className="bg-gray-700/50 p-2 rounded-md overflow-x-auto" {...props}>{children}</pre>,
+                                      ul: ({children, ...props}) => <ul className="list-disc list-inside mb-2" {...props}>{children}</ul>,
+                                      ol: ({children, ...props}) => <ol className="list-decimal list-inside mb-2" {...props}>{children}</ol>,
+                                      li: ({children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
+                                      h1: ({children, ...props}) => <h1 className="text-lg font-bold mb-2 text-cyan-300" {...props}>{children}</h1>,
+                                      h2: ({children, ...props}) => <h2 className="text-base font-semibold mb-2 text-cyan-300" {...props}>{children}</h2>,
+                                      h3: ({children, ...props}) => <h3 className="text-sm font-semibold mb-1 text-cyan-300" {...props}>{children}</h3>,
+                                      strong: ({children, ...props}) => <strong className="font-semibold text-white" {...props}>{children}</strong>,
+                                      em: ({children, ...props}) => <em className="italic text-gray-300" {...props}>{children}</em>,
+                                    }}
+                                  >
+                                    {message.content}
+                                  </ReactMarkdown>
+                                ) : (
+                                  <p>Received non-string content.</p>
+                                )}
+                                {message.isTypewriter && typewriterActive && (
+                                  <span className="inline-block w-2 h-4 bg-cyan-400 rounded animate-pulse ml-1 align-middle"></span>
+                                )}
+                              </div>
+                            )}
                           </ErrorBoundary>
                         ) : (
                           <p>{message.content}</p>
@@ -571,7 +637,11 @@ const StudyAssistant = () => {
               className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-full hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex items-center space-x-1">
+                  <span className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '100ms' }}></span>
+                  <span className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></span>
+                </div>
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
