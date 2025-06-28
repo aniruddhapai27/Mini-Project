@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { dqAPI } from '../utils/dqApi';
 import { toast } from 'react-hot-toast';
+import DotLottieLoader from './DotLottieLoader';
 
 const QuizPerformanceGraph = () => {
   const [stats, setStats] = useState(null);
@@ -159,8 +160,12 @@ const QuizPerformanceGraph = () => {
     return (
       <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/20 rounded-xl p-6 mb-8">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
-          <span className="ml-3 text-gray-400">Loading quiz statistics...</span>
+          <DotLottieLoader 
+            size="w-8 h-8" 
+            text="Loading quiz statistics..." 
+            layout="horizontal"
+            textColor="text-gray-400"
+          />
         </div>
       </div>
     );

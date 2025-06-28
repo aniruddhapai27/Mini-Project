@@ -7,6 +7,7 @@ import {
   clearErrors,
   clearSuccess,
 } from "../redux/slices/authSlice";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -153,7 +154,16 @@ const ForgotPassword = () => {
               disabled={loading.forgotPassword}
               className="w-full flex justify-center py-3 px-4 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-medium rounded-lg hover:from-gray-700 hover:to-gray-900 transition-all duration-300 disabled:opacity-50 shadow-lg border border-gray-500/30 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
-              {loading.forgotPassword ? "Sending..." : "Send Reset Link"}
+              {loading.forgotPassword ? (
+                <DotLottieLoader 
+                  size="sm" 
+                  text="Sending..." 
+                  layout="horizontal"
+                  color="white"
+                />
+              ) : (
+                "Send Reset Link"
+              )}
             </button>
           </form>
 

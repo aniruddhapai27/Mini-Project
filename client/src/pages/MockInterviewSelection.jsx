@@ -10,6 +10,7 @@ import {
   clearCreateError,
 } from "../redux/slices/interviewSlice";
 import { selectUser } from "../redux/slices/authSlice";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const MockInterviewSelection = () => {
   const navigate = useNavigate();
@@ -516,10 +517,13 @@ const MockInterviewSelection = () => {
             disabled={!selectedDomain || !selectedDifficulty || createLoading}
           >
             {createLoading ? (
-              <div className="flex items-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Creating Interview...
-              </div>
+              <DotLottieLoader 
+                size="w-5 h-5" 
+                text="Creating Interview..." 
+                layout="horizontal"
+                textSize="text-sm"
+                textColor="text-white"
+              />
             ) : selectedDomain && selectedDifficulty ? (
               <div className="flex items-center">
                 <svg

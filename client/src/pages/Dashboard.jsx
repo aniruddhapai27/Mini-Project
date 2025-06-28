@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { getInterviewStats, getRecentInterviews } from "../redux/slices/interviewSlice";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -338,13 +339,13 @@ const Dashboard = () => {
               </h3>
               
               {recentLoading ? (
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, index) => (
-                    <div key={index} className="p-3 bg-gray-700/30 rounded-lg animate-pulse">
-                      <div className="h-4 bg-gray-600 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-gray-600 rounded w-1/2"></div>
-                    </div>
-                  ))}
+                <div className="flex justify-center py-8">
+                  <DotLottieLoader 
+                    size="md" 
+                    text="Loading recent sessions..." 
+                    layout="vertical"
+                    color="blue"
+                  />
                 </div>
               ) : recentInterviews && recentInterviews.length > 0 ? (
                 <div className="space-y-3">
