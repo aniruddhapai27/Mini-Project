@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import { useState, useRef, useEffect } from "react";
 import { logoutUser } from "../redux/slices/authSlice";
+import DotLottieLoader from "./DotLottieLoader";
 
 const Navbar = () => {
   const location = useLocation();
@@ -231,10 +232,13 @@ const Navbar = () => {
                     disabled={loading.logout}
                   >
                     {loading.logout ? (
-                      <div className="flex items-center">
-                        <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin mr-2"></div>
-                        <span>Logging out...</span>
-                      </div>
+                      <DotLottieLoader 
+                        size="w-4 h-4" 
+                        text="Logging out..." 
+                        layout="horizontal"
+                        textSize="text-sm"
+                        textColor="text-red-400"
+                      />
                     ) : (
                       "Logout"
                     )}
@@ -431,10 +435,13 @@ const Navbar = () => {
                   disabled={loading.logout}
                 >
                   {loading.logout ? (
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin mr-2"></div>
-                      <span>Logging out...</span>
-                    </div>
+                    <DotLottieLoader 
+                      size="w-4 h-4" 
+                      text="Logging out..." 
+                      layout="horizontal"
+                      textSize="text-sm"
+                      textColor="text-red-400"
+                    />
                   ) : (
                     "Logout"
                   )}

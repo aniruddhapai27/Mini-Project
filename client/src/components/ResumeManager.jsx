@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, updateUser } from "../redux/slices/authSlice";
 import { resumeApi } from "../utils/api";
+import DotLottieLoader from "./DotLottieLoader";
 
 const ResumeManager = ({ onResumeUpdate }) => {
   const user = useSelector(selectUser);
@@ -116,9 +117,13 @@ const ResumeManager = ({ onResumeUpdate }) => {
 
       {uploading && (
         <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-300">Uploading...</span>
-            <span className="text-sm text-gray-300">{uploadProgress}%</span>
+          <div className="flex items-center justify-center mb-2">
+            <DotLottieLoader 
+              size="sm" 
+              text={`Uploading... ${uploadProgress}%`} 
+              layout="horizontal"
+              color="purple"
+            />
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div 

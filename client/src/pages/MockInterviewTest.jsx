@@ -23,6 +23,7 @@ import {
 } from "../redux/slices/interviewSlice";
 import Navbar from "../components/Navbar";
 import Loading from "../components/Loading";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const MockInterview = () => {
   const { sessionId } = useParams();
@@ -562,10 +563,12 @@ const MockInterview = () => {
                   }`}
                 >
                   {aiResponseLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-300 border-t-white"></div>
-                      <span>Processing...</span>
-                    </div>
+                    <DotLottieLoader 
+                      size="sm" 
+                      text="Processing..." 
+                      layout="horizontal"
+                      color="white"
+                    />
                   ) : (
                     <span className="flex items-center space-x-1">
                       <span>Send Response</span>

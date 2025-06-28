@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { studyAssistantApi } from '../utils/api';
 import ReactMarkdown from 'react-markdown';
 import ErrorBoundary from '../components/ErrorBoundary';
+import DotLottieLoader from '../components/DotLottieLoader';
 import { FaTrash } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,6 +25,7 @@ const StudyAssistant = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [deletingSessionId, setDeletingSessionId] = useState(null);
   const [typewriterActive, setTypewriterActive] = useState(false);
   const [typewriterText, setTypewriterText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -274,17 +276,19 @@ const StudyAssistant = () => {
   if (isLoading && !currentSession && sessionId && sessionId !== 'new') {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center pt-16">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading chat session...</p>
-        </div>
+        <DotLottieLoader 
+          size="w-20 h-20"
+          text="Loading chat session..."
+          textSize="text-lg"
+          textColor="text-white"
+        />
       </div>
     );
   }
 
   const handleDeleteSession = async (sessionIdToDelete) => {
     try {
-      setIsLoadingSessions(true);
+      setDeletingSessionId(sessionIdToDelete);
       await studyAssistantApi.deleteSession(sessionIdToDelete);
       toast.success('Session deleted');
       // Remove from local state
@@ -299,7 +303,7 @@ const StudyAssistant = () => {
       console.error('Error deleting session:', error);
       toast.error('Failed to delete session');
     } finally {
-      setIsLoadingSessions(false);
+      setDeletingSessionId(null);
     }
   };
 
@@ -386,10 +390,12 @@ const StudyAssistant = () => {
               <h3 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wide">Recent Chats</h3>
               
               {isLoadingSessions ? (
-                <div className="space-y-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-12 bg-gray-800/50 rounded-lg animate-pulse"></div>
-                  ))}
+                <div className="flex justify-center py-8">
+                  <DotLottieLoader 
+                    size="w-12 h-12"
+                    text="Loading sessions..."
+                    textSize="text-xs"
+                  />
                 </div>
               ) : sessions.length === 0 ? (
                 <div className="text-center py-8">
@@ -448,8 +454,13 @@ const StudyAssistant = () => {
                                 e.stopPropagation();
                                 handleDeleteSession(session._id);
                               }}
+                              disabled={deletingSessionId === session._id}
                             >
-                              <FaTrash size={14} />
+                              {deletingSessionId === session._id ? (
+                                <DotLottieLoader size="w-4 h-4" />
+                              ) : (
+                                <FaTrash size={14} />
+                              )}
                             </button>
                           </button>
                         </motion.div>
@@ -567,13 +578,13 @@ const StudyAssistant = () => {
                         {message.type === 'assistant' ? (
                           <ErrorBoundary fallbackMessage="Error rendering AI response">
                             {message.isThinking ? (
-                              <div className="flex items-center space-x-2 py-2">
-                                <div className="flex space-x-1">
-                                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                                  <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                                </div>
-                                <span className="text-gray-400 text-sm">Assistant is thinking...</span>
+                              <div className="flex items-center justify-center py-2">
+                                <DotLottieLoader 
+                                  size="w-8 h-8"
+                                  text="Assistant is thinking..."
+                                  textSize="text-sm"
+                                  layout="horizontal"
+                                />
                               </div>
                             ) : (
                               <div className="markdown-content leading-relaxed prose prose-invert prose-sm max-w-none">
@@ -608,7 +619,7 @@ const StudyAssistant = () => {
                                   <p>Received non-string content.</p>
                                 )}
                                 {message.isTypewriter && typewriterActive && (
-                                  <span className="inline-block w-2 h-4 bg-cyan-400 rounded animate-pulse ml-1 align-middle"></span>
+                                  <DotLottieLoader size="w-3 h-3" className="inline-block ml-1 align-middle" />
                                 )}
                               </div>
                             )}
@@ -647,11 +658,7 @@ const StudyAssistant = () => {
               className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-full hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               {isLoading ? (
-                <div className="flex items-center space-x-1">
-                  <span className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                  <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '100ms' }}></span>
-                  <span className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></span>
-                </div>
+                <DotLottieLoader size="w-5 h-5" />
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />

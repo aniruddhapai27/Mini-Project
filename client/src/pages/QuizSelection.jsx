@@ -10,6 +10,7 @@ import {
   resetQuiz,
 } from "../redux/slices/dqSlice";
 import { subjectImages } from "../assets/subjectImages";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const QuizSelection = () => {
   const navigate = useNavigate();
@@ -92,8 +93,11 @@ const QuizSelection = () => {
         </div>
 
         <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-gray-500/30 rounded-2xl p-8 shadow-xl relative z-10">
-          <div className="w-12 h-12 border-4 border-t-gray-500 border-gray-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Loading quiz subjects...</p>
+          <DotLottieLoader 
+            size="w-12 h-12"
+            text="Loading quiz subjects..."
+            textColor="text-white"
+          />
         </div>
       </div>
     );

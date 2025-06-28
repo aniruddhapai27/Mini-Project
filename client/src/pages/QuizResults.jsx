@@ -8,6 +8,7 @@ import {
   selectQuizState,
   resetQuiz,
 } from "../redux/slices/dqSlice";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const QuizResults = () => {
   const location = useLocation();
@@ -150,8 +151,11 @@ const QuizResults = () => {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-8 shadow-xl">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
-          <p className="text-white">Calculating results...</p>
+          <DotLottieLoader 
+            size="w-12 h-12"
+            text="Calculating results..."
+            textColor="text-white"
+          />
         </div>
       </div>
     );
