@@ -492,7 +492,7 @@ const StudyAssistant = () => {
 
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm text-gray-400">Online</span>
+            <span className="text-sm text-gray-400">AI Assistant</span>
           </div>
         </div>
 
@@ -545,7 +545,17 @@ const StudyAssistant = () => {
                         ? 'bg-gradient-to-r from-cyan-500 to-purple-500' 
                         : 'bg-gradient-to-r from-purple-500 to-pink-500'
                     }`}>
-                      {message.type === 'assistant' ? '🤖' : '👤'}
+                      {message.type === 'assistant' ? '🤖' : (
+                        _user?.profilePic ? (
+                          <img 
+                            src={_user.profilePic} 
+                            alt="User"
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          '👤'
+                        )
+                      )}
                     </div>
                     
                     <div className={`flex-1 max-w-[70%] ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
