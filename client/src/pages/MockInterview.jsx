@@ -19,8 +19,10 @@ import {
   selectShowLevelUpAnimation,
   selectShowAchievementAnimation,
   sendInterviewMessage,
+  endInterviewWithFeedback,
   getInterviewFeedback,
   selectFeedbackLoading,
+  selectInterviewEndLoading,
 } from "../redux/slices/interviewSlice";
 
 const MockInterview = () => {
@@ -46,6 +48,7 @@ const MockInterview = () => {
   const interviewStarted = useSelector(selectInterviewStarted);
   const aiResponseLoading = useSelector(selectAiResponseLoading);
   const feedbackLoading = useSelector(selectFeedbackLoading);
+  const interviewEndLoading = useSelector(selectInterviewEndLoading);
 
   // Animation states
   const showStreakAnimation = useSelector(selectShowStreakAnimation);
@@ -144,43 +147,69 @@ const MockInterview = () => {
         return;
       }
 
-      console.log("📝 Getting feedback for session:", currentSessionId);
-
-      // Get AI-generated feedback for the interview
-      const feedbackResult = await dispatch(
-        getInterviewFeedback(currentSessionId)
+      console.log(
+        "📝 Using endInterviewWithFeedback thunk for session:",
+        currentSessionId
       );
 
-      console.log("📊 Feedback result:", feedbackResult);
+      // Calculate a preliminary score based on conversation length and complexity
+      const finalScore = Math.max(
+        60,
+        Math.min(100, 60 + conversation.length * 5)
+      );
 
-      let feedback = null;
-      let finalScore = 70; // fallback score
-
-      if (feedbackResult.meta.requestStatus === "fulfilled") {
-        console.log("✅ Feedback received successfully");
-        feedback = feedbackResult.payload;
-        console.log(feedback);
-        finalScore = feedback.overall_score || 70;
-      } else {
-        console.log("❌ Feedback request failed:", feedbackResult.error);
-        // Fallback score calculation if feedback fails
-        finalScore = Math.max(60, Math.min(100, 60 + conversation.length * 5));
-      }
-
-      console.log("🚀 Navigating to results with feedback:", feedback);
-
-      navigate("/mock-interview-results", {
-        state: {
+      // Use the integrated Redux thunk to end interview and get feedback
+      const result = await dispatch(
+        endInterviewWithFeedback({
           sessionId: currentSessionId,
-          conversation,
-          domain: sessionData.domain,
-          difficulty: sessionData.difficulty,
-          score: finalScore,
-          feedback: feedback,
-        },
-      });
+          finalScore: finalScore,
+        })
+      );
+
+      console.log("📊 End interview with feedback result:", result);
+
+      if (result.meta.requestStatus === "fulfilled") {
+        console.log("✅ Interview ended and feedback received successfully");
+        const { feedback, sessionData: endedSessionData } = result.payload;
+
+        navigate("/mock-interview-results", {
+          state: {
+            sessionId: currentSessionId,
+            conversation,
+            domain: sessionData.domain,
+            difficulty: sessionData.difficulty,
+            score: endedSessionData?.finalScore || finalScore,
+            feedback: feedback,
+          },
+        });
+      } else {
+        console.log("❌ End interview with feedback failed:", result.error);
+
+        // Try to get feedback separately as fallback
+        console.log("🔄 Attempting fallback feedback request...");
+        const feedbackResult = await dispatch(
+          getInterviewFeedback(currentSessionId)
+        );
+
+        const fallbackFeedback =
+          feedbackResult.meta.requestStatus === "fulfilled"
+            ? feedbackResult.payload.feedback
+            : null;
+
+        navigate("/mock-interview-results", {
+          state: {
+            sessionId: currentSessionId,
+            conversation,
+            domain: sessionData.domain,
+            difficulty: sessionData.difficulty,
+            score: finalScore,
+            feedback: fallbackFeedback,
+            error: fallbackFeedback ? null : "Failed to generate AI feedback",
+          },
+        });
+      }
     } catch (error) {
-      console.error("Failed to end interview:", error);
+      console.error("❌ Failed to end interview:", error);
 
       // Fallback navigation
       const fallbackScore = Math.max(
@@ -662,24 +691,28 @@ const MockInterview = () => {
             <div className="flex space-x-4">
               <button
                 onClick={() => setShowEndModal(false)}
-                disabled={feedbackLoading}
+                disabled={feedbackLoading || interviewEndLoading}
                 className="flex-1 py-3 px-4 border border-cyan-500/30 text-white rounded-lg hover:bg-cyan-500/10 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue
               </button>
               <button
                 onClick={handleEndInterview}
-                disabled={feedbackLoading}
+                disabled={feedbackLoading || interviewEndLoading}
                 className={`flex-1 py-3 px-4 rounded-lg transition-all duration-300 shadow-lg ${
-                  feedbackLoading
+                  feedbackLoading || interviewEndLoading
                     ? "bg-gray-500 text-gray-300 cursor-not-allowed"
                     : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:shadow-red-500/25"
                 }`}
               >
-                {feedbackLoading ? (
+                {feedbackLoading || interviewEndLoading ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
-                    <span>Analyzing...</span>
+                    <span>
+                      {interviewEndLoading
+                        ? "Ending Interview..."
+                        : "Analyzing..."}
+                    </span>
                   </div>
                 ) : (
                   "End Interview"

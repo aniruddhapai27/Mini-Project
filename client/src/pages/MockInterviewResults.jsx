@@ -7,6 +7,14 @@ import {
   selectStreakCount,
   selectAchievements,
   resetCurrentSession,
+  getInterviewFeedback,
+  selectFeedbackLoading,
+  selectFeedbackError,
+  selectFeedback,
+  selectFeedbackForSession,
+  selectHasFeedbackForSession,
+  clearFeedback,
+  clearFeedbackError,
 } from "../redux/slices/interviewSlice";
 
 const MockInterviewResults = () => {
@@ -14,45 +22,121 @@ const MockInterviewResults = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // Redux selectors
   const level = useSelector(selectLevel);
   const totalXP = useSelector(selectTotalXP);
   const streakCount = useSelector(selectStreakCount);
   const achievements = useSelector(selectAchievements);
+  const feedbackLoading = useSelector(selectFeedbackLoading);
+  const feedbackError = useSelector(selectFeedbackError);
+  const reduxFeedback = useSelector(selectFeedback);
+
   // Get data from navigation state or provide defaults
   const {
+    sessionId = null,
     conversation = [],
     domain = "hr",
     difficulty = "medium",
     score = 75,
-    feedback = null,
+    feedback: initialFeedback = null,
     error = null,
     questionCount = conversation.length,
   } = location.state || {};
 
-  // Debug logging
-  useEffect(() => {
-    console.log("🎯 MockInterviewResults - Received data:");
-    console.log("- conversation:", conversation);
-    console.log("- feedback:", feedback);
-    console.log("- error:", error);
-    console.log("- score:", score);
-  }, [conversation, feedback, error, score]);
-
+  // Local state for UI management
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
+  const [feedbackFetched, setFeedbackFetched] = useState(false);
 
+  // Get feedback selector for this specific session
+  const sessionFeedback = useSelector(selectFeedbackForSession(sessionId));
+  const hasFeedbackForSession = useSelector(
+    selectHasFeedbackForSession(sessionId)
+  );
+
+  // Determine the final feedback to display
+  const finalFeedback = initialFeedback || sessionFeedback || reduxFeedback;
+
+  // Debug logging
   useEffect(() => {
-    // Show confetti animation for good scores
+    console.log("🎯 MockInterviewResults - Component State:");
+    console.log("- sessionId:", sessionId);
+    console.log("- conversation length:", conversation.length);
+    console.log("- initialFeedback:", initialFeedback);
+    console.log("- sessionFeedback (from Redux cache):", sessionFeedback);
+    console.log("- reduxFeedback (current):", reduxFeedback);
+    console.log("- finalFeedback:", finalFeedback);
+    console.log("- hasFeedbackForSession:", hasFeedbackForSession);
+    console.log("- feedbackLoading:", feedbackLoading);
+    console.log("- feedbackError:", feedbackError);
+    console.log("- error:", error);
+    console.log("- score:", score);
+  }, [
+    sessionId,
+    conversation.length,
+    initialFeedback,
+    sessionFeedback,
+    reduxFeedback,
+    finalFeedback,
+    hasFeedbackForSession,
+    feedbackLoading,
+    feedbackError,
+    error,
+    score,
+  ]);
+
+  // Fetch feedback if needed
+  useEffect(() => {
+    const shouldFetchFeedback =
+      sessionId &&
+      !finalFeedback &&
+      !feedbackLoading &&
+      !feedbackFetched &&
+      !error;
+
+    if (shouldFetchFeedback) {
+      console.log("📝 Fetching feedback for session:", sessionId);
+      setFeedbackFetched(true);
+      dispatch(getInterviewFeedback(sessionId))
+        .then((result) => {
+          if (result.meta.requestStatus === "fulfilled") {
+            console.log("✅ Feedback fetched successfully:", result.payload);
+          } else {
+            console.log("❌ Failed to fetch feedback:", result.error);
+          }
+        })
+        .catch((error) => {
+          console.error("❌ Error in feedback fetch:", error);
+        });
+    }
+  }, [
+    dispatch,
+    sessionId,
+    finalFeedback,
+    feedbackLoading,
+    feedbackFetched,
+    error,
+  ]);
+
+  // Reset feedback fetched flag when sessionId changes
+  useEffect(() => {
+    setFeedbackFetched(false);
+  }, [sessionId]);
+
+  // Confetti animation
+  useEffect(() => {
     if (score >= 80) {
       setConfettiActive(true);
       setTimeout(() => setConfettiActive(false), 3000);
     }
   }, [score]);
 
+  // Cleanup on unmount
   useEffect(() => {
-    // Clean up session when leaving
     return () => {
       dispatch(resetCurrentSession());
+      dispatch(clearFeedback());
+      dispatch(clearFeedbackError());
     };
   }, [dispatch]);
 
@@ -85,6 +169,18 @@ const MockInterviewResults = () => {
     if (score >= 70) return "text-yellow-400";
     if (score >= 60) return "text-orange-400";
     return "text-red-400";
+  };
+
+  const getPerformanceGradient = (score) => {
+    if (score >= 90)
+      return "from-green-500/20 to-emerald-500/20 border-green-500/40";
+    if (score >= 80)
+      return "from-blue-500/20 to-cyan-500/20 border-blue-500/40";
+    if (score >= 70)
+      return "from-yellow-500/20 to-amber-500/20 border-yellow-500/40";
+    if (score >= 60)
+      return "from-orange-500/20 to-yellow-500/20 border-orange-500/40";
+    return "from-red-500/20 to-pink-500/20 border-red-500/40";
   };
 
   const calculateXPGained = (score, difficulty) => {
@@ -464,108 +560,317 @@ const MockInterviewResults = () => {
               />
             </svg>
             AI Interview Feedback
+            {feedbackLoading && (
+              <div className="ml-2 w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+            )}
           </h3>
 
-          {feedback && feedback.feedback ? (
-            <div className="space-y-4">
-              {/* Feedback Categories */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-400 mb-2">
-                    Technical Knowledge
-                  </h4>
-                  <p className="text-black dark:text-white text-sm leading-relaxed">
-                    {feedback.feedback.technical_knowledge}
-                  </p>
-                </div>
-
-                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-lg p-4">
-                  <h4 className="font-semibold text-green-400 mb-2">
-                    Communication Skills
-                  </h4>
-                  <p className="text-black dark:text-white text-sm leading-relaxed">
-                    {feedback.feedback.communication_skills}
-                  </p>
-                </div>
-
-                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg p-4">
-                  <h4 className="font-semibold text-purple-400 mb-2">
-                    Confidence Level
-                  </h4>
-                  <p className="text-black dark:text-white text-sm leading-relaxed">
-                    {feedback.feedback.confidence}
-                  </p>
-                </div>
-
-                <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-lg p-4">
-                  <h4 className="font-semibold text-orange-400 mb-2">
-                    Problem Solving
-                  </h4>
-                  <p className="text-black dark:text-white text-sm leading-relaxed">
-                    {feedback.feedback.problem_solving}
-                  </p>
-                </div>
+          {feedbackLoading ? (
+            <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-6">
+              <div className="flex items-center justify-center space-x-3">
+                <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-cyan-400 font-medium">
+                  Generating AI-powered feedback...
+                </p>
               </div>
-
-              {/* Improvement Suggestions */}
-              {feedback.feedback.suggestions && (
-                <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-4">
-                  <h4 className="font-semibold text-cyan-400 mb-3">
-                    💡 Suggestions for Improvement
-                  </h4>
-                  <div className="space-y-3">
+              <p className="text-black dark:text-white text-sm text-center mt-2 opacity-70">
+                Our AI is analyzing your interview performance. This may take a
+                few seconds.
+              </p>
+            </div>
+          ) : finalFeedback && finalFeedback.feedback ? (
+            <div className="space-y-6">
+              {/* Overall Score Display */}
+              {finalFeedback.overall_score && (
+                <div
+                  className={`bg-gradient-to-r ${getPerformanceGradient(
+                    finalFeedback.overall_score
+                  )} rounded-lg p-4`}
+                >
+                  <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-blue-400 font-medium">
-                        Technical Knowledge:
-                      </span>
-                      <p className="text-black dark:text-white text-sm mt-1">
-                        {feedback.feedback.suggestions.technical_knowledge}
+                      <h4 className="font-semibold text-indigo-400 mb-1">
+                        Overall Interview Score
+                      </h4>
+                      <p className="text-black dark:text-white text-sm opacity-70">
+                        AI-generated assessment
                       </p>
                     </div>
-                    <div>
-                      <span className="text-green-400 font-medium">
-                        Communication:
-                      </span>
-                      <p className="text-black dark:text-white text-sm mt-1">
-                        {feedback.feedback.suggestions.communication_skills}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-purple-400 font-medium">
-                        Confidence:
-                      </span>
-                      <p className="text-black dark:text-white text-sm mt-1">
-                        {feedback.feedback.suggestions.confidence}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-orange-400 font-medium">
-                        Problem Solving:
-                      </span>
-                      <p className="text-black dark:text-white text-sm mt-1">
-                        {feedback.feedback.suggestions.problem_solving}
+                    <div className="text-right">
+                      <div
+                        className={`text-3xl font-bold ${getPerformanceColor(
+                          finalFeedback.overall_score
+                        )}`}
+                      >
+                        {finalFeedback.overall_score}%
+                      </div>
+                      <p
+                        className={`text-sm font-medium ${getPerformanceColor(
+                          finalFeedback.overall_score
+                        )}`}
+                      >
+                        {getPerformanceLevel(finalFeedback.overall_score)}
                       </p>
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* Feedback Categories */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-400 mb-2 flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      />
+                    </svg>
+                    Technical Knowledge
+                  </h4>
+                  <p className="text-black dark:text-white text-sm leading-relaxed">
+                    {finalFeedback.feedback.technical_knowledge}
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-lg p-4">
+                  <h4 className="font-semibold text-green-400 mb-2 flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
+                    Communication Skills
+                  </h4>
+                  <p className="text-black dark:text-white text-sm leading-relaxed">
+                    {finalFeedback.feedback.communication_skills}
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg p-4">
+                  <h4 className="font-semibold text-purple-400 mb-2 flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                    Confidence Level
+                  </h4>
+                  <p className="text-black dark:text-white text-sm leading-relaxed">
+                    {finalFeedback.feedback.confidence}
+                  </p>
+                </div>
+
+                <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-lg p-4">
+                  <h4 className="font-semibold text-orange-400 mb-2 flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      />
+                    </svg>
+                    Problem Solving
+                  </h4>
+                  <p className="text-black dark:text-white text-sm leading-relaxed">
+                    {finalFeedback.feedback.problem_solving}
+                  </p>
+                </div>
+              </div>
+
+              {/* Improvement Suggestions */}
+              {finalFeedback.feedback.suggestions && (
+                <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-4">
+                  <h4 className="font-semibold text-cyan-400 mb-3 flex items-center">
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                      />
+                    </svg>
+                    💡 Personalized Improvement Suggestions
+                  </h4>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-3">
+                        <span className="text-blue-400 font-medium flex items-center mb-2">
+                          <svg
+                            className="w-3 h-3 mr-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Technical Knowledge
+                        </span>
+                        <p className="text-black dark:text-white text-sm leading-relaxed">
+                          {
+                            finalFeedback.feedback.suggestions
+                              .technical_knowledge
+                          }
+                        </p>
+                      </div>
+                      <div className="bg-purple-500/5 border border-purple-500/20 rounded-lg p-3">
+                        <span className="text-purple-400 font-medium flex items-center mb-2">
+                          <svg
+                            className="w-3 h-3 mr-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Confidence Building
+                        </span>
+                        <p className="text-black dark:text-white text-sm leading-relaxed">
+                          {finalFeedback.feedback.suggestions.confidence}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="bg-green-500/5 border border-green-500/20 rounded-lg p-3">
+                        <span className="text-green-400 font-medium flex items-center mb-2">
+                          <svg
+                            className="w-3 h-3 mr-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Communication Skills
+                        </span>
+                        <p className="text-black dark:text-white text-sm leading-relaxed">
+                          {
+                            finalFeedback.feedback.suggestions
+                              .communication_skills
+                          }
+                        </p>
+                      </div>
+                      <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3">
+                        <span className="text-orange-400 font-medium flex items-center mb-2">
+                          <svg
+                            className="w-3 h-3 mr-1"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Problem Solving
+                        </span>
+                        <p className="text-black dark:text-white text-sm leading-relaxed">
+                          {finalFeedback.feedback.suggestions.problem_solving}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          ) : error ? (
+          ) : error || feedbackError ? (
             <div className="bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-lg p-4">
-              <p className="text-red-400 font-medium mb-2">
-                ⚠️ Feedback Generation Failed
+              <div className="flex items-center mb-2">
+                <svg
+                  className="w-5 h-5 text-red-400 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <p className="text-red-400 font-medium">
+                  ⚠️ Feedback Generation Failed
+                </p>
+              </div>
+              <p className="text-black dark:text-white text-sm leading-relaxed mb-3">
+                {error ||
+                  feedbackError ||
+                  "Unable to generate AI feedback at this time."}
               </p>
-              <p className="text-black dark:text-white text-sm leading-relaxed mb-2">
-                {error}
-              </p>
-              <p className="text-black dark:text-white text-sm leading-relaxed">
-                Here's some general advice: Focus on providing clear, specific
-                answers with examples from your experience. Practice explaining
-                your thought process and remain confident during your responses.
-              </p>
+              <div className="bg-black/10 dark:bg-white/10 rounded-lg p-3">
+                <p className="text-black dark:text-white text-sm leading-relaxed">
+                  <strong>General Feedback:</strong> Great job on completing the
+                  interview! Focus on providing clear, specific answers with
+                  examples from your experience. Practice explaining your
+                  thought process and remain confident during your responses.
+                </p>
+              </div>
             </div>
           ) : (
             <div className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-4">
+              <div className="flex items-center mb-2">
+                <svg
+                  className="w-5 h-5 text-cyan-400 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <p className="text-cyan-400 font-medium">
+                  Interview Completed Successfully!
+                </p>
+              </div>
               <p className="text-black dark:text-white leading-relaxed">
                 Great job on completing the interview! Keep practicing to
                 improve your skills. Focus on providing specific examples and

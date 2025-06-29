@@ -153,21 +153,94 @@ export const sendInterviewMessage = createAsyncThunk(
 // Get AI-generated interview feedback
 export const getInterviewFeedback = createAsyncThunk(
   "interview/getFeedback",
-  async (sessionId, { rejectWithValue }) => {
+  async (sessionId, { rejectWithValue, getState }) => {
     try {
       console.log("🔄 Redux: Requesting feedback for session:", sessionId);
+
+      // Check if feedback already exists in cache
+      const state = getState();
+      const cachedFeedback = state.interview.sessionFeedbacks[sessionId];
+      if (cachedFeedback) {
+        console.log(
+          "📦 Redux: Returning cached feedback for session:",
+          sessionId
+        );
+        return {
+          sessionId,
+          feedback: cachedFeedback,
+          fromCache: true,
+        };
+      }
+
       const response = await api.get(
         `/api/v1/interview/sessions/${sessionId}/feedback`
       );
       console.log("✅ Redux: Feedback response received:", response.data);
-      return response.data.data;
+
+      return {
+        sessionId,
+        feedback: response.data.data,
+        fromCache: false,
+      };
     } catch (error) {
       console.error(
         "❌ Redux: Feedback request failed:",
         error.response?.data || error.message
       );
+      return rejectWithValue({
+        sessionId,
+        error:
+          error.response?.data?.message || "Failed to get interview feedback",
+        details: error.response?.data || error.message,
+      });
+    }
+  }
+);
+
+// End interview session with feedback
+export const endInterviewWithFeedback = createAsyncThunk(
+  "interview/endWithFeedback",
+  async ({ sessionId, finalScore }, { dispatch, rejectWithValue }) => {
+    try {
+      console.log(
+        "🔄 Redux: Ending interview and requesting feedback for:",
+        sessionId
+      );
+
+      // First end the interview session
+      const endResponse = await api.patch(
+        `/api/v1/interview/sessions/${sessionId}/end`,
+        {
+          finalScore: finalScore || 0,
+        }
+      );
+      console.log("✅ Redux: Interview ended successfully");
+
+      // Then get feedback
+      const feedbackResult = await dispatch(getInterviewFeedback(sessionId));
+
+      if (feedbackResult.meta.requestStatus === "fulfilled") {
+        console.log(
+          "✅ Redux: Complete interview end with feedback successful"
+        );
+        return {
+          sessionData: endResponse.data.data,
+          feedback: feedbackResult.payload.feedback,
+          sessionId,
+        };
+      } else {
+        console.log("⚠️ Redux: Interview ended but feedback failed");
+        return {
+          sessionData: endResponse.data.data,
+          feedback: null,
+          feedbackError: feedbackResult.payload?.error,
+          sessionId,
+        };
+      }
+    } catch (error) {
+      console.error("❌ Redux: Failed to end interview with feedback:", error);
       return rejectWithValue(
-        error.response?.data?.message || "Failed to get interview feedback"
+        error.response?.data?.message || "Failed to end interview with feedback"
       );
     }
   }
@@ -229,6 +302,14 @@ const initialState = {
   feedback: null,
   feedbackLoading: false,
   feedbackError: null,
+  feedbackSessionId: null, // Track which session has feedback
+
+  // Session feedback cache - store feedback for multiple sessions
+  sessionFeedbacks: {}, // { sessionId: feedback }
+
+  // Interview completion state
+  interviewEndLoading: false,
+  interviewEndError: null,
 
   // UI state
   showStreakAnimation: false,
@@ -384,6 +465,44 @@ const interviewSlice = createSlice({
     },
     clearRecentError: (state) => {
       state.recentError = null;
+    },
+
+    // Feedback management actions
+    clearFeedbackError: (state) => {
+      state.feedbackError = null;
+    },
+
+    setFeedbackForSession: (state, action) => {
+      const { sessionId, feedback } = action.payload;
+      state.sessionFeedbacks[sessionId] = feedback;
+
+      if (sessionId === state.currentSession?._id) {
+        state.feedback = feedback;
+        state.feedbackSessionId = sessionId;
+        if (state.currentSession) {
+          state.currentSession.feedback = feedback;
+        }
+      }
+    },
+
+    getFeedbackFromCache: (state, action) => {
+      const sessionId = action.payload;
+      const cachedFeedback = state.sessionFeedbacks[sessionId];
+
+      if (cachedFeedback) {
+        state.feedback = cachedFeedback;
+        state.feedbackSessionId = sessionId;
+      }
+    },
+
+    clearFeedback: (state) => {
+      state.feedback = null;
+      state.feedbackSessionId = null;
+      state.feedbackError = null;
+    },
+
+    clearInterviewEndError: (state) => {
+      state.interviewEndError = null;
     },
 
     // AI Interview management
@@ -629,15 +748,71 @@ const interviewSlice = createSlice({
         state.feedbackError = null;
       })
       .addCase(getInterviewFeedback.fulfilled, (state, action) => {
+        const { sessionId, feedback, fromCache } = action.payload;
         state.feedbackLoading = false;
-        state.feedback = action.payload;
-        if (state.currentSession) {
-          state.currentSession.feedback = action.payload;
+
+        // Always update current feedback and cache
+        state.feedback = feedback;
+        state.feedbackSessionId = sessionId;
+        state.sessionFeedbacks[sessionId] = feedback;
+
+        // Update current session if it matches
+        if (state.currentSession && state.currentSession._id === sessionId) {
+          state.currentSession.feedback = feedback;
         }
+
+        console.log(
+          `✅ Redux: Feedback ${
+            fromCache ? "loaded from cache" : "fetched"
+          } for session ${sessionId}`
+        );
       })
       .addCase(getInterviewFeedback.rejected, (state, action) => {
+        const { sessionId, error } = action.payload;
         state.feedbackLoading = false;
-        state.feedbackError = action.payload;
+        state.feedbackError = error;
+        console.error(
+          `❌ Redux: Feedback failed for session ${sessionId}:`,
+          error
+        );
+      })
+
+      // End interview with feedback
+      .addCase(endInterviewWithFeedback.pending, (state) => {
+        state.interviewEndLoading = true;
+        state.interviewEndError = null;
+        state.feedbackLoading = true;
+      })
+      .addCase(endInterviewWithFeedback.fulfilled, (state, action) => {
+        const { sessionData, feedback, feedbackError, sessionId } =
+          action.payload;
+        state.interviewEndLoading = false;
+        state.feedbackLoading = false;
+
+        // Update session data
+        if (sessionData && sessionId) {
+          if (state.currentSession && state.currentSession._id === sessionId) {
+            state.currentSession = { ...state.currentSession, ...sessionData };
+          }
+        }
+
+        // Handle feedback
+        if (feedback && sessionId) {
+          state.feedback = feedback;
+          state.feedbackSessionId = sessionId;
+          state.sessionFeedbacks[sessionId] = feedback;
+
+          if (state.currentSession && state.currentSession._id === sessionId) {
+            state.currentSession.feedback = feedback;
+          }
+        } else if (feedbackError) {
+          state.feedbackError = feedbackError;
+        }
+      })
+      .addCase(endInterviewWithFeedback.rejected, (state, action) => {
+        state.interviewEndLoading = false;
+        state.interviewEndError = action.payload;
+        state.feedbackLoading = false;
       });
   },
 });
@@ -660,6 +835,11 @@ export const {
   clearUpdateError,
   clearStatsError,
   clearRecentError,
+  clearFeedbackError,
+  setFeedbackForSession,
+  getFeedbackFromCache,
+  clearFeedback,
+  clearInterviewEndError,
   startInterview,
   addUserMessage,
   addAIMessage,
@@ -725,5 +905,23 @@ export const selectAiResponseError = (state) => state.interview.aiResponseError;
 export const selectFeedback = (state) => state.interview.feedback;
 export const selectFeedbackLoading = (state) => state.interview.feedbackLoading;
 export const selectFeedbackError = (state) => state.interview.feedbackError;
+export const selectFeedbackSessionId = (state) =>
+  state.interview.feedbackSessionId;
+export const selectSessionFeedbacks = (state) =>
+  state.interview.sessionFeedbacks;
+
+// Get feedback for specific session
+export const selectFeedbackForSession = (sessionId) => (state) =>
+  state.interview.sessionFeedbacks[sessionId] || null;
+
+// Check if feedback is available for session
+export const selectHasFeedbackForSession = (sessionId) => (state) =>
+  !!state.interview.sessionFeedbacks[sessionId];
+
+// Interview end selectors
+export const selectInterviewEndLoading = (state) =>
+  state.interview.interviewEndLoading;
+export const selectInterviewEndError = (state) =>
+  state.interview.interviewEndError;
 
 export default interviewSlice.reducer;
