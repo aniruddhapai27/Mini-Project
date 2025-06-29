@@ -5,43 +5,44 @@ const api = axios.create({
   withCredentials: true,
   timeout: 30000, // 30-second timeout
   headers: {
-    'Content-Type': 'application/json',
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 // Resume API functions
-export const resumeApi = {  // Upload resume
+export const resumeApi = {
+  // Upload resume
   upload: async (file) => {
     const formData = new FormData();
-    formData.append('resume', file);
-    
-    const response = await api.post('/api/v1/user/resume', formData, {
+    formData.append("resume", file);
+
+    const response = await api.post("/api/v1/user/resume", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
-    
+
     return response.data;
   },
 
   // Get current resume
   get: async () => {
-    const response = await api.get('/api/v1/user/resume');
+    const response = await api.get("/api/v1/user/resume");
     return response.data;
   },
 
   // Delete resume
   delete: async () => {
-    const response = await api.delete('/api/v1/user/resume');
+    const response = await api.delete("/api/v1/user/resume");
     return response.data;
   },
 };
 
-// Interview API functions  
+// Interview API functions
 export const interviewApi = {
   // Create new interview session (resume-based)
   create: async (domain, difficulty) => {
-    const response = await api.post('/api/v1/interview/sessions', {
+    const response = await api.post("/api/v1/interview/sessions", {
       domain,
       difficulty,
     });
@@ -50,33 +51,48 @@ export const interviewApi = {
 
   // Continue interview session
   continue: async (sessionId, userResponse) => {
-    const response = await api.patch(`/api/v1/interview/sessions/${sessionId}`, {
-      userResponse,
-    });
+    const response = await api.patch(
+      `/api/v1/interview/sessions/${sessionId}`,
+      {
+        userResponse,
+      }
+    );
     return response.data;
   },
 
   // End interview session
   end: async (sessionId) => {
-    const response = await api.patch(`/api/v1/interview/sessions/${sessionId}/end`);
+    const response = await api.patch(
+      `/api/v1/interview/sessions/${sessionId}/end`
+    );
     return response.data;
   },
 
   // Get interview history
   getHistory: async (page = 1, limit = 10) => {
-    const response = await api.get(`/api/v1/interview/history?page=${page}&limit=${limit}`);
+    const response = await api.get(
+      `/api/v1/interview/history?page=${page}&limit=${limit}`
+    );
     return response.data;
   },
 
   // Get interview statistics
   getStats: async () => {
-    const response = await api.get('/api/v1/interview/stats');
+    const response = await api.get("/api/v1/interview/stats");
     return response.data;
   },
 
   // Get recent interviews
   getRecent: async (limit = 5) => {
     const response = await api.get(`/api/v1/interview/recent?limit=${limit}`);
+    return response.data;
+  },
+
+  // Get interview feedback
+  getFeedback: async (sessionId) => {
+    const response = await api.get(
+      `/api/v1/interview/sessions/${sessionId}/feedback`
+    );
     return response.data;
   },
 };
@@ -87,7 +103,7 @@ export const studyAssistantApi = {
   sendMessage: async (messageData) => {
     try {
       console.log("Sending message:", messageData);
-      const response = await api.post('/api/v1/assistant/chat', messageData);
+      const response = await api.post("/api/v1/assistant/chat", messageData);
       return response.data;
     } catch (error) {
       console.error("Error sending message:", error);
@@ -99,7 +115,7 @@ export const studyAssistantApi = {
   getHistory: async () => {
     try {
       console.log("Getting history");
-      const response = await api.get('/api/v1/assistant/history');
+      const response = await api.get("/api/v1/assistant/history");
       return response.data;
     } catch (error) {
       console.error("Error getting history:", error);
@@ -122,13 +138,15 @@ export const studyAssistantApi = {
   deleteSession: async (sessionId) => {
     try {
       console.log("Deleting session:", sessionId);
-      const response = await api.delete(`/api/v1/assistant/session/${sessionId}`);
+      const response = await api.delete(
+        `/api/v1/assistant/session/${sessionId}`
+      );
       return response.data;
     } catch (error) {
       console.error("Error deleting session:", error);
       throw error;
     }
-  }
+  },
 };
 
 export default api;

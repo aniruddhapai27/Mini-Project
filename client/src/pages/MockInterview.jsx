@@ -19,6 +19,8 @@ import {
   selectShowLevelUpAnimation,
   selectShowAchievementAnimation,
   sendInterviewMessage,
+  getInterviewFeedback,
+  selectFeedbackLoading,
 } from "../redux/slices/interviewSlice";
 
 const MockInterview = () => {
@@ -43,6 +45,7 @@ const MockInterview = () => {
   const currentSessionId = useSelector(selectCurrentSessionId);
   const interviewStarted = useSelector(selectInterviewStarted);
   const aiResponseLoading = useSelector(selectAiResponseLoading);
+  const feedbackLoading = useSelector(selectFeedbackLoading);
 
   // Animation states
   const showStreakAnimation = useSelector(selectShowStreakAnimation);
@@ -99,7 +102,7 @@ const MockInterview = () => {
     currentSessionId,
     conversation.length,
     dispatch,
-  ]);  // Handle starting the interview
+  ]); // Handle starting the interview
   const handleStartInterview = async () => {
     dispatch(startInterview());
 
@@ -119,10 +122,52 @@ const MockInterview = () => {
   // Handle ending interview
   const handleEndInterview = async () => {
     try {
-      const finalScore = Math.max(
-        60,
-        Math.min(100, 60 + conversation.length * 5)
+      console.log("🔚 Ending interview...");
+
+      if (!currentSessionId) {
+        console.log("❌ No session ID found, using fallback navigation");
+        // If no session ID, navigate with basic data
+        const finalScore = Math.max(
+          60,
+          Math.min(100, 60 + conversation.length * 5)
+        );
+
+        navigate("/mock-interview-results", {
+          state: {
+            conversation,
+            domain: sessionData.domain,
+            difficulty: sessionData.difficulty,
+            score: finalScore,
+            error: "No session ID available for feedback",
+          },
+        });
+        return;
+      }
+
+      console.log("📝 Getting feedback for session:", currentSessionId);
+
+      // Get AI-generated feedback for the interview
+      const feedbackResult = await dispatch(
+        getInterviewFeedback(currentSessionId)
       );
+
+      console.log("📊 Feedback result:", feedbackResult);
+
+      let feedback = null;
+      let finalScore = 70; // fallback score
+
+      if (feedbackResult.meta.requestStatus === "fulfilled") {
+        console.log("✅ Feedback received successfully");
+        feedback = feedbackResult.payload;
+        console.log(feedback);
+        finalScore = feedback.overall_score || 70;
+      } else {
+        console.log("❌ Feedback request failed:", feedbackResult.error);
+        // Fallback score calculation if feedback fails
+        finalScore = Math.max(60, Math.min(100, 60 + conversation.length * 5));
+      }
+
+      console.log("🚀 Navigating to results with feedback:", feedback);
 
       navigate("/mock-interview-results", {
         state: {
@@ -131,16 +176,25 @@ const MockInterview = () => {
           domain: sessionData.domain,
           difficulty: sessionData.difficulty,
           score: finalScore,
+          feedback: feedback,
         },
       });
     } catch (error) {
       console.error("Failed to end interview:", error);
+
+      // Fallback navigation
+      const fallbackScore = Math.max(
+        60,
+        Math.min(100, 60 + conversation.length * 5)
+      );
+
       navigate("/mock-interview-results", {
         state: {
           conversation,
           domain: sessionData.domain,
           difficulty: sessionData.difficulty,
-          score: 70,
+          score: fallbackScore,
+          error: "Failed to generate AI feedback",
         },
       });
     }
@@ -344,9 +398,14 @@ const MockInterview = () => {
               {interviewStarted && (
                 <button
                   onClick={() => setShowEndModal(true)}
-                  className="py-2 px-4 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-all duration-300 text-sm border border-red-500/30 hover:shadow-lg hover:shadow-red-500/25"
+                  disabled={feedbackLoading}
+                  className={`py-2 px-4 rounded-lg transition-all duration-300 text-sm border ${
+                    feedbackLoading
+                      ? "bg-gray-500/20 text-gray-400 border-gray-500/30 cursor-not-allowed"
+                      : "bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/25"
+                  }`}
                 >
-                  End Interview
+                  {feedbackLoading ? "Processing..." : "End Interview"}
                 </button>
               )}
             </div>
@@ -603,15 +662,28 @@ const MockInterview = () => {
             <div className="flex space-x-4">
               <button
                 onClick={() => setShowEndModal(false)}
-                className="flex-1 py-3 px-4 border border-cyan-500/30 text-white rounded-lg hover:bg-cyan-500/10 transition-all duration-300"
+                disabled={feedbackLoading}
+                className="flex-1 py-3 px-4 border border-cyan-500/30 text-white rounded-lg hover:bg-cyan-500/10 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue
               </button>
               <button
                 onClick={handleEndInterview}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-red-500/25"
+                disabled={feedbackLoading}
+                className={`flex-1 py-3 px-4 rounded-lg transition-all duration-300 shadow-lg ${
+                  feedbackLoading
+                    ? "bg-gray-500 text-gray-300 cursor-not-allowed"
+                    : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:shadow-red-500/25"
+                }`}
               >
-                End Interview
+                {feedbackLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
+                    <span>Analyzing...</span>
+                  </div>
+                ) : (
+                  "End Interview"
+                )}
               </button>
             </div>
           </div>

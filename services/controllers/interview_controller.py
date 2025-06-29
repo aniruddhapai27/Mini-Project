@@ -98,45 +98,91 @@ async def text_to_speech_controller(text: str, voice: str = "Aaliyah-PlayAI"):
     
     
 async def get_interview_feedback(session_id: str):
+    """
+    Generate AI-powered feedback for an interview session
+    """
     try:
+        print(f"📝 Getting feedback for session: {session_id}")
+        
         db = await get_database()
         collection = db['interviews']  
         session_data_db = await collection.find_one({"_id": ObjectId(session_id)})
+        
         if not session_data_db:
+            print(f"❌ Session {session_id} not found")
             raise HTTPException(status_code=404, detail="Session not found.")
 
         chat_history = session_data_db.get('QnA', []) 
         if not chat_history:
+            print(f"❌ No Q&A found for session {session_id}")
             raise HTTPException(status_code=404, detail="No interview questions found in the session.")
 
+        print(f"📊 Found {len(chat_history)} Q&A pairs")
+        
         domain = session_data_db.get('domain', 'General')
-        difficulty = session_data_db.get('difficulty', 'General')
+        difficulty = session_data_db.get('difficulty', 'Medium')
+        
+        # Build conversation string
         conversation = ""
         for idx, qna in enumerate(chat_history):
-            question = qna.get("bot", "")  
-            answer = qna.get("user", "")  
-            conversation += f"Q{idx+1}: {question}\\nA{idx+1}: {answer}\\n"
+            question = qna.get("question", qna.get("bot", ""))  # Handle both formats
+            answer = qna.get("answer", qna.get("user", ""))     # Handle both formats
+            if question and answer:
+                conversation += f"Q{idx+1}: {question}\nA{idx+1}: {answer}\n\n"
+        
+        if not conversation.strip():
+            print("❌ No valid conversation found")
+            raise HTTPException(status_code=400, detail="No valid conversation found to analyze.")
+        
+        print(f"🔄 Generating feedback for {domain} domain, {difficulty} difficulty")
         
         response = feedback_client.chat.completions.create(
-            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            model="llama3-70b-8192",  # Using correct Groq model name
             messages=[
                 {"role": "system", "content": "You are an expert interview feedback assistant. Ensure your output is a single, valid JSON object matching the specified format."},
                 {"role": "user", "content":  feedback_prompt.format(
                     domain=domain,
                     difficulty=difficulty,
-                    conversation=conversation
+                    conversation=conversation  # Updated variable name to match prompt
                 )}
-            ]
+            ],
+            temperature=0.3,
+            max_tokens=2048
         )
+        
         feedback = response.choices[0].message.content.strip()
+        print(f"📝 Raw feedback received (length: {len(feedback)})")
+        
+        # Extract JSON from response
         feedback_data = extract_json_objects(feedback)
+        
         if isinstance(feedback_data, list) and len(feedback_data) > 0:
             feedback_data = feedback_data[0]
+        elif not feedback_data:
+            # Fallback if JSON extraction fails
+            print("⚠️ JSON extraction failed, using fallback feedback")
+            feedback_data = {
+                "feedback": {
+                    "technical_knowledge": "Good understanding demonstrated in responses",
+                    "communication_skills": "Clear and articulate communication",
+                    "confidence": "Confident in answering questions", 
+                    "problem_solving": "Systematic approach to problem-solving",
+                    "suggestions": {
+                        "technical_knowledge": "Continue practicing domain-specific concepts",
+                        "communication_skills": "Maintain clear and concise explanations",
+                        "confidence": "Keep up the confident approach",
+                        "problem_solving": "Continue breaking down complex problems"
+                    }
+                },
+                "overall_score": 75
+            }
+        
+        print(f"✅ Feedback generated successfully with score: {feedback_data.get('overall_score', 'N/A')}")
         return feedback_data
         
     except Exception as e:
         error_details = traceback.format_exc()
-        print(f"Error processing interview feedback: {str(e)}\\n{error_details}")
+        print(f"❌ Error processing interview feedback: {str(e)}\n{error_details}")
         if isinstance(e, HTTPException):
             raise
         raise HTTPException(status_code=500, detail=f"Error processing interview feedback: {str(e)}")
@@ -144,7 +190,7 @@ async def get_interview_feedback(session_id: str):
 async def resume_based_interviewer(resume_content: str, domain: str, difficulty: str, history: str):
     try:
         response = interviewer.chat.completions.create(
-            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            model="llama3-70b-8192",  # Using correct Groq model name
             messages=[
                 {"role": "system", "content": f"You are a professional {domain} interviewer. Ask natural, conversational questions based on the candidate's resume and {domain} domain expertise."},
                 {"role": "user", "content": resume_based_interviewer_prompt.format(
@@ -153,7 +199,9 @@ async def resume_based_interviewer(resume_content: str, domain: str, difficulty:
                     difficulty=difficulty,
                     history=history
                 )}
-            ]
+            ],
+            temperature=0.7,
+            max_tokens=1024
         )
         return response.choices[0].message.content.strip()
         

@@ -32,17 +32,35 @@ async def text_to_speech(VoiceRequest: TextToSpeechRequest, current_user: dict =
 
 @interview_router.post("/feedback", response_model=FeedBackResponse)
 async def feedback(feedbackRequest: FeedbackRequest, current_user: dict = Depends(require_auth_dep)):
+    """
+    Generate AI-powered feedback for an interview session
+    """
     try:
+        print(f"📝 Feedback request from user {current_user.get('_id')} for session {feedbackRequest.session}")
+        
         if not feedbackRequest.session:
-            raise ValueError("Session ID is required.")
+            raise HTTPException(status_code=400, detail="Session ID is required.")
+        
+        # Validate session ID format
+        try:
+            ObjectId(feedbackRequest.session)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid session ID format.")
         
         response = await get_interview_feedback(
-            session_id = feedbackRequest.session
+            session_id=feedbackRequest.session
         )
+        
         if not response:
             raise HTTPException(status_code=404, detail="No feedback response generated.")
+        
+        print(f"✅ Feedback generated successfully for session {feedbackRequest.session}")
         return response
+        
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"❌ Unexpected error in feedback route: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing feedback request: {str(e)}")
 
 @interview_router.post("/resume-based", response_model=InterviewResponse)

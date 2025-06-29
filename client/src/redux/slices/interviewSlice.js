@@ -150,6 +150,29 @@ export const sendInterviewMessage = createAsyncThunk(
   }
 );
 
+// Get AI-generated interview feedback
+export const getInterviewFeedback = createAsyncThunk(
+  "interview/getFeedback",
+  async (sessionId, { rejectWithValue }) => {
+    try {
+      console.log("🔄 Redux: Requesting feedback for session:", sessionId);
+      const response = await api.get(
+        `/api/v1/interview/sessions/${sessionId}/feedback`
+      );
+      console.log("✅ Redux: Feedback response received:", response.data);
+      return response.data.data;
+    } catch (error) {
+      console.error(
+        "❌ Redux: Feedback request failed:",
+        error.response?.data || error.message
+      );
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to get interview feedback"
+      );
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   // Current interview session
@@ -201,6 +224,11 @@ const initialState = {
 
   // Interview completion
   completedSessions: [],
+
+  // Interview feedback
+  feedback: null,
+  feedbackLoading: false,
+  feedbackError: null,
 
   // UI state
   showStreakAnimation: false,
@@ -594,6 +622,22 @@ const interviewSlice = createSlice({
         state.aiResponseLoading = false;
         state.isWaitingForAI = false;
         state.aiResponseError = action.payload;
+      })
+      // Get interview feedback
+      .addCase(getInterviewFeedback.pending, (state) => {
+        state.feedbackLoading = true;
+        state.feedbackError = null;
+      })
+      .addCase(getInterviewFeedback.fulfilled, (state, action) => {
+        state.feedbackLoading = false;
+        state.feedback = action.payload;
+        if (state.currentSession) {
+          state.currentSession.feedback = action.payload;
+        }
+      })
+      .addCase(getInterviewFeedback.rejected, (state, action) => {
+        state.feedbackLoading = false;
+        state.feedbackError = action.payload;
       });
   },
 });
@@ -676,5 +720,10 @@ export const selectInterviewStarted = (state) =>
 export const selectAiResponseLoading = (state) =>
   state.interview.aiResponseLoading;
 export const selectAiResponseError = (state) => state.interview.aiResponseError;
+
+// Feedback selectors
+export const selectFeedback = (state) => state.interview.feedback;
+export const selectFeedbackLoading = (state) => state.interview.feedbackLoading;
+export const selectFeedbackError = (state) => state.interview.feedbackError;
 
 export default interviewSlice.reducer;

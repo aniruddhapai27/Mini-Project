@@ -15,6 +15,7 @@ const Interview = require("../models/interviewModel");
 const User = require("../models/userModel");
 const { catchAsync } = require("../utils/catchAsync");
 const axios = require("axios");
+const pythonAPI = require("../utils/pythonAPI");
 
 // Get interview session by ID
 exports.getInterviewSession = catchAsync(async (req, res) => {
@@ -245,7 +246,12 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
   const userId = req.user._id;
   const { domain, difficulty } = req.body;
 
-  console.log("Creating interview session for userId:", userId, "Type:", typeof userId);
+  console.log(
+    "Creating interview session for userId:",
+    userId,
+    "Type:",
+    typeof userId
+  );
 
   if (!domain || !difficulty) {
     return res.status(400).json({
@@ -270,37 +276,41 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
 
   try {
     // Get user's stored resume
-    const user = await User.findById(userId).select('resume');
+    const user = await User.findById(userId).select("resume");
     let resumeBuffer = null;
     let resumeFilename = "no_resume.txt";
-    
+
     if (user && user.resume) {
       try {
         // Download resume from Cloudinary
-        const response = await axios.get(user.resume, { 
-          responseType: 'arraybuffer',
-          timeout: 10000 // 10 second timeout
+        const response = await axios.get(user.resume, {
+          responseType: "arraybuffer",
+          timeout: 10000, // 10 second timeout
         });
         resumeBuffer = Buffer.from(response.data);
-        resumeFilename = user.resume.split('/').pop() || "resume.pdf";
+        resumeFilename = user.resume.split("/").pop() || "resume.pdf";
       } catch (downloadError) {
-        console.log("Failed to download user's resume, using default:", downloadError.message);
+        console.log(
+          "Failed to download user's resume, using default:",
+          downloadError.message
+        );
       }
     }
 
     let aiResponse, pythonSessionId;
 
     try {
-      const pythonAPI = require("../utils/pythonAPI");
       const FormData = require("form-data");
-      
+
       // Create FormData to send to Python service
       const formData = new FormData();
 
       if (resumeBuffer) {
         formData.append("file", resumeBuffer, {
           filename: resumeFilename,
-          contentType: resumeFilename.endsWith('.pdf') ? 'application/pdf' : 'text/plain',
+          contentType: resumeFilename.endsWith(".pdf")
+            ? "application/pdf"
+            : "text/plain",
         });
       } else {
         // Create a default message if no resume is available
@@ -333,7 +343,7 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
             ...formData.getHeaders(),
             Cookie: `jwt=${token}`,
           },
-          timeout: 30000 // 30 second timeout
+          timeout: 30000, // 30 second timeout
         }
       );
 
@@ -362,7 +372,7 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
       pythonSessionId = `fallback_${Date.now()}_${Math.random()
         .toString(36)
         .substr(2, 9)}`;
-    }    // Create interview session in MongoDB with initial AI response
+    } // Create interview session in MongoDB with initial AI response
     const newInterview = new Interview({
       user: userId,
       domain: domain,
@@ -403,7 +413,6 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
   }
 });
 
-
 // Continue resume-based interview
 exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
   const { sessionId } = req.params;
@@ -440,7 +449,6 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
     let aiResponse;
 
     try {
-      const pythonAPI = require("../utils/pythonAPI");
       const FormData = require("form-data");
 
       // Create FormData for continuing the interview
@@ -487,14 +495,16 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
         "That's a solid approach. What would you do differently if you had to optimize this further?",
         "Excellent! How do you stay updated with the latest trends in this field?",
         "Thank you for that detailed explanation. What challenges have you faced in similar scenarios?",
-      ];      // Use a different response based on conversation length
+      ]; // Use a different response based on conversation length
       const responseIndex = interview.QnA.length % fallbackResponses.length;
       aiResponse = fallbackResponses[responseIndex];
-    }    // Update interview session with new Q&A
+    } // Update interview session with new Q&A
     // Only add non-greeting messages to the conversation history
-    const isGreeting = userResponse.trim() === "Hello, I am ready to start the interview." || 
-                      userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";
-    
+    const isGreeting =
+      userResponse.trim() === "Hello, I am ready to start the interview." ||
+      userResponse.trim() ===
+        "Hello, I'm ready to start the interview. Please begin with your first question.";
+
     if (!isGreeting) {
       // Find the last QnA entry with empty user field and fill it
       for (let i = interview.QnA.length - 1; i >= 0; i--) {
@@ -504,7 +514,7 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
           break; // Only update the most recent empty user field
         }
       }
-      
+
       // Add the new AI response as the next QnA entry
       if (aiResponse) {
         interview.QnA.push({
@@ -540,7 +550,12 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
   const { userResponse } = req.body;
   const userId = req.user._id;
 
-  console.log("continueInterviewSession called - sessionId:", sessionId, "userResponse:", userResponse?.substring(0, 50));
+  console.log(
+    "continueInterviewSession called - sessionId:",
+    sessionId,
+    "userResponse:",
+    userResponse?.substring(0, 50)
+  );
 
   if (!userResponse || !userResponse.trim()) {
     return res.status(400).json({
@@ -567,7 +582,6 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
 
     // Try to use Python service first
     try {
-      const pythonAPI = require("../utils/pythonAPI");
       const FormData = require("form-data");
 
       // Create FormData for continuing the interview
@@ -575,7 +589,7 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
       formData.append("domain", interview.domain);
       formData.append("difficulty", interview.difficulty);
       formData.append("user_response", userResponse);
-      
+
       if (interview.sessionId) {
         formData.append("session", interview.sessionId);
       }
@@ -599,11 +613,13 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
             ...formData.getHeaders(),
             Cookie: `jwt=${token}`,
           },
-          timeout: 15000 // 15 second timeout
+          timeout: 15000, // 15 second timeout
         }
       );
 
-      aiResponse = response.data?.ai || "Thank you for your response. Can you tell me more about that?";
+      aiResponse =
+        response.data?.ai ||
+        "Thank you for your response. Can you tell me more about that?";
     } catch (pythonError) {
       console.log("Python service unavailable, using fallback responses");
 
@@ -616,7 +632,7 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
           "Good insight! Can you describe your ideal work environment?",
           "How do you prioritize tasks when you have multiple deadlines?",
           "What would you say is your greatest professional strength?",
-          "Can you give me an example of how you've handled feedback in the past?"
+          "Can you give me an example of how you've handled feedback in the past?",
         ],
         dataScience: [
           "Excellent! Can you walk me through your approach to data preprocessing?",
@@ -625,7 +641,7 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
           "Can you explain how you would approach a classification problem?",
           "How do you ensure the quality and reliability of your data analysis?",
           "What tools and technologies do you prefer for data visualization?",
-          "Can you describe a challenging data science project you've worked on?"
+          "Can you describe a challenging data science project you've worked on?",
         ],
         webdev: [
           "Great! Can you explain your approach to responsive web design?",
@@ -634,7 +650,7 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
           "Can you describe your debugging process when you encounter issues?",
           "How do you stay updated with the latest web development trends?",
           "What's your approach to writing clean, maintainable code?",
-          "Can you explain the difference between client-side and server-side rendering?"
+          "Can you explain the difference between client-side and server-side rendering?",
         ],
         fullTechnical: [
           "Excellent technical insight! Can you explain your approach to system design?",
@@ -643,17 +659,21 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
           "Can you walk me through your code review process?",
           "How do you ensure scalability in your applications?",
           "What's your approach to testing and quality assurance?",
-          "Can you explain how you handle security considerations in your projects?"
-        ]
+          "Can you explain how you handle security considerations in your projects?",
+        ],
       };
 
-      const responses = domainResponses[interview.domain] || domainResponses.fullTechnical;
-      const responseIndex = interview.QnA.length % responses.length;      aiResponse = responses[responseIndex];
-    }    // Update interview session with new Q&A
+      const responses =
+        domainResponses[interview.domain] || domainResponses.fullTechnical;
+      const responseIndex = interview.QnA.length % responses.length;
+      aiResponse = responses[responseIndex];
+    } // Update interview session with new Q&A
     // Only add non-greeting messages to the conversation history
-    const isGreeting = userResponse.trim() === "Hello, I am ready to start the interview." || 
-                      userResponse.trim() === "Hello, I'm ready to start the interview. Please begin with your first question.";
-    
+    const isGreeting =
+      userResponse.trim() === "Hello, I am ready to start the interview." ||
+      userResponse.trim() ===
+        "Hello, I'm ready to start the interview. Please begin with your first question.";
+
     if (!isGreeting) {
       // Find the last QnA entry with empty user field and fill it
       for (let i = interview.QnA.length - 1; i >= 0; i--) {
@@ -663,7 +683,7 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
           break; // Only update the most recent empty user field
         }
       }
-      
+
       // Add the new AI response as the next QnA entry
       if (aiResponse) {
         interview.QnA.push({
@@ -692,6 +712,113 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
       success: false,
       message: "Failed to continue interview session",
       error: error.message,
+    });
+  }
+});
+
+// Get AI-generated interview feedback from Python service
+exports.getInterviewFeedback = catchAsync(async (req, res) => {
+  const { sessionId } = req.params;
+  const userId = req.user._id;
+
+  console.log("📝 Getting feedback for session:", sessionId, "user:", userId);
+
+  // Get interview session
+  const interview = await Interview.findOne({
+    _id: sessionId,
+    user: userId,
+  });
+
+  if (!interview) {
+    console.log("❌ Interview session not found");
+    return res.status(404).json({
+      success: false,
+      message: "Interview session not found",
+    });
+  }
+
+  if (!interview.QnA || interview.QnA.length === 0) {
+    console.log("❌ No conversation found in interview");
+    return res.status(400).json({
+      success: false,
+      message: "No interview conversation found to analyze",
+    });
+  }
+
+  console.log("📊 Interview found with", interview.QnA.length, "Q&A pairs");
+
+  try {
+    // Call Python service for feedback through the proxy
+    console.log("🔄 Calling Python service for feedback...");
+
+    // Get the JWT token from cookies or Authorization header
+    let token = req.cookies.jwt;
+    if (!token && req.headers.authorization) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
+    console.log("🔑 Token available:", !!token);
+    console.log(
+      "🔑 Token preview:",
+      token ? token.substring(0, 20) + "..." : "none"
+    );
+
+    const response = await pythonAPI.post(
+      "/api/v1/interview/feedback",
+      {
+        session: sessionId,
+      },
+      {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : undefined,
+          Cookie: req.cookies.jwt ? `jwt=${req.cookies.jwt}` : undefined,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("✅ Python service response received:", response.status);
+
+    // Update interview with feedback
+    interview.feedBack = response.data;
+    await interview.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Interview feedback generated successfully",
+      data: response.data,
+    });
+  } catch (error) {
+    console.error("❌ Error getting interview feedback:", error.message);
+    console.error("Error details:", error.response?.data || error.message);
+
+    // If Python service fails, provide a fallback response
+    const fallbackFeedback = {
+      feedback: {
+        technical_knowledge:
+          "Unable to analyze technical knowledge at this time",
+        communication_skills:
+          "Unable to analyze communication skills at this time",
+        confidence: "Unable to analyze confidence level at this time",
+        problem_solving:
+          "Unable to analyze problem-solving skills at this time",
+        suggestions: {
+          technical_knowledge:
+            "Practice more technical concepts related to your domain",
+          communication_skills: "Work on clear and concise communication",
+          confidence: "Practice mock interviews to build confidence",
+          problem_solving:
+            "Practice breaking down complex problems into smaller steps",
+        },
+      },
+      overall_score: 70,
+    };
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate AI feedback, providing fallback response",
+      data: fallbackFeedback,
+      error: error.response?.data?.detail || error.message,
     });
   }
 });
