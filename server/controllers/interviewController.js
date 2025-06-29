@@ -751,17 +751,26 @@ exports.getInterviewFeedback = catchAsync(async (req, res) => {
     // Call Python service for feedback through the proxy
     console.log("🔄 Calling Python service for feedback...");
 
-    // Get the JWT token from cookies or Authorization header
-    let token = req.cookies.jwt;
-    if (!token && req.headers.authorization) {
-      token = req.headers.authorization.split(" ")[1];
+    // Get the JWT token from cookies (primary method for Python service)
+    const jwtCookie = req.cookies.jwt;
+
+    console.log("🔑 JWT Cookie available:", !!jwtCookie);
+    console.log(
+      "🔑 Cookie preview:",
+      jwtCookie ? jwtCookie.substring(0, 20) + "..." : "none"
+    );
+
+    if (!jwtCookie) {
+      console.log(
+        "❌ No JWT cookie found, cannot authenticate with Python service"
+      );
+      return res.status(401).json({
+        success: false,
+        message: "Authentication token not found in cookies",
+      });
     }
 
-    console.log("🔑 Token available:", !!token);
-    console.log(
-      "🔑 Token preview:",
-      token ? token.substring(0, 20) + "..." : "none"
-    );
+    console.log("📝 Request payload:", { session: sessionId });
 
     const response = await pythonAPI.post(
       "/api/v1/interview/feedback",
@@ -770,18 +779,21 @@ exports.getInterviewFeedback = catchAsync(async (req, res) => {
       },
       {
         headers: {
-          Authorization: token ? `Bearer ${token}` : undefined,
-          Cookie: req.cookies.jwt ? `jwt=${req.cookies.jwt}` : undefined,
           "Content-Type": "application/json",
+          // Forward the JWT cookie to Python service
+          Cookie: `jwt=${jwtCookie}`,
         },
       }
     );
 
     console.log("✅ Python service response received:", response.status);
+    console.log("📊 Feedback data:", JSON.stringify(response.data, null, 2));
 
-    // Update interview with feedback
+    // Update interview with feedback (response.data should contain the structured feedback)
     interview.feedBack = response.data;
     await interview.save();
+
+    console.log("💾 Feedback saved to database successfully");
 
     res.status(200).json({
       success: true,
@@ -791,6 +803,19 @@ exports.getInterviewFeedback = catchAsync(async (req, res) => {
   } catch (error) {
     console.error("❌ Error getting interview feedback:", error.message);
     console.error("Error details:", error.response?.data || error.message);
+    console.error("Python service status:", error.response?.status);
+    console.error(
+      "Python service URL:",
+      process.env.PYTHON_SERVICE_URL || "http://localhost:8000"
+    );
+
+    // Detailed error logging for debugging
+    if (error.response) {
+      console.error("Response data:", error.response.data);
+      console.error("Response headers:", error.response.headers);
+    } else if (error.request) {
+      console.error("No response received:", error.request);
+    }
 
     // If Python service fails, provide a fallback response
     const fallbackFeedback = {
