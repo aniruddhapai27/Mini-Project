@@ -1,493 +1,259 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchDailyActivityData } from "../redux/slices/dqSlice";
+import {
+  fetchDailyActivityData,
+  selectDailyActivityData,
+  selectQuizResults,
+} from "../redux/slices/dqSlice";
 
-const GitHubStyleStreakCalendar = ({
-  currentStreak,
-  maxStreak,
-  className = "",
-}) => {
+// Helper function to format date as YYYY-MM-DD
+const formatDate = (date) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const GitHubStyleStreakCalendar = () => {
   const dispatch = useDispatch();
-  const {
-    dailyActivityData,
-    dailyActivityLoading: loading,
-    dailyActivityError: error,
-  } = useSelector((state) => state.dq);
+  const dailyActivityData = useSelector(selectDailyActivityData);
+  const quizResults = useSelector(selectQuizResults);
+  const [streaksData, setStreaksData] = useState([]); // Holds data for each month block
+  const [activityStatus, setActivityStatus] = useState({});
+  const [lastQuizResultTimestamp, setLastQuizResultTimestamp] = useState(null);
 
-  const [yearData, setYearData] = useState([]);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const scrollContainerRef = useRef(null);
-
-  // Fetch activity data from Redux
   useEffect(() => {
-    dispatch(fetchDailyActivityData(selectedYear));
-  }, [selectedYear, dispatch]);
+    // Fetch daily activity data for the current year
+    const currentYear = new Date().getFullYear();
+    dispatch(fetchDailyActivityData(currentYear));
+  }, [dispatch]);
 
-  // Extract activity data from Redux state
-  const userActivityData = useMemo(() => {
-    return dailyActivityData?.activityData || {};
-  }, [dailyActivityData]);
+  // Refresh activity data when a new quiz is completed
+  useEffect(() => {
+    if (quizResults && quizResults.timestamp) {
+      if (lastQuizResultTimestamp !== quizResults.timestamp) {
+        setLastQuizResultTimestamp(quizResults.timestamp);
+        // Immediately update today's activity optimistically
+        const today = formatDate(new Date());
+        setActivityStatus((prev) => {
+          const currentLevel = prev[today] || "";
+          let newLevel = "low"; // Default to 1 quiz
 
-  // Mock activity data for fallback
-  const mockActivityData = useMemo(
-    () => ({
-      // June 2025 data
-      "2025-06-28": { count: 2, subjects: ["Data Structures", "Algorithms"] },
-      "2025-06-27": { count: 1, subjects: ["Database"] },
-      "2025-06-26": {
-        count: 3,
-        subjects: ["OS", "Networks", "Software Engineering"],
-      },
-      "2025-06-25": { count: 1, subjects: ["Web Development"] },
-      "2025-06-24": { count: 2, subjects: ["Python", "JavaScript"] },
-      "2025-06-23": { count: 1, subjects: ["React"] },
-      "2025-06-22": { count: 2, subjects: ["Node.js", "MongoDB"] },
-      "2025-06-21": { count: 1, subjects: ["Computer Networks"] },
-      "2025-06-20": { count: 3, subjects: ["DBMS", "SQL", "NoSQL"] },
-      "2025-06-19": { count: 2, subjects: ["Software Engineering", "Testing"] },
-      "2025-06-18": { count: 1, subjects: ["Algorithm Design"] },
-      "2025-06-17": { count: 2, subjects: ["Data Structures", "Trees"] },
-      "2025-06-16": { count: 1, subjects: ["Operating Systems"] },
-      "2025-06-15": {
-        count: 4,
-        subjects: ["Web Dev", "React", "Node.js", "Express"],
-      },
-      // May 2025 data
-      "2025-05-30": { count: 1, subjects: ["JavaScript"] },
-      "2025-05-29": { count: 2, subjects: ["Python", "Django"] },
-      "2025-05-28": { count: 1, subjects: ["Machine Learning"] },
-      "2025-05-25": {
-        count: 3,
-        subjects: ["AI", "Deep Learning", "Neural Networks"],
-      },
-      // April 2025 data
-      "2025-04-20": { count: 2, subjects: ["System Design", "Microservices"] },
-      "2025-04-15": { count: 1, subjects: ["Cloud Computing"] },
-      "2025-04-10": { count: 3, subjects: ["Docker", "Kubernetes", "DevOps"] },
-    }),
-    []
-  );
+          // Increment the intensity level
+          if (currentLevel === "low") newLevel = "medium";
+          else if (currentLevel === "medium") newLevel = "high";
+          else if (currentLevel === "high") newLevel = "very-high";
+          else if (currentLevel === "very-high") newLevel = "very-high";
+          else newLevel = "low"; // First quiz of the day
 
-  // Generate calendar data for a rolling year (GitHub style - all days in horizontal grid)
-  // Shows from next month to current month (365/366 days) with today at the end
-  const generateYearData = useCallback(
-    (year) => {
-      const months = [];
-      const today = new Date();
-      const currentMonth = today.getMonth();
+          return { ...prev, [today]: newLevel };
+        });
 
-      // Create rolling year: start from next month of previous year to current month
-      const startMonth = currentMonth + 1;
-      const startYear = year - 1;
+        // Refresh the activity data from backend after a short delay to ensure backend has processed
+        setTimeout(() => {
+          const currentYear = new Date().getFullYear();
+          dispatch(fetchDailyActivityData(currentYear));
+        }, 1000);
+      }
+    }
+  }, [quizResults, lastQuizResultTimestamp, dispatch]);
 
-      // Generate 12 months starting from next month of previous year
-      for (let i = 0; i < 12; i++) {
-        const monthIndex = (startMonth + i) % 12;
-        const yearForMonth = startYear + Math.floor((startMonth + i) / 12);
+  useEffect(() => {
+    // Define today's date here to be accessible within the effect
+    // This ensures it captures the date at the time the effect runs.
+    const todayRefDate = new Date();
 
-        const monthData = {
-          name: new Date(yearForMonth, monthIndex).toLocaleString("default", {
-            month: "short",
-          }),
-          year: yearForMonth,
-          monthIndex: monthIndex,
-          weeks: [],
-        };
+    const numberOfMonthsToDisplay = 9; // Display current and past 9 months (10 total)
+    const newMonthlyData = [];
 
-        // Get first day of month and calculate start of first week
-        const firstDayOfMonth = new Date(yearForMonth, monthIndex, 1);
-        const startOfFirstWeek = new Date(firstDayOfMonth);
-        startOfFirstWeek.setDate(
-          firstDayOfMonth.getDate() - firstDayOfMonth.getDay()
-        );
+    for (let i = 0; i < numberOfMonthsToDisplay; i++) {
+      const targetIterationDate = new Date(
+        todayRefDate.getFullYear(),
+        todayRefDate.getMonth() - i,
+        1
+      );
+      const monthName = targetIterationDate.toLocaleString("default", {
+        month: "short",
+      });
+      const year = targetIterationDate.getFullYear();
 
-        // Get last day of month and calculate end of last week
-        const lastDayOfMonth = new Date(yearForMonth, monthIndex + 1, 0);
-        const endOfLastWeek = new Date(lastDayOfMonth);
-        endOfLastWeek.setDate(
-          lastDayOfMonth.getDate() + (6 - lastDayOfMonth.getDay())
-        );
+      const firstDayOfMonth = new Date(
+        targetIterationDate.getFullYear(),
+        targetIterationDate.getMonth(),
+        1
+      );
+      const lastDayOfMonth = new Date(
+        targetIterationDate.getFullYear(),
+        targetIterationDate.getMonth() + 1,
+        0
+      );
 
-        // Generate weeks for this month
-        const currentDate = new Date(startOfFirstWeek);
-        while (currentDate <= endOfLastWeek) {
-          const weekData = [];
+      const daysInMonthGrid = [];
+      const startingDayOfWeek = firstDayOfMonth.getDay(); // 0 for Sunday
 
-          for (let day = 0; day < 7; day++) {
-            const dateString = currentDate.toISOString().split("T")[0];
-            const isCurrentMonth = currentDate.getMonth() === monthIndex;
-            const isCurrentYear = currentDate.getFullYear() === yearForMonth;
-            const isToday = dateString === today.toISOString().split("T")[0];
-            const isFuture = currentDate > today;
-
-            const activity =
-              userActivityData[dateString] || mockActivityData[dateString];
-
-            weekData.push({
-              date: dateString,
-              day: currentDate.getDate(),
-              month: currentDate.getMonth(),
-              isCurrentMonth,
-              isCurrentYear,
-              isToday,
-              isFuture,
-              activity,
-              level: isCurrentMonth
-                ? getActivityLevel(activity?.count || 0)
-                : -1,
-            });
-
-            currentDate.setDate(currentDate.getDate() + 1);
-          }
-
-          monthData.weeks.push(weekData);
-        }
-
-        months.push(monthData);
+      // Add initial padding cells for the first week
+      for (let j = 0; j < startingDayOfWeek; j++) {
+        daysInMonthGrid.push({
+          type: "padding",
+          key: `padding-${monthName}-${year}-${j}`,
+        });
       }
 
-      return months;
-    },
-    [userActivityData, mockActivityData]
-  );
-
-  // Get activity level (0-4) based on submission count
-  const getActivityLevel = (count) => {
-    if (count === 0) return 0;
-    if (count === 1) return 1;
-    if (count === 2) return 2;
-    if (count >= 3) return 3;
-    return 4; // 5+ submissions
-  };
-
-  // Get color based on activity level (GitHub style)
-  const getActivityColor = (
-    level,
-    isToday = false,
-    isFuture = false,
-    isCurrentMonth = true
-  ) => {
-    if (!isCurrentMonth) return "bg-gray-800"; // Other month - solid dark color
-    if (isFuture) return "bg-gray-800"; // Future dates - solid dark color
-    if (isToday) return "bg-green-400 ring-1 ring-cyan-400/50";
-
-    const colors = {
-      0: "bg-gray-800", // No activity - solid dark color
-      1: "bg-green-300", // Light activity
-      2: "bg-green-400", // Medium activity
-      3: "bg-green-500", // High activity
-      4: "bg-green-600", // Very high activity
-    };
-
-    return colors[level] || colors[0];
-  };
-
-  // Initialize year data
-  useEffect(() => {
-    setYearData(generateYearData(selectedYear));
-  }, [selectedYear, userActivityData, generateYearData]);
-
-  // Calculate year statistics
-  const getYearStats = () => {
-    let totalActiveDays = 0;
-    let totalSubmissions = 0;
-    let longestStreak = 0;
-    let currentStreakCount = 0;
-
-    yearData.forEach((month) => {
-      month.weeks.forEach((week) => {
-        week.forEach((day) => {
-          if (day.isCurrentMonth && day.activity && day.activity.count > 0) {
-            totalActiveDays++;
-            totalSubmissions += day.activity.count;
-            currentStreakCount++;
-            longestStreak = Math.max(longestStreak, currentStreakCount);
-          } else if (day.isCurrentMonth && !day.isFuture) {
-            currentStreakCount = 0;
-          }
+      // Add day cells
+      for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
+        const currentDateObject = new Date(
+          targetIterationDate.getFullYear(),
+          targetIterationDate.getMonth(),
+          day
+        );
+        daysInMonthGrid.push({
+          type: "day",
+          date: currentDateObject,
+          dateString: formatDate(currentDateObject),
+          key: formatDate(currentDateObject),
         });
+      }
+
+      newMonthlyData.push({
+        monthName,
+        year,
+        days: daysInMonthGrid,
+        key: `${year}-${monthName}`,
       });
-    });
+    }
 
-    return {
-      totalActiveDays,
-      totalSubmissions,
-      longestStreak,
-      weeklyAverage: Math.round((totalActiveDays / 52) * 10) / 10,
-    };
-  };
+    setStreaksData(newMonthlyData.reverse()); // Show past months first, up to current
 
-  const stats = getYearStats();
+    // Set activity status from dailyActivityData
+    const tempActivityStatus = {};
+    if (dailyActivityData && dailyActivityData.activityData) {
+      Object.keys(dailyActivityData.activityData).forEach((dateString) => {
+        const dayData = dailyActivityData.activityData[dateString];
+        const quizCount = dayData.count || 0;
 
-  // Auto-scroll to show today when component loads or year changes
-  useEffect(() => {
+        // Set activity level based on quiz count
+        if (quizCount >= 5) {
+          tempActivityStatus[dateString] = "very-high"; // Dark green
+        } else if (quizCount >= 3) {
+          tempActivityStatus[dateString] = "high"; // Medium-dark green
+        } else if (quizCount >= 2) {
+          tempActivityStatus[dateString] = "medium"; // Medium green
+        } else if (quizCount >= 1) {
+          tempActivityStatus[dateString] = "low"; // Light green
+        }
+      });
+    }
+
+    setActivityStatus(tempActivityStatus);
+  }, [dailyActivityData]); // Depend on dailyActivityData to re-run when it changes
+
+  const getActivityTooltip = (dateString) => {
     if (
-      scrollContainerRef.current &&
-      selectedYear === new Date().getFullYear()
+      dailyActivityData &&
+      dailyActivityData.activityData &&
+      dailyActivityData.activityData[dateString]
     ) {
-      const container = scrollContainerRef.current;
+      const dayData = dailyActivityData.activityData[dateString];
+      const quizCount = dayData.count || 0;
+      const subjects = dayData.subjects || [];
 
-      // Since today is at the end of our rolling year, scroll to the very end
-      setTimeout(() => {
-        container.scrollTo({
-          left: container.scrollWidth,
-          behavior: "smooth",
-        });
-      }, 100);
+      if (quizCount === 0) return "No activity";
+
+      const subjectText =
+        subjects.length > 0
+          ? ` (${subjects.slice(0, 3).join(", ")}${
+              subjects.length > 3 ? "..." : ""
+            })`
+          : "";
+
+      return `${quizCount} quiz${
+        quizCount > 1 ? "es" : ""
+      } completed${subjectText}`;
     }
-  }, [yearData, selectedYear]);
-
-  // Get tooltip content
-  const getTooltipContent = (day) => {
-    if (!day.isCurrentMonth || day.isFuture) return null;
-
-    const count = day.activity?.count || 0;
-    const subjects = day.activity?.subjects || [];
-
-    if (count === 0) {
-      return `No questions solved on ${new Date(
-        day.date
-      ).toLocaleDateString()}`;
-    }
-
-    return `${count} question${count > 1 ? "s" : ""} solved on ${new Date(
-      day.date
-    ).toLocaleDateString()}${
-      subjects.length > 0 ? `\n${subjects.join(", ")}` : ""
-    }`;
+    return "No activity";
   };
+
+  const getDayCellStyle = (dateString) => {
+    const status = activityStatus[dateString];
+    const cellDate = new Date(dateString);
+
+    const todayForComparison = new Date();
+    todayForComparison.setHours(0, 0, 0, 0); // Normalize to midnight
+
+    // Different intensity levels based on quiz activity
+    if (status === "very-high") {
+      return "bg-green-800 hover:bg-green-700 border border-green-900 shadow-sm"; // Very dark green (5+ quizzes)
+    } else if (status === "high") {
+      return "bg-green-600 hover:bg-green-500 border border-green-700 shadow-sm"; // Dark green (3-4 quizzes)
+    } else if (status === "medium") {
+      return "bg-green-500 hover:bg-green-400 border border-green-600 shadow-sm"; // Medium green (2 quizzes)
+    } else if (status === "low") {
+      return "bg-green-400 hover:bg-green-300 border border-green-500 shadow-sm"; // Light green (1 quiz)
+    }
+
+    if (cellDate > todayForComparison) {
+      return "bg-slate-700/30 cursor-not-allowed"; // Style for future days
+    }
+    return "bg-slate-600/50 hover:bg-slate-500/60"; // Default for past non-active days
+  };
+
+  const weekDayLabels = ["S", "M", "T", "W", "T", "F", "S"];
 
   return (
-    <div
-      className={`bg-gradient-to-br from-gray-900/90 to-gray-800/90 border border-gray-700/50 rounded-2xl p-6 ${className}`}
-    >
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center py-12">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="w-8 h-8 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full"
-          />
-          <span className="ml-3 text-gray-400">Loading activity data...</span>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && !loading && (
-        <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mb-4">
-          <div className="text-red-400 text-sm">
-            Failed to load activity data. Showing demo data.
-          </div>
-        </div>
-      )}
-
-      {!loading && (
-        <>
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <motion.div
-                  animate={{ scale: currentStreak > 0 ? [1, 1.1, 1] : 1 }}
-                  transition={{
-                    duration: 2,
-                    repeat: currentStreak > 0 ? Infinity : 0,
-                  }}
-                  className="text-3xl"
+    <div className="bg-gradient-to-br from-black/80 to-black/60 border border-[#B200FF]/30 p-4 rounded-lg shadow-xl shadow-black/40 backdrop-blur-md text-white w-full mx-auto flex flex-col items-center">
+      <style jsx>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+      <h2 className="text-xl font-bold text-[#B200FF] mb-4 tracking-normal text-center">
+        Activity Overview
+      </h2>
+      <div className="hide-scrollbar flex flex-row overflow-x-auto py-2 space-x-3 w-full">
+        {streaksData.map((monthData) => (
+          <div key={monthData.key} className="flex-shrink-0">
+            <h3 className="text-base font-semibold text-center text-purple-300 mb-2">
+              {monthData.monthName} {monthData.year}
+            </h3>
+            <div className="grid grid-cols-7 gap-0.5 mb-1">
+              {weekDayLabels.map((label) => (
+                <div
+                  key={`${monthData.key}-${label}`}
+                  className="w-4 h-4 flex items-center justify-center text-xs text-gray-200 font-medium"
                 >
-                  🔥
-                </motion.div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">
-                    Daily Question Streak
-                  </h3>
-                  <p className="text-sm text-gray-400">
-                    {stats.totalSubmissions} questions solved • Rolling year
-                    ending {selectedYear}
-                  </p>
+                  {label}
                 </div>
-              </div>
+              ))}
             </div>
+            <div className="grid grid-cols-7 gap-0.5">
+              {monthData.days.map((dayItem) => {
+                if (dayItem.type === "padding") {
+                  return (
+                    <div key={dayItem.key} className="w-4 h-4 rounded-sm"></div>
+                  );
+                }
 
-            {/* Year Selector */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setSelectedYear(selectedYear - 1)}
-                className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 transition-colors"
-              >
-                <svg
-                  className="w-4 h-4 text-gray-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-              <span className="text-lg font-semibold text-white min-w-[80px] text-center">
-                {selectedYear}
-              </span>
-              <button
-                onClick={() => setSelectedYear(selectedYear + 1)}
-                disabled={selectedYear >= new Date().getFullYear()}
-                className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg
-                  className="w-4 h-4 text-gray-300"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+                const cellStyle = getDayCellStyle(dayItem.dateString);
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-gray-800/50 rounded-xl p-3 text-center border border-gray-700/30">
-              <div className="text-lg font-bold text-cyan-400">
-                {stats.totalActiveDays}
-              </div>
-              <div className="text-xs text-gray-400">Total Active Days</div>
-            </div>
-            <div className="bg-gray-800/50 rounded-xl p-3 text-center border border-gray-700/30">
-              <div className="text-lg font-bold text-purple-400">
-                {maxStreak}
-              </div>
-              <div className="text-xs text-gray-400">Max Streak</div>
-            </div>
-          </div>
-
-          {/* Calendar Grid - GitHub Style */}
-          <div className="space-y-3">
-            {/* Contribution Graph */}
-            <div className="flex items-start">
-              {/* Scrollable Calendar Container */}
-              <div
-                ref={scrollContainerRef}
-                className="overflow-x-auto scrollbar-hide flex-1"
-              >
-                {/* Month Labels */}
-                <div className="flex justify-start items-center space-x-3 text-xs text-gray-400 px-1 mb-2 min-w-max">
-                  {yearData.map((month) => (
-                    <div
-                      key={`${month.year}-${month.monthIndex}`}
-                      className="text-center min-w-[60px]"
-                    >
-                      {month.name}
-                    </div>
-                  ))}
-                </div>
-                {/* Months with Small Gaps Between Squares */}
-                <div className="flex space-x-3 min-w-max pr-4">
-                  {yearData.map((month, monthIndex) => (
-                    <div
-                      key={`${month.year}-${month.monthIndex}-${monthIndex}`}
-                      className="flex gap-0.5"
-                    >
-                      {month.weeks.map((week, weekIndex) => (
-                        <div
-                          key={`${monthIndex}-${weekIndex}`}
-                          className="flex flex-col gap-0.5"
-                        >
-                          {week.map((day, dayIndex) => (
-                            <motion.div
-                              key={`${monthIndex}-${weekIndex}-${dayIndex}`}
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{
-                                delay:
-                                  monthIndex * 0.05 +
-                                  weekIndex * 0.005 +
-                                  dayIndex * 0.001,
-                              }}
-                              className="relative group"
-                            >
-                              <div
-                                className={`
-                                w-2.5 h-2.5 rounded-sm transition-all duration-200
-                                ${
-                                  day.isFuture
-                                    ? "bg-gray-900/20 opacity-30 cursor-not-allowed"
-                                    : `cursor-pointer hover:scale-125 ${getActivityColor(
-                                        day.level,
-                                        day.isToday,
-                                        day.isFuture,
-                                        day.isCurrentMonth
-                                      )}`
-                                }
-                                ${day.isToday ? "ring-1 ring-cyan-400/50" : ""}
-                              `}
-                                title={
-                                  day.isFuture
-                                    ? "Future date"
-                                    : getTooltipContent(day) || ""
-                                }
-                              >
-                                {/* Today indicator */}
-                                {day.isToday && (
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-0.5 h-0.5 bg-white rounded-full" />
-                                  </div>
-                                )}
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Legend */}
-          <div className="mt-6 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-400">Less</span>
-              <div className="flex items-center gap-1">
-                {[0, 1, 2, 3, 4].map((level) => (
+                return (
                   <div
-                    key={level}
-                    className={`w-2.5 h-2.5 rounded-sm ${getActivityColor(
-                      level,
-                      false,
-                      false,
-                      true
+                    key={dayItem.key}
+                    className={`w-4 h-4 rounded-sm transition-all duration-150 ${cellStyle}`}
+                    title={`${dayItem.dateString} - ${getActivityTooltip(
+                      dayItem.dateString
                     )}`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-gray-400">More</span>
-            </div>
-
-            <div className="text-xs text-gray-400">
-              Learn how we count contributions
+                  ></div>
+                );
+              })}
             </div>
           </div>
-        </>
-      )}
+        ))}
+      </div>
     </div>
   );
 };
