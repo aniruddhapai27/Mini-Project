@@ -123,6 +123,21 @@ export const getMe = createAsyncThunk(
   }
 );
 
+// Add updateStreak thunk to maintain user streaks
+export const updateStreak = createAsyncThunk(
+  "auth/updateStreak",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await api.patch("/api/v1/users/update-streak");
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update streak"
+      );
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {
@@ -137,6 +152,7 @@ const authSlice = createSlice({
       resetPassword: false,
       updatePassword: false,
       updateProfile: false,
+      updateStreak: false,
     },
     error: {
       me: null,
@@ -147,6 +163,7 @@ const authSlice = createSlice({
       resetPassword: null,
       updatePassword: null,
       updateProfile: null,
+      updateStreak: null,
     },
     success: {
       forgotPassword: false,
@@ -168,6 +185,7 @@ const authSlice = createSlice({
         resetPassword: false,
         updatePassword: false,
         updateProfile: false,
+        updateStreak: false,
       };
       state.error = {
         me: null,
@@ -178,6 +196,7 @@ const authSlice = createSlice({
         resetPassword: null,
         updatePassword: null,
         updateProfile: null,
+        updateStreak: null,
       };
       state.success = {
         forgotPassword: false,
@@ -201,6 +220,7 @@ const authSlice = createSlice({
         resetPassword: null,
         updatePassword: null,
         updateProfile: null,
+        updateStreak: null,
       };
     },
     clearSuccess: (state) => {
@@ -347,6 +367,25 @@ const authSlice = createSlice({
         state.loading.me = false;
         state.isAuthenticated = false;
         state.error.me = action.payload;
+      })
+
+      // Update Streak
+      .addCase(updateStreak.pending, (state) => {
+        state.loading.updateStreak = true;
+        state.error.updateStreak = null;
+      })
+      .addCase(updateStreak.fulfilled, (state, action) => {
+        state.loading.updateStreak = false;
+        if (state.user) {
+          state.user.currentStreak = action.payload.currentStreak;
+          state.user.maxStreak = action.payload.maxStreak;
+          state.user.lastActivity = action.payload.lastActivity || new Date().toISOString();
+        }
+        state.error.updateStreak = null;
+      })
+      .addCase(updateStreak.rejected, (state, action) => {
+        state.loading.updateStreak = false;
+        state.error.updateStreak = action.payload;
       });
   },
 });

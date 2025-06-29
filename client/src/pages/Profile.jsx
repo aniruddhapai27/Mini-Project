@@ -10,6 +10,7 @@ import {
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import DotLottieLoader from "../components/DotLottieLoader";
 import QuizPerformanceGraph from "../components/QuizPerformanceGraph";
+import StreakVisualizer from "../components/StreakVisualizer";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -35,9 +36,10 @@ const Profile = () => {
   const [stats] = useState({
     averageScore: 85,
     totalSessions: 12,
-    currentStreak: 3,
-    maxStreak: 5,
+    currentStreak: user?.currentStreak || 0,
+    maxStreak: user?.maxStreak || 0,
     lastSessionDate: "2025-06-01",
+    lastActivity: user?.lastActivity || null,
     badges: ["Fast Learner", "Consistent", "Top Performer"],    categoryScores: {
       hr: 88,
       dataScience: 82,
@@ -509,12 +511,22 @@ const Profile = () => {
               </div>
             </div>
           </div>          {/* Right Column: Stats and Performance */}
-          <div className="lg:col-span-2">            {/* Metrics Cards */}
+          <div className="lg:col-span-2">
+            {/* Streak Visualizer */}
+            <div className="mb-6">
+              <StreakVisualizer 
+                currentStreak={user?.currentStreak || 0}
+                maxStreak={user?.maxStreak || 0}
+                lastActivity={user?.lastActivity}
+              />
+            </div>
+
+            {/* Metrics Cards */}
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-4 text-center">
                 <div className="text-2xl mb-2">🔥</div>
                 <div className="text-xl font-bold text-cyan-400">
-                  {stats.currentStreak}
+                  {user?.currentStreak || 0}
                 </div>
                 <div className="text-gray-400 text-xs">Current Streak</div>
               </div>
@@ -677,7 +689,7 @@ const Profile = () => {
                 Your strongest area is{" "}
                 <span className="text-cyan-400 font-medium">
                   {getBestCategory()}
-                </span>
+                  </span>
                 . You've completed{" "}
                 <span className="text-purple-400 font-medium">
                   {stats.totalSessions} sessions

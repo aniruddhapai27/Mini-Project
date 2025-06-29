@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { useState, useRef, useEffect } from "react";
 import { logoutUser } from "../redux/slices/authSlice";
 import DotLottieLoader from "./DotLottieLoader";
+import StreakIndicator from "./StreakIndicator";
 
 const Navbar = () => {
   const location = useLocation();
@@ -216,7 +217,12 @@ const Navbar = () => {
                         </div>
                       </div>
                     )}
-                  </div>                  <Link
+                  </div>
+
+                  {/* Streak Indicator */}
+                  <StreakIndicator />
+
+                  <Link
                     to="/profile"
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 border ${
                       isActive("/profile")

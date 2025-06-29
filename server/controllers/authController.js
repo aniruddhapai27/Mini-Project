@@ -60,11 +60,15 @@ exports.register = [
       res.status(201).json({
         success: true,
         token,
-        data: {
+        user: {
+          _id: newUser._id,
           name,
           email,
           profilePic: profilePicUrl,
           resume: resumeUrl,
+          currentStreak: 0,
+          maxStreak: 0,
+          lastActivity: null,
         },
         message: "User registered successfully",
       });
@@ -109,11 +113,15 @@ exports.login = async (req, res) => {
     res.status(200).json({
       success: true,
       token,
-      data: {
+      user: {
+        _id: user._id,
         name: user.name,
         email: user.email,
         profilePic: user.profilePic,
         resume: user.resume,
+        currentStreak: user.currentStreak || 0,
+        maxStreak: user.maxStreak || 0,
+        lastActivity: user.lastActivity,
       },
       message: "User logged in successfully",
     });
@@ -304,6 +312,9 @@ exports.getMe = async (req, res) => {
         email: user.email,
         profilePic: user.profilePic,
         resume: user.resume,
+        currentStreak: user.currentStreak || 0,
+        maxStreak: user.maxStreak || 0,
+        lastActivity: user.lastActivity,
       },
       message: "User details retrieved successfully",
     });
