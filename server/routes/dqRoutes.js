@@ -7,6 +7,7 @@ const {
   testDatabase,
   getUserQuizHistory,
   getQuizStats,
+  getDailyActivityData,
 } = require("../controllers/dqController");
 const { isLogin } = require("../middlewares/isLogin");
 
@@ -21,5 +22,6 @@ router.get("/test-database", testDatabase);
 // Quiz history routes (protected)
 router.get("/history", isLogin, getUserQuizHistory);
 router.get("/stats", isLogin, getQuizStats);
+router.get("/daily-activity", isLogin, getDailyActivityData);
 
 module.exports = router;

@@ -63,6 +63,16 @@ export const dqAPI = {
       throw error.response?.data?.message || "Failed to fetch quiz statistics";
     }
   },
+
+  // Get daily activity data
+  getDailyActivityData: async (year) => {
+    try {
+      const response = await api.get(`/api/v1/dq/daily-activity?year=${year}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Failed to fetch daily activity data";
+    }
+  },
 };
 
 export default dqAPI;

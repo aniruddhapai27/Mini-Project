@@ -1,5 +1,10 @@
-import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
+import {
+  createSlice,
+  createAsyncThunk,
+  createSelector,
+} from "@reduxjs/toolkit";
 import api from "../../utils/api";
+import { dqAPI } from "../../utils/dqApi";
 
 // Async thunk for fetching all daily questions grouped by subject
 export const fetchDailyQuestions = createAsyncThunk(
@@ -84,6 +89,21 @@ export const submitQuizAnswers = createAsyncThunk(
   }
 );
 
+// Add async thunk for fetching activity data
+export const fetchDailyActivityData = createAsyncThunk(
+  "dq/fetchDailyActivityData",
+  async (year, { rejectWithValue }) => {
+    try {
+      const response = await dqAPI.getDailyActivityData(year);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch daily activity data"
+      );
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   // Daily questions data
@@ -118,6 +138,11 @@ const initialState = {
 
   // Quiz history
   completedQuizzes: [],
+
+  // Daily activity data
+  dailyActivityData: [],
+  dailyActivityLoading: false,
+  dailyActivityError: null,
 };
 
 // Create the slice
@@ -268,7 +293,8 @@ const dqSlice = createSlice({
       .addCase(fetchQuestionsBySubject.pending, (state) => {
         state.subjectQuestionsLoading = true;
         state.subjectQuestionsError = null;
-      })      .addCase(fetchQuestionsBySubject.fulfilled, (state, action) => {
+      })
+      .addCase(fetchQuestionsBySubject.fulfilled, (state, action) => {
         state.subjectQuestionsLoading = false;
         // Ensure exactly 10 questions
         state.subjectQuestions = action.payload.questions.slice(0, 10);
@@ -310,6 +336,21 @@ const dqSlice = createSlice({
         state.submissionError =
           action.payload || "Failed to submit quiz answers";
         console.error("Quiz submission rejected:", action.payload);
+      })
+
+      // Fetch daily activity data
+      .addCase(fetchDailyActivityData.pending, (state) => {
+        state.dailyActivityLoading = true;
+        state.dailyActivityError = null;
+      })
+      .addCase(fetchDailyActivityData.fulfilled, (state, action) => {
+        state.dailyActivityLoading = false;
+        state.dailyActivityData = action.payload;
+        state.dailyActivityError = null;
+      })
+      .addCase(fetchDailyActivityData.rejected, (state, action) => {
+        state.dailyActivityLoading = false;
+        state.dailyActivityError = action.payload;
       });
   },
 });
@@ -379,6 +420,10 @@ export const selectSubmissionError = (state) => state.dq.submissionError;
 export const selectQuizState = (state) => state.dq.currentQuiz;
 
 export const selectCompletedQuizzes = (state) => state.dq.completedQuizzes;
+export const selectDailyActivityData = (state) => state.dq.dailyActivityData;
+export const selectDailyActivityLoading = (state) =>
+  state.dq.dailyActivityLoading;
+export const selectDailyActivityError = (state) => state.dq.dailyActivityError;
 
 // Export reducer
 export default dqSlice.reducer;

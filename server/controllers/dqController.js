@@ -597,3 +597,100 @@ exports.getQuizStats = async (req, res) => {
     });
   }
 };
+
+// Get daily activity data for streak calendar
+exports.getDailyActivityData = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { year = new Date().getFullYear() } = req.query;
+
+    console.log('getDailyActivityData called with:', { userId, year });
+
+    // Get start and end dates for the year
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31, 23, 59, 59);
+
+    console.log('Date range:', { startDate, endDate });
+
+    // Query to get daily quiz submissions grouped by date
+    const dailyActivity = await QuizHistory.aggregate([
+      {
+        $match: {
+          user: userId,
+          date: { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$date' },
+            month: { $month: '$date' },
+            day: { $dayOfMonth: '$date' }
+          },
+          count: { $sum: 1 },
+          subjects: { $addToSet: '$subject' },
+          bestScore: { $max: '$score' },
+          avgScore: { $avg: '$score' },
+          date: { $first: '$date' }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          date: {
+            $dateFromParts: {
+              year: '$_id.year',
+              month: '$_id.month',
+              day: '$_id.day'
+            }
+          },
+          count: 1,
+          subjects: 1,
+          bestScore: { $round: ['$bestScore', 0] },
+          avgScore: { $round: ['$avgScore', 0] }
+        }
+      },
+      { $sort: { date: 1 } }
+    ]);
+
+    console.log('Daily activity aggregation result:', dailyActivity.length, 'days with activity');
+
+    // Convert to an object with date strings as keys for easier frontend access
+    const activityData = {};
+    dailyActivity.forEach(day => {
+      const dateString = day.date.toISOString().split('T')[0];
+      activityData[dateString] = {
+        count: day.count,
+        subjects: day.subjects,
+        bestScore: day.bestScore,
+        avgScore: day.avgScore
+      };
+    });
+
+    // Calculate year statistics
+    const totalDays = dailyActivity.length;
+    const totalSubmissions = dailyActivity.reduce((sum, day) => sum + day.count, 0);
+    const avgSubmissionsPerDay = totalDays > 0 ? Math.round((totalSubmissions / totalDays) * 10) / 10 : 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        year: parseInt(year),
+        activityData,
+        statistics: {
+          totalActiveDays: totalDays,
+          totalSubmissions,
+          avgSubmissionsPerDay,
+          totalSubjects: [...new Set(dailyActivity.flatMap(d => d.subjects))].length
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error in getDailyActivityData:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

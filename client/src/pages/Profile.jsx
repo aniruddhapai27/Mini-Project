@@ -10,7 +10,7 @@ import {
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import DotLottieLoader from "../components/DotLottieLoader";
 import QuizPerformanceGraph from "../components/QuizPerformanceGraph";
-import StreakVisualizer from "../components/StreakVisualizer";
+import GitHubStyleStreakCalendar from "../components/GitHubStyleStreakCalendar";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -512,9 +512,9 @@ const Profile = () => {
             </div>
           </div>          {/* Right Column: Stats and Performance */}
           <div className="lg:col-span-2">
-            {/* Streak Visualizer */}
+            {/* GitHub-style Streak Calendar */}
             <div className="mb-6">
-              <StreakVisualizer 
+              <GitHubStyleStreakCalendar 
                 currentStreak={user?.currentStreak || 0}
                 maxStreak={user?.maxStreak || 0}
                 lastActivity={user?.lastActivity}
