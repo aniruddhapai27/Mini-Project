@@ -19,6 +19,7 @@ import {
   resetForNewSubject,
   submitQuizAnswers,
 } from "../redux/slices/dqSlice";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const Quiz = () => {
   const { subject: encodedSubject } = useParams();
@@ -366,8 +367,11 @@ const Quiz = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
         <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-8 shadow-xl">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
-          <p className="text-white">Loading quiz...</p>
+          <DotLottieLoader 
+            size="w-12 h-12"
+            text="Loading quiz..."
+            textColor="text-white"
+          />
         </div>
       </div>
     );
@@ -377,8 +381,11 @@ const Quiz = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
         <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-green-500/30 rounded-2xl p-8 shadow-xl">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p className="text-white">Processing quiz results...</p>
+          <DotLottieLoader 
+            size="w-12 h-12"
+            text="Processing quiz results..."
+            textColor="text-white"
+          />
         </div>
       </div>
     );
@@ -489,8 +496,11 @@ const Quiz = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
         <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-8 shadow-xl">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
-          <p className="text-white">Loading quiz...</p>
+          <DotLottieLoader 
+            size="w-12 h-12"
+            text="Loading quiz..."
+            textColor="text-white"
+          />
         </div>
       </div>
     );

@@ -6,6 +6,7 @@ import {
   clearErrors,
   clearSuccess,
 } from "../redux/slices/authSlice";
+import DotLottieLoader from "./DotLottieLoader";
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -150,10 +151,13 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
               className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-300 disabled:opacity-50"
             >
               {loading.updatePassword ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
-                  <span>Updating...</span>
-                </div>
+                <DotLottieLoader 
+                  size="w-4 h-4" 
+                  text="Updating..." 
+                  layout="horizontal"
+                  textSize="text-sm"
+                  textColor="text-white"
+                />
               ) : (
                 "Change Password"
               )}

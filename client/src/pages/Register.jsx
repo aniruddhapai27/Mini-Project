@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import { registerUser } from "../redux/slices/authSlice";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const Register = () => {
   const { loading } = useSelector((state) => state.auth);
@@ -353,10 +354,13 @@ const Register = () => {
             className="w-full py-3 px-4 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-semibold rounded-lg hover:from-gray-700 hover:to-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-[0_0_15px_rgba(156,163,175,0.3)] hover:shadow-[0_0_25px_rgba(156,163,175,0.5)] transform hover:scale-[1.02]"
           >
             {loading.signup ? (
-              <div className="flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Creating Account...
-              </div>
+              <DotLottieLoader 
+                size="w-5 h-5" 
+                text="Creating Account..." 
+                layout="horizontal"
+                textSize="text-sm"
+                textColor="text-white"
+              />
             ) : (
               "Create Account"
             )}

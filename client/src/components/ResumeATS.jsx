@@ -1,33 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from 'react-markdown';
 import api from "../utils/api";
+import DotLottieLoader from "./DotLottieLoader";
 
 // Loading animation component
 const LoadingAnimation = () => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-md border border-cyan-500/30 rounded-xl p-8 text-center max-w-md mx-4">
-        <div className="mb-6">
-          {/* Animated brain icon */}
-          <div className="w-16 h-16 mx-auto mb-4 relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full animate-pulse"></div>
-            <div className="absolute inset-1 bg-gray-900 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-cyan-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-            </div>
-          </div>
-          
-          {/* Animated dots */}
-          <div className="flex justify-center space-x-2 mb-4">
-            <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
-        </div>
-        
-        <h3 className="text-xl font-bold text-white mb-2">Analyzing Resume</h3>
-        <p className="text-gray-400 text-sm">AI is evaluating your ATS score and generating suggestions...</p>
+        <DotLottieLoader 
+          size="lg" 
+          text="AI is evaluating your ATS score and generating suggestions..." 
+          layout="vertical"
+          color="cyan"
+        />
         
         {/* Progress bar */}
         <div className="mt-6 w-full bg-gray-700 rounded-full h-2">

@@ -2,6 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authSlice";
 import dqReducer from "./slices/dqSlice";
 import interviewReducer from "./slices/interviewSlice";
+import streakMiddleware from "./middleware/streakMiddleware";
 
 const store = configureStore({
   reducer: {
@@ -13,7 +14,7 @@ const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }),
+    }).concat(streakMiddleware),
   devTools: import.meta.env.DEV,
 });
 

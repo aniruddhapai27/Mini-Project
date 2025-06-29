@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { loginUser } from "../redux/slices/authSlice";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const Login = () => {
   const { loading } = useSelector((state) => state.auth);
@@ -197,10 +198,13 @@ const Login = () => {
             className="w-full flex justify-center py-3 px-4 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-medium rounded-lg hover:from-gray-700 hover:to-gray-900 transition-all duration-300 disabled:opacity-50 shadow-lg border border-gray-500/30 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
             {loading.login ? (
-              <div className="flex items-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                <span>Signing in...</span>
-              </div>
+              <DotLottieLoader 
+                size="w-5 h-5" 
+                text="Signing in..." 
+                layout="horizontal"
+                textSize="text-sm"
+                textColor="text-white"
+              />
             ) : (
               "Sign In"
             )}

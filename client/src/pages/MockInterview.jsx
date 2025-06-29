@@ -24,6 +24,7 @@ import {
   selectFeedbackLoading,
   selectInterviewEndLoading,
 } from "../redux/slices/interviewSlice";
+import DotLottieLoader from "../components/DotLottieLoader";
 
 const MockInterview = () => {
   const navigate = useNavigate();
@@ -643,10 +644,13 @@ const MockInterview = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   )}
                   {aiResponseLoading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
-                      <span>Processing...</span>
-                    </div>
+                    <DotLottieLoader 
+                      size="w-4 h-4" 
+                      text="Processing..." 
+                      layout="horizontal"
+                      textSize="text-sm"
+                      textColor="text-white"
+                    />
                   ) : (
                     <span className="relative flex items-center space-x-2">
                       <span>Send</span>

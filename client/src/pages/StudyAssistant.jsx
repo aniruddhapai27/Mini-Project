@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { studyAssistantApi } from '../utils/api';
 import ReactMarkdown from 'react-markdown';
 import ErrorBoundary from '../components/ErrorBoundary';
+import DotLottieLoader from '../components/DotLottieLoader';
 import { FaTrash } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -24,6 +25,10 @@ const StudyAssistant = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState(null);
+  const [deletingSessionId, setDeletingSessionId] = useState(null);
+  const [typewriterActive, setTypewriterActive] = useState(false);
+  const [typewriterText, setTypewriterText] = useState('');
+  const [isThinking, setIsThinking] = useState(false);
 
   const subjects = [
     { key: 'ADA', name: 'Algorithm Design & Analysis', icon: '🔢', color: 'from-blue-500 to-cyan-500' },
@@ -122,6 +127,19 @@ const StudyAssistant = () => {
 
     try {
       setIsLoading(true);
+      setIsThinking(true);
+      setTypewriterActive(false);
+      setTypewriterText('');
+      
+      // Add thinking message
+      const thinkingMessageObj = {
+        type: 'assistant',
+        content: '',
+        timestamp: new Date().toISOString(),
+        isThinking: true
+      };
+      setMessages(prev => [...prev, thinkingMessageObj]);
+      
       console.log('Processing message:', userMessage);
       
       // Determine session ID - create session only when user sends first message
@@ -152,13 +170,18 @@ const StudyAssistant = () => {
         // Refresh sessions list to include the new session
         fetchChatHistory();
 
-        // Add AI response
-        const aiMessageObj = {
-          type: 'assistant',
-          content: response.response,
-          timestamp: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, aiMessageObj]);
+        // Replace thinking message with AI response with typewriter effect
+        setIsThinking(false);
+        setTypewriterText(response.response);
+        setTypewriterActive(true);
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          const thinkingIndex = newMsgs.findIndex(m => m.isThinking);
+          if (thinkingIndex !== -1) {
+            newMsgs[thinkingIndex] = { type: 'assistant', content: '', timestamp: new Date().toISOString(), isTypewriter: true };
+          }
+          return newMsgs;
+        });
         
       } else {
         // Session already exists, continue the conversation
@@ -170,24 +193,55 @@ const StudyAssistant = () => {
           session_id: sessionIdToUse
         });
 
-        // Add AI response
-        const aiMessageObj = {
-          type: 'assistant',
-          content: response.response,
-          timestamp: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, aiMessageObj]);
+        // Add AI response with typewriter effect
+        setIsThinking(false);
+        setTypewriterText(response.response);
+        setTypewriterActive(true);
+        setMessages(prev => {
+          const newMsgs = [...prev];
+          const thinkingIndex = newMsgs.findIndex(m => m.isThinking);
+          if (thinkingIndex !== -1) {
+            newMsgs[thinkingIndex] = { type: 'assistant', content: '', timestamp: new Date().toISOString(), isTypewriter: true };
+          }
+          return newMsgs;
+        });
       }
 
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
       
-      // Remove user message on error
-      setMessages(prev => prev.slice(0, -1));
-    } finally {      setIsLoading(false);
+      // Remove user message and thinking message on error
+      setMessages(prev => prev.slice(0, -2));
+      setIsThinking(false);
+    } finally {
+      setIsLoading(false);
     }
   }, [inputMessage, isLoading, currentSession, sessionId, selectedSubject, navigate, fetchChatHistory]);
+
+  // Typewriter effect for last assistant message
+  useEffect(() => {
+    if (!typewriterActive || !typewriterText) return;
+    let idx = messages.findIndex(m => m.isTypewriter);
+    if (idx === -1) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      setMessages(prev => {
+        const newMsgs = [...prev];
+        if (newMsgs[idx]) newMsgs[idx].content = typewriterText.slice(0, i + 1);
+        return newMsgs;
+      });
+      i++;
+      if (i >= typewriterText.length) {
+        clearInterval(interval);
+        setTypewriterActive(false);
+        setTypewriterText('');
+        setMessages(prev => prev.map(m => ({ ...m, isTypewriter: false })));
+      }
+    }, 3);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line
+  }, [typewriterActive, typewriterText]);
 
   // Initialize component
   useEffect(() => {
@@ -222,17 +276,19 @@ const StudyAssistant = () => {
   if (isLoading && !currentSession && sessionId && sessionId !== 'new') {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center pt-16">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading chat session...</p>
-        </div>
+        <DotLottieLoader 
+          size="w-20 h-20"
+          text="Loading chat session..."
+          textSize="text-lg"
+          textColor="text-white"
+        />
       </div>
     );
   }
 
   const handleDeleteSession = async (sessionIdToDelete) => {
     try {
-      setIsLoadingSessions(true);
+      setDeletingSessionId(sessionIdToDelete);
       await studyAssistantApi.deleteSession(sessionIdToDelete);
       toast.success('Session deleted');
       // Remove from local state
@@ -247,7 +303,7 @@ const StudyAssistant = () => {
       console.error('Error deleting session:', error);
       toast.error('Failed to delete session');
     } finally {
-      setIsLoadingSessions(false);
+      setDeletingSessionId(null);
     }
   };
 
@@ -334,10 +390,12 @@ const StudyAssistant = () => {
               <h3 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wide">Recent Chats</h3>
               
               {isLoadingSessions ? (
-                <div className="space-y-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-12 bg-gray-800/50 rounded-lg animate-pulse"></div>
-                  ))}
+                <div className="flex justify-center py-8">
+                  <DotLottieLoader 
+                    size="w-12 h-12"
+                    text="Loading sessions..."
+                    textSize="text-xs"
+                  />
                 </div>
               ) : sessions.length === 0 ? (
                 <div className="text-center py-8">
@@ -396,8 +454,13 @@ const StudyAssistant = () => {
                                 e.stopPropagation();
                                 handleDeleteSession(session._id);
                               }}
+                              disabled={deletingSessionId === session._id}
                             >
-                              <FaTrash size={14} />
+                              {deletingSessionId === session._id ? (
+                                <DotLottieLoader size="w-4 h-4" />
+                              ) : (
+                                <FaTrash size={14} />
+                              )}
                             </button>
                           </button>
                         </motion.div>
@@ -440,7 +503,7 @@ const StudyAssistant = () => {
 
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm text-gray-400">Online</span>
+            <span className="text-sm text-gray-400">AI Assistant</span>
           </div>
         </div>
 
@@ -493,7 +556,17 @@ const StudyAssistant = () => {
                         ? 'bg-gradient-to-r from-cyan-500 to-purple-500' 
                         : 'bg-gradient-to-r from-purple-500 to-pink-500'
                     }`}>
-                      {message.type === 'assistant' ? '🤖' : '👤'}
+                      {message.type === 'assistant' ? '🤖' : (
+                        _user?.profilePic ? (
+                          <img 
+                            src={_user.profilePic} 
+                            alt="User"
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          '👤'
+                        )
+                      )}
                     </div>
                     
                     <div className={`flex-1 max-w-[70%] ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
@@ -504,38 +577,52 @@ const StudyAssistant = () => {
                       }`}>
                         {message.type === 'assistant' ? (
                           <ErrorBoundary fallbackMessage="Error rendering AI response">
-                            <div className="markdown-content leading-relaxed prose prose-invert prose-sm max-w-none">
-                              {message.content && typeof message.content === 'string' ? (
-                                <ReactMarkdown 
-                                  components={{
-                                    p: ({children, ...props}) => <p className="mb-2 last:mb-0" {...props}>{children}</p>,
-                                    code: ({inline, children, ...props}) => 
-                                      inline ? (
-                                        <code className="bg-gray-700/50 px-1 py-0.5 rounded text-cyan-300" {...props}>
-                                          {children}
-                                        </code>
-                                      ) : (
-                                        <code className="block bg-gray-700/50 p-2 rounded-md text-green-300 overflow-x-auto" {...props}>
-                                          {children}
-                                        </code>
-                                      ),
-                                    pre: ({children, ...props}) => <pre className="bg-gray-700/50 p-2 rounded-md overflow-x-auto" {...props}>{children}</pre>,
-                                    ul: ({children, ...props}) => <ul className="list-disc list-inside mb-2" {...props}>{children}</ul>,
-                                    ol: ({children, ...props}) => <ol className="list-decimal list-inside mb-2" {...props}>{children}</ol>,
-                                    li: ({children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
-                                    h1: ({children, ...props}) => <h1 className="text-lg font-bold mb-2 text-cyan-300" {...props}>{children}</h1>,
-                                    h2: ({children, ...props}) => <h2 className="text-base font-semibold mb-2 text-cyan-300" {...props}>{children}</h2>,
-                                    h3: ({children, ...props}) => <h3 className="text-sm font-semibold mb-1 text-cyan-300" {...props}>{children}</h3>,
-                                    strong: ({children, ...props}) => <strong className="font-semibold text-white" {...props}>{children}</strong>,
-                                    em: ({children, ...props}) => <em className="italic text-gray-300" {...props}>{children}</em>,
-                                  }}
-                                >
-                                  {message.content}
-                                </ReactMarkdown>
-                              ) : (
-                                <p>Received non-string content.</p>
-                              )}
-                            </div>
+                            {message.isThinking ? (
+                              <div className="flex items-center justify-center py-2">
+                                <DotLottieLoader 
+                                  size="w-8 h-8"
+                                  text="Assistant is thinking..."
+                                  textSize="text-sm"
+                                  layout="horizontal"
+                                />
+                              </div>
+                            ) : (
+                              <div className="markdown-content leading-relaxed prose prose-invert prose-sm max-w-none">
+                                {message.content && typeof message.content === 'string' ? (
+                                  <ReactMarkdown 
+                                    components={{
+                                      p: ({children, ...props}) => <p className="mb-2 last:mb-0" {...props}>{children}</p>,
+                                      code: ({inline, children, ...props}) => 
+                                        inline ? (
+                                          <code className="bg-gray-700/50 px-1 py-0.5 rounded text-cyan-300" {...props}>
+                                            {children}
+                                          </code>
+                                        ) : (
+                                          <code className="block bg-gray-700/50 p-2 rounded-md text-green-300 overflow-x-auto" {...props}>
+                                            {children}
+                                          </code>
+                                        ),
+                                      pre: ({children, ...props}) => <pre className="bg-gray-700/50 p-2 rounded-md overflow-x-auto" {...props}>{children}</pre>,
+                                      ul: ({children, ...props}) => <ul className="list-disc list-inside mb-2" {...props}>{children}</ul>,
+                                      ol: ({children, ...props}) => <ol className="list-decimal list-inside mb-2" {...props}>{children}</ol>,
+                                      li: ({children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
+                                      h1: ({children, ...props}) => <h1 className="text-lg font-bold mb-2 text-cyan-300" {...props}>{children}</h1>,
+                                      h2: ({children, ...props}) => <h2 className="text-base font-semibold mb-2 text-cyan-300" {...props}>{children}</h2>,
+                                      h3: ({children, ...props}) => <h3 className="text-sm font-semibold mb-1 text-cyan-300" {...props}>{children}</h3>,
+                                      strong: ({children, ...props}) => <strong className="font-semibold text-white" {...props}>{children}</strong>,
+                                      em: ({children, ...props}) => <em className="italic text-gray-300" {...props}>{children}</em>,
+                                    }}
+                                  >
+                                    {message.content}
+                                  </ReactMarkdown>
+                                ) : (
+                                  <p>Received non-string content.</p>
+                                )}
+                                {message.isTypewriter && typewriterActive && (
+                                  <DotLottieLoader size="w-3 h-3" className="inline-block ml-1 align-middle" />
+                                )}
+                              </div>
+                            )}
                           </ErrorBoundary>
                         ) : (
                           <p>{message.content}</p>
@@ -571,7 +658,7 @@ const StudyAssistant = () => {
               className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-full hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <DotLottieLoader size="w-5 h-5" />
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />

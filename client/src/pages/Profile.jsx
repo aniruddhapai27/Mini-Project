@@ -8,7 +8,9 @@ import {
   getMe,
 } from "../redux/slices/authSlice";
 import ChangePasswordModal from "../components/ChangePasswordModal";
+import DotLottieLoader from "../components/DotLottieLoader";
 import QuizPerformanceGraph from "../components/QuizPerformanceGraph";
+import StreakVisualizer from "../components/StreakVisualizer";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -34,9 +36,10 @@ const Profile = () => {
   const [stats] = useState({
     averageScore: 85,
     totalSessions: 12,
-    currentStreak: 3,
-    maxStreak: 5,
+    currentStreak: user?.currentStreak || 0,
+    maxStreak: user?.maxStreak || 0,
     lastSessionDate: "2025-06-01",
+    lastActivity: user?.lastActivity || null,
     badges: ["Fast Learner", "Consistent", "Top Performer"],    categoryScores: {
       hr: 88,
       dataScience: 82,
@@ -160,10 +163,11 @@ const Profile = () => {
   if (!user || loading.me) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading profile...</p>
-        </div>
+        <DotLottieLoader 
+          size="w-12 h-12"
+          text="Loading profile..."
+          textColor="text-gray-400"
+        />
       </div>
     );
   }
@@ -464,10 +468,13 @@ const Profile = () => {
                             className="px-3 py-1 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-cyan-600 transition-all duration-300 disabled:opacity-50 shadow-lg text-[10px] flex-1"
                           >
                             {loading.updateProfile ? (
-                              <div className="flex items-center justify-center">
-                                <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white mr-1"></div>
-                                <span>Saving...</span>
-                              </div>
+                              <DotLottieLoader 
+                                size="w-3 h-3" 
+                                text="Saving..." 
+                                layout="horizontal"
+                                textSize="text-xs"
+                                textColor="text-white"
+                              />
                             ) : (
                               "Save Changes"
                             )}
@@ -504,12 +511,22 @@ const Profile = () => {
               </div>
             </div>
           </div>          {/* Right Column: Stats and Performance */}
-          <div className="lg:col-span-2">            {/* Metrics Cards */}
+          <div className="lg:col-span-2">
+            {/* Streak Visualizer */}
+            <div className="mb-6">
+              <StreakVisualizer 
+                currentStreak={user?.currentStreak || 0}
+                maxStreak={user?.maxStreak || 0}
+                lastActivity={user?.lastActivity}
+              />
+            </div>
+
+            {/* Metrics Cards */}
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-4 text-center">
                 <div className="text-2xl mb-2">🔥</div>
                 <div className="text-xl font-bold text-cyan-400">
-                  {stats.currentStreak}
+                  {user?.currentStreak || 0}
                 </div>
                 <div className="text-gray-400 text-xs">Current Streak</div>
               </div>
@@ -672,7 +689,7 @@ const Profile = () => {
                 Your strongest area is{" "}
                 <span className="text-cyan-400 font-medium">
                   {getBestCategory()}
-                </span>
+                  </span>
                 . You've completed{" "}
                 <span className="text-purple-400 font-medium">
                   {stats.totalSessions} sessions
