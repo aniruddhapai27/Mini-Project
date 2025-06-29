@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  fetchDailyActivityData,
-  selectDailyActivityData,
-  selectQuizResults,
+import { 
+  fetchDailyActivityData, 
+  selectDailyActivityData, 
+  selectQuizResults 
 } from "../redux/slices/dqSlice";
 
 // Helper function to format date as YYYY-MM-DD
@@ -22,6 +22,7 @@ const GitHubStyleStreakCalendar = () => {
   const [streaksData, setStreaksData] = useState([]); // Holds data for each month block
   const [activityStatus, setActivityStatus] = useState({});
   const [lastQuizResultTimestamp, setLastQuizResultTimestamp] = useState(null);
+  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
     // Fetch daily activity data for the current year
@@ -121,9 +122,7 @@ const GitHubStyleStreakCalendar = () => {
         days: daysInMonthGrid,
         key: `${year}-${monthName}`,
       });
-    }
-
-    setStreaksData(newMonthlyData.reverse()); // Show past months first, up to current
+    }    setStreaksData(newMonthlyData.reverse()); // Show past months first, up to current
 
     // Set activity status from dailyActivityData
     const tempActivityStatus = {};
@@ -131,7 +130,7 @@ const GitHubStyleStreakCalendar = () => {
       Object.keys(dailyActivityData.activityData).forEach((dateString) => {
         const dayData = dailyActivityData.activityData[dateString];
         const quizCount = dayData.count || 0;
-
+        
         // Set activity level based on quiz count
         if (quizCount >= 5) {
           tempActivityStatus[dateString] = "very-high"; // Dark green
@@ -147,6 +146,40 @@ const GitHubStyleStreakCalendar = () => {
 
     setActivityStatus(tempActivityStatus);
   }, [dailyActivityData]); // Depend on dailyActivityData to re-run when it changes
+
+  // Auto-scroll to current month when streaksData changes
+  useEffect(() => {
+    if (streaksData.length > 0 && scrollContainerRef.current) {
+      const today = new Date();
+      const currentMonth = today.toLocaleString("default", { month: "short" });
+      const currentYear = today.getFullYear();
+      
+      // Find the current month index (remembering months are in reverse order - oldest first)
+      const currentMonthIndex = streaksData.findIndex(month => 
+        month.monthName === currentMonth && month.year === currentYear
+      );
+      
+      if (currentMonthIndex !== -1) {
+        // Use a timeout to ensure the DOM has rendered
+        setTimeout(() => {
+          const container = scrollContainerRef.current;
+          const monthElements = container.children;
+          
+          if (monthElements[currentMonthIndex]) {
+            // Get the actual position of the current month
+            const currentMonthElement = monthElements[currentMonthIndex];
+            const scrollPosition = currentMonthElement.offsetLeft;
+            
+            // Scroll to show current month with some padding
+            container.scrollTo({
+              left: Math.max(0, scrollPosition - container.clientWidth / 4), // Show with 25% padding from left
+              behavior: 'smooth'
+            });
+          }
+        }, 100);
+      }
+    }
+  }, [streaksData]);
 
   const getActivityTooltip = (dateString) => {
     if (
@@ -180,22 +213,33 @@ const GitHubStyleStreakCalendar = () => {
 
     const todayForComparison = new Date();
     todayForComparison.setHours(0, 0, 0, 0); // Normalize to midnight
+    
+    const isToday = cellDate.getTime() === todayForComparison.getTime();
 
+    // Base styles
+    let baseStyle = "";
+    
     // Different intensity levels based on quiz activity
     if (status === "very-high") {
-      return "bg-green-800 hover:bg-green-700 border border-green-900 shadow-sm"; // Very dark green (5+ quizzes)
+      baseStyle = "bg-green-800 hover:bg-green-700 border border-green-900 shadow-sm"; // Very dark green (5+ quizzes)
     } else if (status === "high") {
-      return "bg-green-600 hover:bg-green-500 border border-green-700 shadow-sm"; // Dark green (3-4 quizzes)
+      baseStyle = "bg-green-600 hover:bg-green-500 border border-green-700 shadow-sm"; // Dark green (3-4 quizzes)
     } else if (status === "medium") {
-      return "bg-green-500 hover:bg-green-400 border border-green-600 shadow-sm"; // Medium green (2 quizzes)
+      baseStyle = "bg-green-500 hover:bg-green-400 border border-green-600 shadow-sm"; // Medium green (2 quizzes)
     } else if (status === "low") {
-      return "bg-green-400 hover:bg-green-300 border border-green-500 shadow-sm"; // Light green (1 quiz)
+      baseStyle = "bg-green-400 hover:bg-green-300 border border-green-500 shadow-sm"; // Light green (1 quiz)
+    } else if (cellDate > todayForComparison) {
+      baseStyle = "bg-slate-700/30 cursor-not-allowed"; // Style for future days
+    } else {
+      baseStyle = "bg-slate-600/50 hover:bg-slate-500/60"; // Default for past non-active days
     }
 
-    if (cellDate > todayForComparison) {
-      return "bg-slate-700/30 cursor-not-allowed"; // Style for future days
+    // Add today's highlight
+    if (isToday) {
+      baseStyle += " ring-2 ring-[#B200FF] ring-opacity-80"; // Purple ring for today
     }
-    return "bg-slate-600/50 hover:bg-slate-500/60"; // Default for past non-active days
+
+    return baseStyle;
   };
 
   const weekDayLabels = ["S", "M", "T", "W", "T", "F", "S"];
@@ -214,7 +258,7 @@ const GitHubStyleStreakCalendar = () => {
       <h2 className="text-xl font-bold text-[#B200FF] mb-4 tracking-normal text-center">
         Activity Overview
       </h2>
-      <div className="hide-scrollbar flex flex-row overflow-x-auto py-2 space-x-3 w-full">
+      <div ref={scrollContainerRef} className="hide-scrollbar flex flex-row overflow-x-auto py-2 space-x-3 w-full">
         {streaksData.map((monthData) => (
           <div key={monthData.key} className="flex-shrink-0">
             <h3 className="text-base font-semibold text-center text-purple-300 mb-2">
