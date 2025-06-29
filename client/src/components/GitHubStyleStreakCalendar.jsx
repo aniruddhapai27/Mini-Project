@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  fetchDailyActivityData,
+  selectDailyActivityData,
+  selectQuizResults,
+} from "../redux/slices/dqSlice";
 
 // Helper function to format date as YYYY-MM-DD
 const formatDate = (date) => {
@@ -11,9 +16,48 @@ const formatDate = (date) => {
 };
 
 const GitHubStyleStreakCalendar = () => {
-  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const dailyActivityData = useSelector(selectDailyActivityData);
+  const quizResults = useSelector(selectQuizResults);
   const [streaksData, setStreaksData] = useState([]); // Holds data for each month block
   const [activityStatus, setActivityStatus] = useState({});
+  const [lastQuizResultTimestamp, setLastQuizResultTimestamp] = useState(null);
+
+  useEffect(() => {
+    // Fetch daily activity data for the current year
+    const currentYear = new Date().getFullYear();
+    dispatch(fetchDailyActivityData(currentYear));
+  }, [dispatch]);
+
+  // Refresh activity data when a new quiz is completed
+  useEffect(() => {
+    if (quizResults && quizResults.timestamp) {
+      if (lastQuizResultTimestamp !== quizResults.timestamp) {
+        setLastQuizResultTimestamp(quizResults.timestamp);
+        // Immediately update today's activity optimistically
+        const today = formatDate(new Date());
+        setActivityStatus((prev) => {
+          const currentLevel = prev[today] || "";
+          let newLevel = "low"; // Default to 1 quiz
+
+          // Increment the intensity level
+          if (currentLevel === "low") newLevel = "medium";
+          else if (currentLevel === "medium") newLevel = "high";
+          else if (currentLevel === "high") newLevel = "very-high";
+          else if (currentLevel === "very-high") newLevel = "very-high";
+          else newLevel = "low"; // First quiz of the day
+
+          return { ...prev, [today]: newLevel };
+        });
+
+        // Refresh the activity data from backend after a short delay to ensure backend has processed
+        setTimeout(() => {
+          const currentYear = new Date().getFullYear();
+          dispatch(fetchDailyActivityData(currentYear));
+        }, 1000);
+      }
+    }
+  }, [quizResults, lastQuizResultTimestamp, dispatch]);
 
   useEffect(() => {
     // Define today's date here to be accessible within the effect
@@ -81,21 +125,54 @@ const GitHubStyleStreakCalendar = () => {
 
     setStreaksData(newMonthlyData.reverse()); // Show past months first, up to current
 
-    // Set activity status from user.loginActivity
+    // Set activity status from dailyActivityData
     const tempActivityStatus = {};
-    if (user && user.loginActivity && Array.isArray(user.loginActivity)) {
-      user.loginActivity.forEach((activityDateStr) => {
-        const activityDate = new Date(activityDateStr);
-        const formattedDate = formatDate(activityDate);
-        // Only mark as active if the date is not in the future relative to todayRefDate
-        if (activityDate <= todayRefDate) {
-          tempActivityStatus[formattedDate] = "active"; // Mark as active
+    if (dailyActivityData && dailyActivityData.activityData) {
+      Object.keys(dailyActivityData.activityData).forEach((dateString) => {
+        const dayData = dailyActivityData.activityData[dateString];
+        const quizCount = dayData.count || 0;
+
+        // Set activity level based on quiz count
+        if (quizCount >= 5) {
+          tempActivityStatus[dateString] = "very-high"; // Dark green
+        } else if (quizCount >= 3) {
+          tempActivityStatus[dateString] = "high"; // Medium-dark green
+        } else if (quizCount >= 2) {
+          tempActivityStatus[dateString] = "medium"; // Medium green
+        } else if (quizCount >= 1) {
+          tempActivityStatus[dateString] = "low"; // Light green
         }
       });
     }
 
     setActivityStatus(tempActivityStatus);
-  }, [user]); // Depend on user to re-run if loginActivity changes
+  }, [dailyActivityData]); // Depend on dailyActivityData to re-run when it changes
+
+  const getActivityTooltip = (dateString) => {
+    if (
+      dailyActivityData &&
+      dailyActivityData.activityData &&
+      dailyActivityData.activityData[dateString]
+    ) {
+      const dayData = dailyActivityData.activityData[dateString];
+      const quizCount = dayData.count || 0;
+      const subjects = dayData.subjects || [];
+
+      if (quizCount === 0) return "No activity";
+
+      const subjectText =
+        subjects.length > 0
+          ? ` (${subjects.slice(0, 3).join(", ")}${
+              subjects.length > 3 ? "..." : ""
+            })`
+          : "";
+
+      return `${quizCount} quiz${
+        quizCount > 1 ? "es" : ""
+      } completed${subjectText}`;
+    }
+    return "No activity";
+  };
 
   const getDayCellStyle = (dateString) => {
     const status = activityStatus[dateString];
@@ -104,8 +181,15 @@ const GitHubStyleStreakCalendar = () => {
     const todayForComparison = new Date();
     todayForComparison.setHours(0, 0, 0, 0); // Normalize to midnight
 
-    if (status === "active") {
-      return "bg-green-500 hover:bg-green-400 border border-green-700 shadow-sm"; // Green for active days
+    // Different intensity levels based on quiz activity
+    if (status === "very-high") {
+      return "bg-green-800 hover:bg-green-700 border border-green-900 shadow-sm"; // Very dark green (5+ quizzes)
+    } else if (status === "high") {
+      return "bg-green-600 hover:bg-green-500 border border-green-700 shadow-sm"; // Dark green (3-4 quizzes)
+    } else if (status === "medium") {
+      return "bg-green-500 hover:bg-green-400 border border-green-600 shadow-sm"; // Medium green (2 quizzes)
+    } else if (status === "low") {
+      return "bg-green-400 hover:bg-green-300 border border-green-500 shadow-sm"; // Light green (1 quiz)
     }
 
     if (cellDate > todayForComparison) {
@@ -160,9 +244,9 @@ const GitHubStyleStreakCalendar = () => {
                   <div
                     key={dayItem.key}
                     className={`w-4 h-4 rounded-sm transition-all duration-150 ${cellStyle}`}
-                    title={`${dayItem.dateString} - ${
-                      activityStatus[dayItem.dateString] || "No activity"
-                    }`}
+                    title={`${dayItem.dateString} - ${getActivityTooltip(
+                      dayItem.dateString
+                    )}`}
                   ></div>
                 );
               })}
