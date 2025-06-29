@@ -36,8 +36,6 @@ async def feedback(feedbackRequest: FeedbackRequest, current_user: dict = Depend
     Generate AI-powered feedback for an interview session
     """
     try:
-        print(f"📝 Feedback request from user {current_user.get('_id')} for session {feedbackRequest.session}")
-        
         if not feedbackRequest.session:
             raise HTTPException(status_code=400, detail="Session ID is required.")
         
@@ -47,20 +45,21 @@ async def feedback(feedbackRequest: FeedbackRequest, current_user: dict = Depend
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid session ID format.")
         
-        response = await get_interview_feedback(
-            session_id=feedbackRequest.session
-        )
+        # Get feedback from controller
+        response = await get_interview_feedback(session_id=feedbackRequest.session)
         
         if not response:
             raise HTTPException(status_code=404, detail="No feedback response generated.")
         
-        print(f"✅ Feedback generated successfully for session {feedbackRequest.session}")
-        return response
+        # Return the response in the expected format
+        return FeedBackResponse(
+            feedback=response.get("feedback", {}),
+            overall_score=response.get("overall_score", 0)
+        )
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Unexpected error in feedback route: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing feedback request: {str(e)}")
 
 @interview_router.post("/resume-based", response_model=InterviewResponse)
@@ -88,7 +87,8 @@ async def resume_based_interview(
         
         if not user_response.strip():
             raise HTTPException(status_code=400, detail="User response cannot be empty.")
-          # Use authenticated user ID - convert back to ObjectId if it's a string
+        
+        # Use authenticated user ID - convert back to ObjectId if it's a string
         user_id = current_user["_id"]
         if isinstance(user_id, str):
             user_id = ObjectId(user_id)
@@ -103,13 +103,24 @@ async def resume_based_interview(
         db = await get_database()
         collection = db['interviews']
         
-        if session:            # Get existing session - Node.js sessions don't filter by user_id in the lookup
-            session_doc = await collection.find_one({"_id": ObjectId(session)})
-            if not session_doc:
-                raise HTTPException(status_code=404, detail="Interview session not found.")
-              # Build conversation history from Node.js QnA structure
+        if session:
+            # Check if session is a valid ObjectId (not a fallback session)
+            try:
+                session_object_id = ObjectId(session)
+                # Get existing session - Node.js sessions don't filter by user_id in the lookup
+                session_doc = await collection.find_one({"_id": session_object_id})
+                if not session_doc:
+                    raise HTTPException(status_code=404, detail="Interview session not found.")
+            except Exception as e:
+                # Session is not a valid ObjectId (likely a fallback session)
+                # Try to find by sessionId field instead
+                session_doc = await collection.find_one({"sessionId": session})
+                if not session_doc:
+                    session_doc = None
+            
+            # Build conversation history from Node.js QnA structure
             history = ""
-            if "QnA" in session_doc:
+            if session_doc and "QnA" in session_doc:
                 for idx, qna in enumerate(session_doc["QnA"]):
                     # Skip the first exchange which is the initial greeting
                     user_msg = qna.get('user', '').strip()
@@ -120,7 +131,9 @@ async def resume_based_interview(
                     interviewer_msg = qna.get('bot', '')
                     candidate_msg = qna.get('user', '')
                     if interviewer_msg and candidate_msg:
-                        history += f"Interviewer: {interviewer_msg}\\nCandidate: {candidate_msg}\\n"            # Add current user response only if it's not the initial greeting
+                        history += f"Interviewer: {interviewer_msg}\\n\\nCandidate: {candidate_msg}\\n\\n"
+            
+            # Add current user response only if it's not the initial greeting
             if (user_response.strip() != "Hello, I am ready to start the interview." and
                 user_response.strip() != "Hello, I'm ready to start the interview. Please begin with your first question."):
                 history += f"Candidate: {user_response}\\n"
@@ -136,11 +149,14 @@ async def resume_based_interview(
         ai_response = await resume_based_interviewer(resume_content, domain, difficulty, history)
         
         return InterviewResponse(
-            session_id=session,
-            ai=ai_response
+            ai=ai_response,
+            session_id=session
         )
         
     except HTTPException:
         raise
     except Exception as e:
+        print(f"❌ Error in resume-based interview: {str(e)}")
+        import traceback
+        print(f"📊 Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error processing resume-based interview: {str(e)}")

@@ -102,22 +102,16 @@ async def get_interview_feedback(session_id: str):
     Generate AI-powered feedback for an interview session
     """
     try:
-        print(f"📝 Getting feedback for session: {session_id}")
-        
         db = await get_database()
         collection = db['interviews']  
         session_data_db = await collection.find_one({"_id": ObjectId(session_id)})
         
         if not session_data_db:
-            print(f"❌ Session {session_id} not found")
             raise HTTPException(status_code=404, detail="Session not found.")
 
         chat_history = session_data_db.get('QnA', []) 
         if not chat_history:
-            print(f"❌ No Q&A found for session {session_id}")
             raise HTTPException(status_code=404, detail="No interview questions found in the session.")
-
-        print(f"📊 Found {len(chat_history)} Q&A pairs")
         
         domain = session_data_db.get('domain', 'General')
         difficulty = session_data_db.get('difficulty', 'Medium')
@@ -127,23 +121,27 @@ async def get_interview_feedback(session_id: str):
         for idx, qna in enumerate(chat_history):
             question = qna.get("question", qna.get("bot", ""))  # Handle both formats
             answer = qna.get("answer", qna.get("user", ""))     # Handle both formats
-            if question and answer:
-                conversation += f"Q{idx+1}: {question}\nA{idx+1}: {answer}\n\n"
+            
+            # Skip empty responses or initial greetings
+            if not question or not answer:
+                continue
+            if answer.strip() in ["Hello, I am ready to start the interview.", 
+                                 "Hello, I'm ready to start the interview. Please begin with your first question."]:
+                continue
+                
+            conversation += f"Q{idx+1}: {question}\\nA{idx+1}: {answer}\\n\\n"
         
         if not conversation.strip():
-            print("❌ No valid conversation found")
             raise HTTPException(status_code=400, detail="No valid conversation found to analyze.")
         
-        print(f"🔄 Generating feedback for {domain} domain, {difficulty} difficulty")
-        
         response = feedback_client.chat.completions.create(
-            model="llama3-70b-8192",  # Using correct Groq model name
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
             messages=[
                 {"role": "system", "content": "You are an expert interview feedback assistant. Ensure your output is a single, valid JSON object matching the specified format."},
                 {"role": "user", "content":  feedback_prompt.format(
                     domain=domain,
                     difficulty=difficulty,
-                    conversation=conversation  # Updated variable name to match prompt
+                    conversation=conversation
                 )}
             ],
             temperature=0.3,
@@ -151,7 +149,6 @@ async def get_interview_feedback(session_id: str):
         )
         
         feedback = response.choices[0].message.content.strip()
-        print(f"📝 Raw feedback received (length: {len(feedback)})")
         
         # Extract JSON from response
         feedback_data = extract_json_objects(feedback)
@@ -159,8 +156,10 @@ async def get_interview_feedback(session_id: str):
         if isinstance(feedback_data, list) and len(feedback_data) > 0:
             feedback_data = feedback_data[0]
         elif not feedback_data:
-            # Fallback if JSON extraction fails
-            print("⚠️ JSON extraction failed, using fallback feedback")
+            feedback_data = {}
+        
+        # Ensure the feedback data has the correct structure for Pydantic validation
+        if not feedback_data or "feedback" not in feedback_data:
             feedback_data = {
                 "feedback": {
                     "technical_knowledge": "Good understanding demonstrated in responses",
@@ -176,8 +175,23 @@ async def get_interview_feedback(session_id: str):
                 },
                 "overall_score": 75
             }
+        else:
+            # Ensure suggestions field exists in feedback
+            if "suggestions" not in feedback_data["feedback"]:
+                feedback_data["feedback"]["suggestions"] = {
+                    "technical_knowledge": feedback_data["feedback"].get("technical_knowledge", "Continue practicing domain-specific concepts"),
+                    "communication_skills": feedback_data["feedback"].get("communication_skills", "Maintain clear and concise explanations"),
+                    "confidence": feedback_data["feedback"].get("confidence", "Keep up the confident approach"),
+                    "problem_solving": feedback_data["feedback"].get("problem_solving", "Continue breaking down complex problems")
+                }
+            
+            # Ensure overall_score exists and is an integer
+            if "overall_score" not in feedback_data or not isinstance(feedback_data["overall_score"], (int, float)):
+                feedback_data["overall_score"] = 75
+            else:
+                # Convert to int if it's a float
+                feedback_data["overall_score"] = int(feedback_data["overall_score"])
         
-        print(f"✅ Feedback generated successfully with score: {feedback_data.get('overall_score', 'N/A')}")
         return feedback_data
         
     except Exception as e:
@@ -189,8 +203,21 @@ async def get_interview_feedback(session_id: str):
 
 async def resume_based_interviewer(resume_content: str, domain: str, difficulty: str, history: str):
     try:
+        # Validate inputs
+        if not resume_content or not resume_content.strip():
+            resume_content = "No resume content provided. Please conduct a general interview based on the selected domain."
+        
+        if not domain:
+            domain = "general"
+            
+        if not difficulty:
+            difficulty = "medium"
+            
+        if not history:
+            history = ""
+        
         response = interviewer.chat.completions.create(
-            model="llama3-70b-8192",  # Using correct Groq model name
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
             messages=[
                 {"role": "system", "content": f"You are a professional {domain} interviewer. Ask natural, conversational questions based on the candidate's resume and {domain} domain expertise."},
                 {"role": "user", "content": resume_based_interviewer_prompt.format(
@@ -203,11 +230,28 @@ async def resume_based_interviewer(resume_content: str, domain: str, difficulty:
             temperature=0.7,
             max_tokens=1024
         )
-        return response.choices[0].message.content.strip()
+        
+        ai_response = response.choices[0].message.content.strip()
+        
+        # Ensure we have a valid response
+        if not ai_response:
+            ai_response = f"Thank you for your response. Let's continue with the {domain} interview. Can you tell me more about your experience in this field?"
+            
+        return ai_response
         
     except Exception as e:
         error_details = traceback.format_exc()
         print(f"Error generating resume-based interview question: {str(e)}\\n{error_details}")
         if isinstance(e, HTTPException):
             raise
-        raise HTTPException(status_code=500, detail=f"Error generating resume-based interview question: {str(e)}")
+        
+        # Provide fallback response based on domain
+        fallback_responses = {
+            "hr": "That's interesting! Can you tell me about a challenging situation you've faced in a team environment?",
+            "dataScience": "Great! Can you walk me through a data analysis project you've worked on recently?", 
+            "webdev": "Excellent! Can you describe a web application you've built and the technologies you used?",
+            "fullTechnical": "Good answer! Can you explain your approach to solving complex technical problems?"
+        }
+        
+        fallback_response = fallback_responses.get(domain, "Thank you for sharing that. Can you elaborate more on your experience?")
+        return fallback_response
