@@ -7,26 +7,40 @@ exports.updateStreak = async(req, res) =>{
     try {
         const user = await User.findById(req.user._id);
         const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+        
         const lastActivity = user.lastActivity ? new Date(user.lastActivity) : null;
         
         if(lastActivity){
+            lastActivity.setHours(0, 0, 0, 0); // Set to start of day
             const diffDays = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
-            if(diffDays === 1){
-                user.currentStreak +=1;
-            }else if(diffDays > 1){
+            
+            if(diffDays === 0){
+                // Same day, don't update streak count but update lastActivity time
+                user.lastActivity = new Date(); // Use actual current time
+            } else if(diffDays === 1){
+                // Consecutive day, increment streak
+                user.currentStreak += 1;
+                user.lastActivity = new Date();
+            } else if(diffDays > 1){
+                // Gap in days, reset streak to 1
                 user.currentStreak = 1;
+                user.lastActivity = new Date();
             }
-        }else{
+        } else {
+            // First time activity
             user.currentStreak = 1;
+            user.lastActivity = new Date();
         }
 
         user.maxStreak = Math.max(user.maxStreak, user.currentStreak);
-        user.lastActivity = today;
         await user.save();
+        
         res.status(200).json({
-            success :true,
+            success: true,
             currentStreak: user.currentStreak,
             maxStreak: user.maxStreak,
+            lastActivity: user.lastActivity,
         });
     } catch (error) {
         res.status(500).json({
