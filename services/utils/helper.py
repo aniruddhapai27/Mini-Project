@@ -102,22 +102,61 @@ def fix_multiline_json_strings(json_string: str) -> str:
 
 
 def extract_text(file):
-    """Extract text from uploaded file"""
-    if file.filename.endswith('.pdf'):
-        reader = PdfReader(file.file)
-        text = ''
-        for page in reader.pages:
-            text += page.extract_text() or ''
-        return text
-    elif file.filename.endswith('.docx'):
-        doc = Document(file.file)
-        text = ''
-        for para in doc.paragraphs:
-            text += para.text + '\n'
-        return text
-    elif file.filename.endswith('.txt'):
-        return file.file.read().decode('utf-8')
-    return ""
+    """
+    Extract text content from uploaded files (PDF, DOCX, TXT)
+    """
+    try:
+        content = file.file.read()
+        filename = file.filename.lower()
+        
+        if filename.endswith('.pdf'):
+            # Handle PDF
+            pdf_file = io.BytesIO(content)
+            reader = PdfReader(pdf_file)
+            text = ''
+            for page in reader.pages:
+                text += page.extract_text() + '\n'
+            return text.strip()
+            
+        elif filename.endswith('.docx'):
+            # Handle DOCX
+            docx_file = io.BytesIO(content)
+            doc = Document(docx_file)
+            text = ''
+            for para in doc.paragraphs:
+                text += para.text + '\n'
+            return text.strip()
+            
+        elif filename.endswith('.txt'):
+            # Handle plain text
+            try:
+                text = content.decode('utf-8')
+            except UnicodeDecodeError:
+                try:
+                    text = content.decode('latin-1')
+                except UnicodeDecodeError:
+                    text = content.decode('utf-8', errors='ignore')
+            return text.strip()
+            
+        else:
+            # Fallback: try to read as text
+            try:
+                text = content.decode('utf-8')
+                return text.strip()
+            except UnicodeDecodeError:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Unsupported file type or encoding: {filename}"
+                )
+            
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Failed to extract text from file {file.filename}: {str(e)}"
+        )
+    finally:
+        # Reset file pointer for potential future reads
+        file.file.seek(0)
 
 
 def extract_text_from_url(url: str):

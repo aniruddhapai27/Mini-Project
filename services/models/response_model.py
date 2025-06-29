@@ -22,7 +22,7 @@ class DailyQuestionsResponse(BaseModel):
 
 class InterviewResponse(BaseModel):
     ai: str
-    session: Optional[str] = None
+    session_id: Optional[str] = None
     
 class FeedbackSuggestions(BaseModel):
     technical_knowledge: str

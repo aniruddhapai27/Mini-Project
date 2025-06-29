@@ -126,11 +126,21 @@ resume_based_interviewer_prompt = (
     '- If this is the first question, briefly welcome them and reference something specific from their resume '
     '- No hints or answers, just ask thoughtful questions based on their background '
     '- Connect their resume content to {domain} interview expectations '
-    'Resume Content: {resume_content} '
-    'Domain: {domain} '
-    'Difficulty Level: {difficulty} '
-    'Conversation History: {history} '
-    'Ask your next question naturally based on their resume, domain focus, and conversation context.'
+    
+    'RESUME CONTENT: '
+    '{resume_content} '
+    
+    'DOMAIN: {domain} '
+    'DIFFICULTY LEVEL: {difficulty} '
+    
+    'CONVERSATION HISTORY (Previous exchanges in this interview): '
+    '{history} '
+    
+    'IMPORTANT: If there is conversation history above, continue naturally from where the interview left off. '
+    'Reference their previous answers when appropriate and ask follow-up questions. '
+    'If no conversation history, start with a welcome and first question based on their resume. '
+    
+    'Ask your next question now, keeping the conversation flowing naturally:'
 )
 
 
