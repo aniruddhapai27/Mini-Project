@@ -147,6 +147,7 @@ const GitHubStyleStreakCalendar = () => {
     setActivityStatus(tempActivityStatus);
   }, [dailyActivityData]); // Depend on dailyActivityData to re-run when it changes
 
+  
   // Auto-scroll to current month when streaksData changes
   useEffect(() => {
     if (streaksData.length > 0 && scrollContainerRef.current) {
