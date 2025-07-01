@@ -37,13 +37,13 @@ const Quiz = () => {
   // Local state for current question's selected option
   const [selectedOption, setSelectedOption] = useState(null);
   const [isFinishing, setIsFinishing] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
   
   // Timer state
   const [timeLeft, setTimeLeft] = useState(120); // 2 minutes = 120 seconds
   const [startTime, setStartTime] = useState(null);
   const [timePerQuestion, setTimePerQuestion] = useState([]);
   const currentQuestionStartTimeRef = useRef(null);
-  const [showTimeWarning, setShowTimeWarning] = useState(false);
 
   // Get current user answer for the current question
   const userAnswer = useSelector((state) =>
@@ -266,18 +266,6 @@ const Quiz = () => {
           return 0;
         }
         
-        // Show warning at 20 seconds
-        if (prevTime === 21) {
-          setShowTimeWarning(true);
-          setTimeout(() => setShowTimeWarning(false), 4000); // Hide after 4 seconds
-        }
-        
-        // Show final warning at 10 seconds
-        if (prevTime === 11) {
-          setShowTimeWarning(true);
-          setTimeout(() => setShowTimeWarning(false), 3000); // Hide after 3 seconds
-        }
-        
         return prevTime - 1;
       });
     }, 1000);
@@ -357,11 +345,19 @@ const Quiz = () => {
   };
 
   const handleExitQuiz = () => {
+    setShowExitModal(true);
+  };
+
+  const handleConfirmExit = () => {
     // Clear quiz cache to prevent stale data
     clearQuizCache();
     // Reset quiz state
     dispatch(resetQuiz());
     navigate("/quiz-selection");
+  };
+
+  const handleCancelExit = () => {
+    setShowExitModal(false);
   };
   if (loading) {
     return (
@@ -566,27 +562,6 @@ const Quiz = () => {
         <div className="absolute left-0 top-1/4 w-full h-px bg-gradient-to-r from-transparent via-gray-700/20 to-transparent animate-pulse" style={{ animationDelay: "2s" }}></div>
         <div className="absolute left-0 bottom-1/3 w-full h-px bg-gradient-to-r from-transparent via-gray-600/15 to-transparent animate-pulse" style={{ animationDelay: "3s" }}></div>      </div>
 
-      {/* Time Warning Modal */}
-      {showTimeWarning && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-          <div className="bg-red-500/90 backdrop-blur-xl border-2 border-red-400 rounded-2xl p-8 shadow-xl animate-bounce max-w-md mx-4">
-            <div className="text-center">
-              <svg className="w-16 h-16 text-white mx-auto mb-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <h2 className="text-2xl font-bold text-white mb-2">⚠️ Time Warning!</h2>
-              <p className="text-white/90 text-lg">
-                {timeLeft > 15 ? 'Only 20 seconds remaining!' : 'Only 10 seconds remaining!'}
-              </p>
-              <p className="text-white/80 text-sm mt-2">Quiz will auto-submit when time runs out</p>
-              <div className="mt-4 text-white font-mono text-xl animate-pulse">
-                {formatTime(timeLeft)}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Quiz Container */}
       <div className="w-full max-w-2xl mx-auto bg-gray-900/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden animate-fadeIn relative z-10 border border-white/10">
         {/* Container Inner Glow */}
@@ -751,6 +726,97 @@ const Quiz = () => {
           </div>
         </div>
       </div>
+
+      {/* Exit Confirmation Modal */}
+      {showExitModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800/90 backdrop-blur-xl border border-red-500/30 rounded-2xl p-8 max-w-md mx-4 shadow-2xl animate-fadeIn">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                Exit Quiz?
+              </h3>
+              <p className="text-gray-300 text-sm">
+                Are you sure you want to exit the quiz? Your progress will be lost and you'll need to start over.
+              </p>
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                onClick={handleCancelExit}
+                className="flex-1 py-3 px-4 border border-gray-500/30 text-white rounded-lg hover:bg-gray-700/50 transition-all duration-300"
+              >
+                Continue Quiz
+              </button>
+              <button
+                onClick={handleConfirmExit}
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-red-500/25"
+              >
+                Exit Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Custom CSS for timer animations */}
+      <style>{`
+        @keyframes timer-pulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.8;
+            transform: scale(1.05);
+          }
+        }
+        
+        @keyframes timer-critical {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+            box-shadow: 0 0 0 rgba(248, 113, 113, 0);
+          }
+          25% {
+            opacity: 0.9;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(248, 113, 113, 0.5);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.15);
+            box-shadow: 0 0 15px rgba(248, 113, 113, 0.8);
+          }
+          75% {
+            opacity: 0.9;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(248, 113, 113, 0.5);
+          }
+        }
+        
+        .animate-timer-pulse {
+          animation: timer-pulse 2s ease-in-out infinite;
+        }
+        
+        .animate-timer-critical {
+          animation: timer-critical 1s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
