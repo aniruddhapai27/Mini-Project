@@ -92,9 +92,9 @@ const MockInterviewSelection = () => {
     }
 
     try {
-      // For the new conversational interview system, we'll create a session ID and navigate directly
-      const sessionId = "new"; // Let the interview page handle session creation
-      navigate(`/mock-interview/${sessionId}`, {
+      // For the new conversational interview system, we'll navigate with "new" as sessionId
+      // The MockInterview component will create a session and update the URL
+      navigate(`/mock-interview/new`, {
         state: {
           domain: selectedDomain,
           difficulty: selectedDifficulty,
@@ -517,9 +517,9 @@ const MockInterviewSelection = () => {
             disabled={!selectedDomain || !selectedDifficulty || createLoading}
           >
             {createLoading ? (
-              <DotLottieLoader 
-                size="w-5 h-5" 
-                text="Creating Interview..." 
+              <DotLottieLoader
+                size="w-5 h-5"
+                text="Creating Interview..."
                 layout="horizontal"
                 textSize="text-sm"
                 textColor="text-white"

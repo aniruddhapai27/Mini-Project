@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setUserResponse,
@@ -33,6 +33,7 @@ const MockInterview = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const { sessionId: urlSessionId } = useParams(); // Get sessionId from URL params
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -138,6 +139,16 @@ const MockInterview = () => {
 
     setIsThinking(true);
 
+    // Check if we should use existing session ID from URL (if it's not 'new')
+    const shouldUseExistingSession = urlSessionId && urlSessionId !== "new";
+    const sessionIdToUse = shouldUseExistingSession ? urlSessionId : null;
+
+    console.log(
+      `Starting interview with ${
+        shouldUseExistingSession ? "existing" : "new"
+      } session ID: ${sessionIdToUse || "null"}`
+    );
+
     // For the first question, we don't need to add a welcome message manually
     // We'll send an initial message to the API to get the first question
     const initialMessageData = {
@@ -145,7 +156,7 @@ const MockInterview = () => {
       difficulty: sessionData.difficulty,
       userResponse:
         "Hello, I'm ready to start the interview. Please begin with your first question.",
-      sessionId: null, // No session initially
+      sessionId: sessionIdToUse, // Use existing session ID or null for a new one
     };
 
     dispatch(sendInterviewMessage(initialMessageData));
@@ -346,6 +357,24 @@ const MockInterview = () => {
       }
     }
   }, [aiResponseLoading, conversation, isThinking]);
+
+  // Update URL when sessionId changes
+  useEffect(() => {
+    // Only update the URL if we have a valid session ID that's different from the URL
+    if (
+      currentSessionId &&
+      urlSessionId !== currentSessionId &&
+      urlSessionId === "new"
+    ) {
+      // Update URL without navigating away or triggering a re-render
+      window.history.replaceState(
+        null,
+        "",
+        `/mock-interview/${currentSessionId}`
+      );
+      console.log(`Updated URL with session ID: ${currentSessionId}`);
+    }
+  }, [currentSessionId, urlSessionId]);
 
   // Clean up on unmount
   useEffect(() => {
