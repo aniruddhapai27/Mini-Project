@@ -23,6 +23,7 @@ import {
   getInterviewFeedback,
   selectFeedbackLoading,
   selectInterviewEndLoading,
+  addUserMessage,
 } from "../redux/slices/interviewSlice";
 import DotLottieLoader from "../components/DotLottieLoader";
 import { AnimatePresence, motion } from "framer-motion";
@@ -91,9 +92,12 @@ const MockInterview = () => {
   const handleSendResponse = useCallback(async () => {
     if (!userResponse.trim() || aiResponseLoading) return;
 
-    // User message will be added by the reducer
+    const userMessage = userResponse.trim();
 
-    // Reset user response input after adding to conversation
+    // Add user message to the conversation immediately
+    dispatch(addUserMessage(userMessage));
+
+    // Reset user response input
     dispatch(setUserResponse(""));
 
     // Set thinking state
@@ -101,14 +105,15 @@ const MockInterview = () => {
     setTypewriterActive(false);
     setTypewriterText("");
 
+    // Create message data for the API
     const messageData = {
       domain: sessionData.domain,
       difficulty: sessionData.difficulty,
-      userResponse: userResponse.trim(),
+      userResponse: userMessage,
       sessionId: currentSessionId,
     };
 
-    // Dispatch the message to the API
+    // Now dispatch the API call to get AI's response
     dispatch(sendInterviewMessage(messageData));
 
     // Check if we should suggest ending (after 5 exchanges)
@@ -306,9 +311,9 @@ const MockInterview = () => {
         setTimeout(() => {
           setTypewriterActive(false);
           setTypewriterMessageIndex(-1);
-        }, 500); // Keep the completed message for a short while
+        }, 800); // Keep the completed message for a moment before removing the cursor
       }
-    }, 3); // Fast typing speed
+    }, 15); // Moderate typing speed for readability
 
     return () => clearInterval(interval);
   }, [typewriterActive, typewriterText]);
@@ -319,19 +324,24 @@ const MockInterview = () => {
       // When AI finishes responding
       setIsThinking(false);
 
-      // Find the latest AI message index
-      const lastAiMessageIndex = conversation.findIndex((m) => m.type === "ai");
+      // Find the latest AI message index (search from the end of the array)
+      const lastAiMessageIndex = [...conversation]
+        .reverse()
+        .findIndex((m) => m.type === "ai" || m.type === "assistant");
 
-      if (
-        lastAiMessageIndex !== -1 &&
-        conversation[lastAiMessageIndex].message
-      ) {
-        const messageContent = conversation[lastAiMessageIndex].message;
+      // Convert to the actual index in the original array
+      const actualIndex =
+        lastAiMessageIndex !== -1
+          ? conversation.length - 1 - lastAiMessageIndex
+          : -1;
+
+      if (actualIndex !== -1 && conversation[actualIndex].message) {
+        const messageContent = conversation[actualIndex].message;
 
         // Set up typewriter effect for the latest AI message
         setTypewriterText(messageContent);
         setCurrentTypewriterText(""); // Start with empty text
-        setTypewriterMessageIndex(lastAiMessageIndex); // Track which message gets the typewriter
+        setTypewriterMessageIndex(actualIndex); // Track which message gets the typewriter
         setTypewriterActive(true);
       }
     }
@@ -593,7 +603,14 @@ const MockInterview = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{
+                      duration: 0.3,
+                      // Add a slight delay for AI messages to create a natural conversation flow
+                      delay:
+                        message.type === "ai" || message.type === "assistant"
+                          ? 0.1
+                          : 0,
+                    }}
                     className={`flex items-start space-x-4 ${
                       message.type === "user"
                         ? "flex-row-reverse space-x-reverse"
@@ -638,14 +655,23 @@ const MockInterview = () => {
                             <div className="leading-relaxed">
                               <p>
                                 {typewriterActive &&
-                                typewriterMessageIndex === index
-                                  ? currentTypewriterText
-                                  : message.message}
+                                typewriterMessageIndex === index ? (
+                                  <span className="animate-typing">
+                                    {currentTypewriterText}
+                                  </span>
+                                ) : message.message &&
+                                  typeof message.message === "string" ? (
+                                  message.message
+                                ) : typeof message.message === "object" ? (
+                                  JSON.stringify(message.message)
+                                ) : (
+                                  "No message content"
+                                )}
                                 {typewriterActive &&
                                   typewriterMessageIndex === index && (
                                     <DotLottieLoader
                                       size="w-3 h-3"
-                                      className="inline-block ml-1 align-middle"
+                                      className="inline-block ml-1 align-middle text-cyan-400"
                                     />
                                   )}
                               </p>
@@ -675,18 +701,18 @@ const MockInterview = () => {
                     transition={{ duration: 0.3 }}
                     className="flex items-start space-x-4"
                   >
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg bg-gradient-to-r from-cyan-500 to-purple-500">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg bg-gradient-to-r from-cyan-500 to-purple-500 animate-pulse">
                       🤖
                     </div>
 
                     <div className="flex-1 max-w-[70%]">
-                      <div className="p-4 rounded-2xl backdrop-blur-sm bg-gray-800/50 border border-gray-700/50">
+                      <div className="p-4 rounded-2xl backdrop-blur-sm bg-gray-800/50 border border-gray-700/50 border-l-cyan-500/50 border-l-2 typing-indicator">
                         <div className="flex items-center space-x-2">
                           <DotLottieLoader
                             size="w-6 h-6"
-                            text="AI is thinking..."
+                            text="AI is typing..."
                             textSize="text-sm"
-                            textColor="text-gray-300"
+                            textColor="text-cyan-300"
                             layout="horizontal"
                           />
                         </div>

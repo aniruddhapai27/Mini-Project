@@ -444,7 +444,17 @@ const interviewSlice = createSlice({
     },
 
     hideAchievementAnimation: (state) => {
-      state.showAchievementAnimation = null;
+      state.showAchievementAnimation = false;
+    },
+
+    // Add user message immediately (for better UX)
+    addUserMessage: (state, action) => {
+      state.conversation.push({
+        type: "user",
+        message: action.payload.message,
+        timestamp: action.payload.timestamp,
+        immediate: true,
+      });
     },
 
     // Clear errors
@@ -703,8 +713,7 @@ const interviewSlice = createSlice({
         state.aiResponseLoading = false;
         state.isWaitingForAI = false;
 
-        const { aiResponse, sessionId, userMessage, isFirstMessage } =
-          action.payload;
+        const { aiResponse, sessionId, isFirstMessage } = action.payload; // Removed unused userMessage variable
 
         // Set session ID if this is the first response
         if (sessionId && !state.currentSessionId) {
@@ -713,20 +722,18 @@ const interviewSlice = createSlice({
 
         // For first message, only add AI response (user message is generic)
         if (isFirstMessage) {
+          // Clear any existing conversation
+          state.conversation = [];
+
+          // Add initial AI response
           state.conversation.push({
             type: "ai",
             message: aiResponse,
             timestamp: new Date().toISOString(),
           });
         } else {
-          // Add user message to conversation
-          state.conversation.push({
-            type: "user",
-            message: userMessage,
-            timestamp: new Date().toISOString(),
-          });
-
-          // Add AI response to conversation
+          // Don't add the user message here since it's already added immediately by the UI
+          // We only need to add the AI response
           state.conversation.push({
             type: "ai",
             message: aiResponse,
@@ -814,6 +821,7 @@ const interviewSlice = createSlice({
         state.interviewEndError = action.payload;
         state.feedbackLoading = false;
       });
+    // We're now using the regular addUserMessage reducer instead of this custom case
   },
 });
 
