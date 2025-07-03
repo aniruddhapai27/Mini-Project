@@ -246,6 +246,23 @@ export const endInterviewWithFeedback = createAsyncThunk(
   }
 );
 
+// Fetch interview history
+export const fetchInterviewHistory = createAsyncThunk(
+  "interview/fetchHistory",
+  async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`/api/v1/interview/history`, {
+        params: { page, limit },
+      });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch interview history"
+      );
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   // Current interview session
@@ -264,6 +281,14 @@ const initialState = {
   currentQuestionIndex: 0,
   userResponse: "",
   isWaitingForAI: false,
+
+  // Interview history
+  interviewHistory: [],
+  totalPages: 0,
+  currentPage: 1,
+  totalInterviews: 0,
+  historyLoading: false,
+  historyError: null,
 
   // Gamification elements
   streakCount: 0,
@@ -818,10 +843,28 @@ const interviewSlice = createSlice({
       })
       .addCase(endInterviewWithFeedback.rejected, (state, action) => {
         state.interviewEndLoading = false;
-        state.interviewEndError = action.payload;
         state.feedbackLoading = false;
+        state.interviewEndError = action.payload?.error || action.error.message;
+        console.error("❌ Redux: End interview with feedback failed:", action);
+      })
+
+      // Fetch interview history
+      .addCase(fetchInterviewHistory.pending, (state) => {
+        state.historyLoading = true;
+        state.historyError = null;
+      })
+      .addCase(fetchInterviewHistory.fulfilled, (state, action) => {
+        state.historyLoading = false;
+        state.interviewHistory = action.payload.interviews;
+        state.totalPages = action.payload.totalPages;
+        state.currentPage = action.payload.currentPage;
+        state.totalInterviews = action.payload.totalInterviews;
+      })
+      .addCase(fetchInterviewHistory.rejected, (state, action) => {
+        state.historyLoading = false;
+        state.historyError = action.payload || action.error.message;
+        console.error("❌ Redux: Failed to fetch interview history:", action);
       });
-    // We're now using the regular addUserMessage reducer instead of this custom case
   },
 });
 
@@ -931,5 +974,15 @@ export const selectInterviewEndLoading = (state) =>
   state.interview.interviewEndLoading;
 export const selectInterviewEndError = (state) =>
   state.interview.interviewEndError;
+
+// Interview history selectors
+export const selectInterviewHistory = (state) =>
+  state.interview.interviewHistory;
+export const selectHistoryLoading = (state) => state.interview.historyLoading;
+export const selectHistoryError = (state) => state.interview.historyError;
+export const selectHistoryTotalPages = (state) => state.interview.totalPages;
+export const selectHistoryCurrentPage = (state) => state.interview.currentPage;
+export const selectHistoryTotalInterviews = (state) =>
+  state.interview.totalInterviews;
 
 export default interviewSlice.reducer;

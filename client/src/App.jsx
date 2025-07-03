@@ -15,6 +15,7 @@ import QuizResults from "./pages/QuizResults";
 import MockInterviewSelection from "./pages/MockInterviewSelection";
 import MockInterview from "./pages/MockInterview";
 import MockInterviewResults from "./pages/MockInterviewResults";
+import InterviewHistory from "./pages/InterviewHistoryNew";
 import StudyAssistant from "./pages/StudyAssistant";
 import ResumeATSPage from "./pages/ResumeATSPage";
 import { Route, Routes } from "react-router-dom";
@@ -105,6 +106,30 @@ const App = () => {
           element={
             <ProtectedRoute>
               <MockInterviewResults />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="mock-interview-results/:sessionId"
+          element={
+            <ProtectedRoute>
+              <MockInterviewResults />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="interview-history"
+          element={
+            <ProtectedRoute>
+              <InterviewHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="interview-history/:sessionId"
+          element={
+            <ProtectedRoute>
+              <InterviewHistory />
             </ProtectedRoute>
           }
         />

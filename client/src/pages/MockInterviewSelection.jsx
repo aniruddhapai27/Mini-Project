@@ -507,24 +507,53 @@ const MockInterviewSelection = () => {
             </div>
           )}
 
-          <button
-            className={`py-4 px-8 rounded-2xl text-white font-semibold text-lg transition-all duration-300 shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              selectedDomain && selectedDifficulty && !createLoading
-                ? "bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 hover:scale-105 focus:ring-gray-500"
-                : "bg-gray-600 cursor-not-allowed opacity-50"
-            }`}
-            onClick={handleStartInterview}
-            disabled={!selectedDomain || !selectedDifficulty || createLoading}
-          >
-            {createLoading ? (
-              <DotLottieLoader
-                size="w-5 h-5"
-                text="Creating Interview..."
-                layout="horizontal"
-                textSize="text-sm"
-                textColor="text-white"
-              />
-            ) : selectedDomain && selectedDifficulty ? (
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
+              className={`py-4 px-8 rounded-2xl text-white font-semibold text-lg transition-all duration-300 shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                selectedDomain && selectedDifficulty && !createLoading
+                  ? "bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 hover:scale-105 focus:ring-gray-500"
+                  : "bg-gray-600 cursor-not-allowed opacity-50"
+              }`}
+              onClick={handleStartInterview}
+              disabled={!selectedDomain || !selectedDifficulty || createLoading}
+            >
+              {createLoading ? (
+                <DotLottieLoader
+                  size="w-5 h-5"
+                  text="Creating Interview..."
+                  layout="horizontal"
+                  textSize="text-sm"
+                  textColor="text-white"
+                />
+              ) : selectedDomain && selectedDifficulty ? (
+                <div className="flex items-center">
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                  Start{" "}
+                  {selectedDomain.charAt(0).toUpperCase() +
+                    selectedDomain.slice(1)}{" "}
+                  Interview
+                </div>
+              ) : (
+                "Select Domain & Difficulty First"
+              )}
+            </button>
+
+            <button
+              onClick={() => navigate("/interview-history")}
+              className="py-3 px-6 rounded-xl text-white font-medium text-base transition-all duration-300 bg-gradient-to-r from-gray-600/80 to-gray-800/80 hover:from-gray-700 hover:to-gray-900 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-lg"
+            >
               <div className="flex items-center">
                 <svg
                   className="w-5 h-5 mr-2"
@@ -536,18 +565,13 @@ const MockInterviewSelection = () => {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                Start{" "}
-                {selectedDomain.charAt(0).toUpperCase() +
-                  selectedDomain.slice(1)}{" "}
-                Interview
+                View Interview History
               </div>
-            ) : (
-              "Select Domain & Difficulty First"
-            )}
-          </button>
+            </button>
+          </div>
         </div>{" "}
         {/* Tips Section */}
         <div className="mt-12 bg-gradient-to-r from-gray-600/10 to-gray-800/10 border border-gray-500/30 rounded-xl p-6">

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import {
@@ -8,6 +8,7 @@ import {
   selectAchievements,
   resetCurrentSession,
   getInterviewFeedback,
+  getInterviewSession,
   selectFeedbackLoading,
   selectFeedbackError,
   selectFeedback,
@@ -15,12 +16,15 @@ import {
   selectHasFeedbackForSession,
   clearFeedback,
   clearFeedbackError,
+  selectSessionLoading,
+  selectSessionError,
 } from "../redux/slices/interviewSlice";
 
 const MockInterviewResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { sessionId: urlSessionId } = useParams(); // Get sessionId from URL params
 
   // Redux selectors
   const level = useSelector(selectLevel);
@@ -30,10 +34,12 @@ const MockInterviewResults = () => {
   const feedbackLoading = useSelector(selectFeedbackLoading);
   const feedbackError = useSelector(selectFeedbackError);
   const reduxFeedback = useSelector(selectFeedback);
+  const sessionLoading = useSelector(selectSessionLoading);
+  const sessionError = useSelector(selectSessionError);
 
   // Get data from navigation state or provide defaults
   const {
-    sessionId = null,
+    sessionId: stateSessionId = null,
     conversation = [],
     domain = "hr",
     difficulty = "medium",
@@ -43,10 +49,14 @@ const MockInterviewResults = () => {
     questionCount = conversation.length,
   } = location.state || {};
 
+  // Use URL sessionId if available, otherwise use the one from state
+  const sessionId = urlSessionId || stateSessionId;
+
   // Local state for UI management
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
   const [feedbackFetched, setFeedbackFetched] = useState(false);
+  const [sessionData, setSessionData] = useState(null);
 
   // Get feedback selector for this specific session
   const sessionFeedback = useSelector(selectFeedbackForSession(sessionId));
@@ -140,12 +150,44 @@ const MockInterviewResults = () => {
     };
   }, [dispatch]);
 
+  // Fetch session data if we have a sessionId from the URL
+  useEffect(() => {
+    if (urlSessionId && !location.state) {
+      // If we have a URL sessionId but no state, fetch the session data
+      console.log("Fetching session data for ID:", urlSessionId);
+      dispatch(getInterviewSession(urlSessionId))
+        .unwrap()
+        .then((sessionData) => {
+          console.log("Fetched session data:", sessionData);
+          setSessionData(sessionData);
+
+          // Set the session data to be used by the component
+          if (sessionData) {
+            // If the session has feedback, use it
+            if (sessionData.feedBack) {
+              dispatch(clearFeedback());
+              dispatch({
+                type: "interview/setFeedbackForSession",
+                payload: {
+                  sessionId: urlSessionId,
+                  feedback: sessionData.feedBack,
+                },
+              });
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching session data:", error);
+        });
+    }
+  }, [urlSessionId, dispatch, location.state]);
+
   const handleNewInterview = () => {
     navigate("/mock-interview-selection");
   };
 
   const handleViewHistory = () => {
-    navigate("/profile");
+    navigate("/interview-history");
   };
 
   const getPerformanceIcon = (score) => {

@@ -9,7 +9,8 @@ import StreakIndicator from "./StreakIndicator";
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const { isAuthenticated, loading } = useSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activitiesDropdownOpen, setActivitiesDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -22,9 +23,9 @@ const Navbar = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -62,9 +63,14 @@ const Navbar = () => {
             >
               SkillWise-AI
             </Link>
-          </div>{/* Navigation links */}
-          <div className="flex items-center space-x-4 ml-auto">            {/* Navigation Links */}
-            <div className="hidden md:flex items-center space-x-8">              <Link
+          </div>
+          {/* Navigation links */}
+          <div className="flex items-center space-x-4 ml-auto">
+            {" "}
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center space-x-8">
+              {" "}
+              <Link
                 to="/"
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 border ${
                   isActive("/")
@@ -74,7 +80,6 @@ const Navbar = () => {
               >
                 Home
               </Link>
-
               {!isAuthenticated ? (
                 <>
                   <Link
@@ -99,7 +104,9 @@ const Navbar = () => {
                   </Link>
                 </>
               ) : (
-                <>                  <Link
+                <>
+                  {" "}
+                  <Link
                     to="/dashboard"
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 border ${
                       isActive("/dashboard")
@@ -108,28 +115,45 @@ const Navbar = () => {
                     }`}
                   >
                     Dashboard
-                  </Link>                  {/* Activities Dropdown */}
+                  </Link>{" "}
+                  {/* Activities Dropdown */}
                   <div className="relative" ref={dropdownRef}>
-                    <button                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-1 border ${
-                        isActive("/quiz-selection") || isActive("/mock-interview-selection") || isActive("/mock-interview") || isActive("/resume-ats")
+                    <button
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 flex items-center space-x-1 border ${
+                        isActive("/quiz-selection") ||
+                        isActive("/mock-interview-selection") ||
+                        isActive("/mock-interview") ||
+                        isActive("/resume-ats")
                           ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/30 shadow-lg"
                           : "text-gray-300 hover:text-cyan-400 hover:bg-cyan-500/5 border-transparent hover:border-cyan-500/20"
                       }`}
-                      onClick={() => setActivitiesDropdownOpen(!activitiesDropdownOpen)}
+                      onClick={() =>
+                        setActivitiesDropdownOpen(!activitiesDropdownOpen)
+                      }
                     >
                       <span>Activities</span>
-                      <svg 
-                        className={`w-4 h-4 transition-transform duration-200 ${activitiesDropdownOpen ? 'rotate-180' : ''}`} 
-                        fill="none" 
-                        stroke="currentColor" 
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          activitiesDropdownOpen ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
-                    </button>{/* Dropdown Menu */}
+                    </button>
+                    {/* Dropdown Menu */}
                     {activitiesDropdownOpen && (
                       <div className="absolute top-full left-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md rounded-lg shadow-xl z-50 animate-fadeIn">
-                        <div className="py-2">                          <Link
+                        <div className="py-2">
+                          {" "}
+                          <Link
                             to="/quiz-selection"
                             className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
                               isActive("/quiz-selection")
@@ -140,19 +164,33 @@ const Navbar = () => {
                           >
                             <div className="flex items-center space-x-3">
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                  />
                                 </svg>
                               </div>
                               <div>
                                 <div className="font-medium">Quiz</div>
-                                <div className="text-xs text-gray-400">Test your knowledge</div>
+                                <div className="text-xs text-gray-400">
+                                  Test your knowledge
+                                </div>
                               </div>
                             </div>
-                          </Link>                          <Link
+                          </Link>{" "}
+                          <Link
                             to="/mock-interview-selection"
                             className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
-                              isActive("/mock-interview-selection") || isActive("/mock-interview")
+                              isActive("/mock-interview-selection") ||
+                              isActive("/mock-interview")
                                 ? "text-orange-400 bg-orange-500/10"
                                 : "text-gray-300 hover:text-orange-400 hover:bg-orange-500/5"
                             }`}
@@ -160,21 +198,70 @@ const Navbar = () => {
                           >
                             <div className="flex items-center space-x-3">
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                  />
                                 </svg>
                               </div>
                               <div>
-                                <div className="font-medium">Mock Interview</div>
-                                <div className="text-xs text-gray-400">Practice interviews</div>
+                                <div className="font-medium">
+                                  Mock Interview
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  Practice interviews
+                                </div>
                               </div>
                             </div>
                           </Link>
-
+                          <Link
+                            to="/interview-history"
+                            className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                              isActive("/interview-history")
+                                ? "text-amber-400 bg-amber-500/10"
+                                : "text-gray-300 hover:text-amber-400 hover:bg-amber-500/5"
+                            }`}
+                            onClick={() => setActivitiesDropdownOpen(false)}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="font-medium">
+                                  Interview History
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  View past sessions
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
                           <Link
                             to="/study-assistant/new"
                             className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
-                              isActive("/study-assistant") || location.pathname.includes("/study-assistant")
+                              isActive("/study-assistant") ||
+                              location.pathname.includes("/study-assistant")
                                 ? "text-green-400 bg-green-500/10"
                                 : "text-gray-300 hover:text-green-400 hover:bg-green-500/5"
                             }`}
@@ -182,17 +269,30 @@ const Navbar = () => {
                           >
                             <div className="flex items-center space-x-3">
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                                  />
                                 </svg>
                               </div>
                               <div>
-                                <div className="font-medium">Study Assistant</div>
-                                <div className="text-xs text-gray-400">AI-powered learning</div>
+                                <div className="font-medium">
+                                  Study Assistant
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  AI-powered learning
+                                </div>
                               </div>
                             </div>
                           </Link>
-
                           <Link
                             to="/resume-ats"
                             className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
@@ -204,13 +304,25 @@ const Navbar = () => {
                           >
                             <div className="flex items-center space-x-3">
                               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                <svg
+                                  className="w-4 h-4 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                  />
                                 </svg>
                               </div>
                               <div>
                                 <div className="font-medium">Resume ATS</div>
-                                <div className="text-xs text-gray-400">Score & suggestions</div>
+                                <div className="text-xs text-gray-400">
+                                  Score & suggestions
+                                </div>
                               </div>
                             </div>
                           </Link>
@@ -218,10 +330,8 @@ const Navbar = () => {
                       </div>
                     )}
                   </div>
-
                   {/* Streak Indicator */}
                   <StreakIndicator />
-
                   <Link
                     to="/profile"
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 border ${
@@ -238,9 +348,9 @@ const Navbar = () => {
                     disabled={loading.logout}
                   >
                     {loading.logout ? (
-                      <DotLottieLoader 
-                        size="w-4 h-4" 
-                        text="Logging out..." 
+                      <DotLottieLoader
+                        size="w-4 h-4"
+                        text="Logging out..."
                         layout="horizontal"
                         textSize="text-sm"
                         textColor="text-red-400"
@@ -251,7 +361,8 @@ const Navbar = () => {
                   </button>
                 </>
               )}
-            </div>            {/* Mobile menu button */}
+            </div>{" "}
+            {/* Mobile menu button */}
             <div className="md:hidden">
               <button
                 className="text-white p-2 focus:outline-none focus:ring-2 focus:ring-white"
@@ -290,10 +401,13 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-      </div>      {/* Mobile Menu */}
+      </div>{" "}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-gray-800/80 backdrop-blur-md border-t border-cyan-500/20 animate-fadeIn">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">            <Link
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            {" "}
+            <Link
               to="/"
               className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                 isActive("/")
@@ -304,9 +418,10 @@ const Navbar = () => {
             >
               Home
             </Link>
-
             {!isAuthenticated ? (
-              <>                <Link
+              <>
+                {" "}
+                <Link
                   to="/login"
                   className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                     isActive("/login")
@@ -331,7 +446,8 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                {" "}                <Link
+                {" "}
+                <Link
                   to="/dashboard"
                   className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                     isActive("/dashboard")
@@ -341,7 +457,8 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Dashboard
-                </Link>                {/* Activities Section for Mobile */}
+                </Link>{" "}
+                {/* Activities Section for Mobile */}
                 <div className="px-3 py-2">
                   <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">
                     Activities
@@ -358,18 +475,29 @@ const Navbar = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                           </svg>
                         </div>
                         <span>Quiz</span>
                       </div>
                     </Link>
-                    
+
                     <Link
                       to="/mock-interview-selection"
                       className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
-                        isActive("/mock-interview-selection") || isActive("/mock-interview")
+                        isActive("/mock-interview-selection") ||
+                        isActive("/mock-interview")
                           ? "text-orange-400 bg-orange-500/10 border-orange-500/30"
                           : "text-gray-300 hover:text-orange-400 hover:bg-orange-500/5 border-transparent hover:border-orange-500/20"
                       }`}
@@ -377,8 +505,18 @@ const Navbar = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-6 h-6 rounded bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                            />
                           </svg>
                         </div>
                         <span>Mock Interview</span>
@@ -386,9 +524,39 @@ const Navbar = () => {
                     </Link>
 
                     <Link
+                      to="/interview-history"
+                      className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
+                        isActive("/interview-history")
+                          ? "text-amber-400 bg-amber-500/10 border-amber-500/30"
+                          : "text-gray-300 hover:text-amber-400 hover:bg-amber-500/5 border-transparent hover:border-amber-500/20"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 rounded bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <span>Interview History</span>
+                      </div>
+                    </Link>
+
+                    <Link
                       to="/study-assistant/new"
                       className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
-                        isActive("/study-assistant") || location.pathname.includes("/study-assistant")
+                        isActive("/study-assistant") ||
+                        location.pathname.includes("/study-assistant")
                           ? "text-green-400 bg-green-500/10 border-green-500/30"
                           : "text-gray-300 hover:text-green-400 hover:bg-green-500/5 border-transparent hover:border-green-500/20"
                       }`}
@@ -396,8 +564,18 @@ const Navbar = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-6 h-6 rounded bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                            />
                           </svg>
                         </div>
                         <span>Study Assistant</span>
@@ -415,8 +593,18 @@ const Navbar = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="w-6 h-6 rounded bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          <svg
+                            className="w-3 h-3 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                            />
                           </svg>
                         </div>
                         <span>Resume ATS</span>
@@ -428,7 +616,7 @@ const Navbar = () => {
                   to="/profile"
                   className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
                     isActive("/profile")
-                      ? "text-white bg-white/10 border-white/30" 
+                      ? "text-white bg-white/10 border-white/30"
                       : "text-gray-300 hover:text-white hover:bg-white/5 border-transparent hover:border-white/20"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
@@ -441,9 +629,9 @@ const Navbar = () => {
                   disabled={loading.logout}
                 >
                   {loading.logout ? (
-                    <DotLottieLoader 
-                      size="w-4 h-4" 
-                      text="Logging out..." 
+                    <DotLottieLoader
+                      size="w-4 h-4"
+                      text="Logging out..."
                       layout="horizontal"
                       textSize="text-sm"
                       textColor="text-red-400"
@@ -457,7 +645,6 @@ const Navbar = () => {
           </div>
         </div>
       )}
-
       {/* Neon glow effect */}
       <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
     </nav>
