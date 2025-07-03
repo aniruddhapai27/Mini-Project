@@ -35,6 +35,17 @@ const App = () => {
   }
   return (
     <Routes>
+      {/* Direct route for MockInterview - outside the AuthLayout */}
+      <Route
+        path="mock-interview/:sessionId"
+        element={
+          <ProtectedRoute>
+            <MockInterview />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* All other routes using AuthLayout */}
       <Route path="/" element={<AuthLayout />}>
         <Route index element={<Home />} />
         <Route path="login" element={<Login />} />
@@ -90,13 +101,6 @@ const App = () => {
           }
         />
         <Route
-          path="mock-interview/:sessionId"
-          element={
-            <ProtectedRoute>
-              <MockInterview />
-            </ProtectedRoute>
-          }
-        />        <Route
           path="mock-interview-results"
           element={
             <ProtectedRoute>
@@ -111,7 +115,8 @@ const App = () => {
               <StudyAssistant />
             </ProtectedRoute>
           }
-        />        <Route
+        />{" "}
+        <Route
           path="resume-ats"
           element={
             <ProtectedRoute>

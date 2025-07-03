@@ -61,8 +61,8 @@ const MockInterview = () => {
   // Local state
   const [showEndModal, setShowEndModal] = useState(false);
   const [typewriterActive, setTypewriterActive] = useState(false);
-  const [typewriterText, setTypewriterText] = useState('');
-  const [currentTypewriterText, setCurrentTypewriterText] = useState('');
+  const [typewriterText, setTypewriterText] = useState("");
+  const [currentTypewriterText, setCurrentTypewriterText] = useState("");
   const [typewriterMessageIndex, setTypewriterMessageIndex] = useState(-1);
   const [isThinking, setIsThinking] = useState(false);
 
@@ -92,15 +92,15 @@ const MockInterview = () => {
     if (!userResponse.trim() || aiResponseLoading) return;
 
     // User message will be added by the reducer
-    
+
     // Reset user response input after adding to conversation
-    dispatch(setUserResponse(''));
-    
+    dispatch(setUserResponse(""));
+
     // Set thinking state
     setIsThinking(true);
     setTypewriterActive(false);
-    setTypewriterText('');
-    
+    setTypewriterText("");
+
     const messageData = {
       domain: sessionData.domain,
       difficulty: sessionData.difficulty,
@@ -130,9 +130,9 @@ const MockInterview = () => {
   // Handle starting the interview
   const handleStartInterview = async () => {
     dispatch(startInterview());
-    
+
     setIsThinking(true);
-    
+
     // For the first question, we don't need to add a welcome message manually
     // We'll send an initial message to the API to get the first question
     const initialMessageData = {
@@ -142,7 +142,7 @@ const MockInterview = () => {
         "Hello, I'm ready to start the interview. Please begin with your first question.",
       sessionId: null, // No session initially
     };
-    
+
     dispatch(sendInterviewMessage(initialMessageData));
   };
 
@@ -256,9 +256,13 @@ const MockInterview = () => {
   // Scroll to bottom of messages
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
     } else if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   };
 
@@ -290,12 +294,12 @@ const MockInterview = () => {
   // Typewriter effect for last assistant message
   useEffect(() => {
     if (!typewriterActive || !typewriterText) return;
-    
+
     let i = 0;
     const interval = setInterval(() => {
       // Update the displayed text with one more character
       setCurrentTypewriterText(typewriterText.slice(0, i + 1));
-      
+
       i++;
       if (i >= typewriterText.length) {
         clearInterval(interval);
@@ -304,9 +308,8 @@ const MockInterview = () => {
           setTypewriterMessageIndex(-1);
         }, 500); // Keep the completed message for a short while
       }
-      
     }, 3); // Fast typing speed
-    
+
     return () => clearInterval(interval);
   }, [typewriterActive, typewriterText]);
 
@@ -315,16 +318,19 @@ const MockInterview = () => {
     if (!aiResponseLoading && isThinking) {
       // When AI finishes responding
       setIsThinking(false);
-      
+
       // Find the latest AI message index
-      const lastAiMessageIndex = conversation.findIndex(m => m.type === 'ai');
-      
-      if (lastAiMessageIndex !== -1 && conversation[lastAiMessageIndex].message) {
+      const lastAiMessageIndex = conversation.findIndex((m) => m.type === "ai");
+
+      if (
+        lastAiMessageIndex !== -1 &&
+        conversation[lastAiMessageIndex].message
+      ) {
         const messageContent = conversation[lastAiMessageIndex].message;
-        
+
         // Set up typewriter effect for the latest AI message
         setTypewriterText(messageContent);
-        setCurrentTypewriterText(''); // Start with empty text
+        setCurrentTypewriterText(""); // Start with empty text
         setTypewriterMessageIndex(lastAiMessageIndex); // Track which message gets the typewriter
         setTypewriterActive(true);
       }
@@ -403,31 +409,44 @@ const MockInterview = () => {
   }, [showAchievementAnimation, dispatch]);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-black flex relative overflow-hidden pt-0"
+      className="h-screen bg-black flex flex-col relative overflow-hidden pt-0"
     >
       {/* Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="interview-grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="cyan" strokeWidth="1"/>
+              <pattern
+                id="interview-grid"
+                width="50"
+                height="50"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 50 0 L 0 0 0 50"
+                  fill="none"
+                  stroke="cyan"
+                  strokeWidth="1"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#interview-grid)" />
           </svg>
         </div>
-        
+
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col relative z-0">
+      <div className="flex-1 flex flex-col relative z-0 h-full overflow-hidden">
         {/* Chat Header */}
         <div className="bg-gray-900/50 backdrop-blur-xl border-b border-gray-700/50 p-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -436,11 +455,17 @@ const MockInterview = () => {
                 {getDomainIcon(sessionData.domain)}
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">{formatDomainName(sessionData.domain)} Interview</h1>
+                <h1 className="text-xl font-bold text-white">
+                  {formatDomainName(sessionData.domain)} Interview
+                </h1>
                 <p className="text-sm text-gray-400">
-                  <span className="capitalize">{sessionData.difficulty} Level</span>
+                  <span className="capitalize">
+                    {sessionData.difficulty} Level
+                  </span>
                   {conversation.length > 0 && (
-                    <span className="ml-2">• Question {Math.floor(conversation.length / 2) + 1}</span>
+                    <span className="ml-2">
+                      • Question {Math.floor(conversation.length / 2) + 1}
+                    </span>
                   )}
                 </p>
               </div>
@@ -479,8 +504,9 @@ const MockInterview = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 overflow-y-auto p-6 space-y-4"
+            className="flex-1 overflow-y-auto p-6 space-y-4 pb-4"
             ref={chatContainerRef}
+            style={{ height: "calc(100vh - 136px)" }}
           >
             {!interviewStarted ? (
               /* Interview Introduction */
@@ -490,7 +516,8 @@ const MockInterview = () => {
                     {getDomainIcon(sessionData.domain)}
                   </div>
                   <h2 className="text-3xl font-bold text-white mb-6">
-                    Welcome to <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+                    Welcome to{" "}
+                    <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
                       AI Interview System
                     </span>
                   </h2>
@@ -509,25 +536,37 @@ const MockInterview = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                     <div className="bg-gray-800/30 rounded-lg p-5 text-center">
                       <div className="text-2xl mb-3 animate-bounce">🎯</div>
-                      <h4 className="font-semibold text-white mb-2">Be Specific</h4>
+                      <h4 className="font-semibold text-white mb-2">
+                        Be Specific
+                      </h4>
                       <p className="text-sm text-gray-400">
                         Provide detailed answers with concrete examples
                       </p>
                     </div>
                     <div className="bg-gray-800/30 rounded-lg p-5 text-center">
-                      <div className="text-2xl mb-3 animate-bounce" style={{ animationDelay: "0.2s" }}>
+                      <div
+                        className="text-2xl mb-3 animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      >
                         💭
                       </div>
-                      <h4 className="font-semibold text-white mb-2">Think Aloud</h4>
+                      <h4 className="font-semibold text-white mb-2">
+                        Think Aloud
+                      </h4>
                       <p className="text-sm text-gray-400">
                         Share your thought process and reasoning
                       </p>
                     </div>
                     <div className="bg-gray-800/30 rounded-lg p-5 text-center">
-                      <div className="text-2xl mb-3 animate-bounce" style={{ animationDelay: "0.4s" }}>
+                      <div
+                        className="text-2xl mb-3 animate-bounce"
+                        style={{ animationDelay: "0.4s" }}
+                      >
                         ⌨️
                       </div>
-                      <h4 className="font-semibold text-white mb-2">Quick Send</h4>
+                      <h4 className="font-semibold text-white mb-2">
+                        Quick Send
+                      </h4>
                       <p className="text-sm text-gray-400">
                         Press Enter to send responses quickly
                       </p>
@@ -556,27 +595,39 @@ const MockInterview = () => {
                     exit={{ opacity: 0, y: 10 }}
                     transition={{ duration: 0.3 }}
                     className={`flex items-start space-x-4 ${
-                      message.type === "user" ? "flex-row-reverse space-x-reverse" : ""
+                      message.type === "user"
+                        ? "flex-row-reverse space-x-reverse"
+                        : ""
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
-                      message.type === "ai" || message.type === "assistant"
-                        ? "bg-gradient-to-r from-cyan-500 to-purple-500" 
-                        : "bg-gradient-to-r from-purple-500 to-pink-500"
-                    }`}>
-                      {message.type === "ai" || message.type === "assistant" ? "🤖" : "👤"}
-                    </div>
-                    
-                    <div className={`flex-1 max-w-[70%] ${message.type === "user" ? "text-right" : "text-left"}`}>
-                      <div className={`p-4 rounded-2xl backdrop-blur-sm ${
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
                         message.type === "ai" || message.type === "assistant"
-                          ? "bg-gray-800/50 border border-gray-700/50 text-white"
-                          : "bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white"
-                      }`}>
+                          ? "bg-gradient-to-r from-cyan-500 to-purple-500"
+                          : "bg-gradient-to-r from-purple-500 to-pink-500"
+                      }`}
+                    >
+                      {message.type === "ai" || message.type === "assistant"
+                        ? "🤖"
+                        : "👤"}
+                    </div>
+
+                    <div
+                      className={`flex-1 max-w-[70%] ${
+                        message.type === "user" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      <div
+                        className={`p-4 rounded-2xl backdrop-blur-sm ${
+                          message.type === "ai" || message.type === "assistant"
+                            ? "bg-gray-800/50 border border-gray-700/50 text-white"
+                            : "bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white"
+                        }`}
+                      >
                         <ErrorBoundary fallbackMessage="Error rendering message">
                           {message.isThinking ? (
                             <div className="flex items-center justify-center py-2">
-                              <DotLottieLoader 
+                              <DotLottieLoader
                                 size="w-8 h-8"
                                 text="Assistant is thinking..."
                                 textSize="text-sm"
@@ -586,28 +637,34 @@ const MockInterview = () => {
                           ) : (
                             <div className="leading-relaxed">
                               <p>
-                                {typewriterActive && typewriterMessageIndex === index 
-                                  ? currentTypewriterText 
+                                {typewriterActive &&
+                                typewriterMessageIndex === index
+                                  ? currentTypewriterText
                                   : message.message}
-                                {typewriterActive && typewriterMessageIndex === index && (
-                                  <DotLottieLoader size="w-3 h-3" className="inline-block ml-1 align-middle" />
-                                )}
+                                {typewriterActive &&
+                                  typewriterMessageIndex === index && (
+                                    <DotLottieLoader
+                                      size="w-3 h-3"
+                                      className="inline-block ml-1 align-middle"
+                                    />
+                                  )}
                               </p>
                             </div>
                           )}
                         </ErrorBoundary>
                       </div>
                       <p className="text-xs text-gray-500 mt-1.5">
-                        {message.timestamp ? (
-                          typeof message.timestamp === 'object' && message.timestamp instanceof Date 
-                            ? message.timestamp.toLocaleTimeString() 
+                        {message.timestamp
+                          ? typeof message.timestamp === "object" &&
+                            message.timestamp instanceof Date
+                            ? message.timestamp.toLocaleTimeString()
                             : new Date(message.timestamp).toLocaleTimeString()
-                        ) : new Date().toLocaleTimeString()}
+                          : new Date().toLocaleTimeString()}
                       </p>
                     </div>
                   </motion.div>
                 ))}
-                
+
                 {/* AI Typing Indicator */}
                 {aiResponseLoading && (
                   <motion.div
@@ -621,11 +678,11 @@ const MockInterview = () => {
                     <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg bg-gradient-to-r from-cyan-500 to-purple-500">
                       🤖
                     </div>
-                    
+
                     <div className="flex-1 max-w-[70%]">
                       <div className="p-4 rounded-2xl backdrop-blur-sm bg-gray-800/50 border border-gray-700/50">
                         <div className="flex items-center space-x-2">
-                          <DotLottieLoader 
+                          <DotLottieLoader
                             size="w-6 h-6"
                             text="AI is thinking..."
                             textSize="text-sm"
@@ -645,7 +702,7 @@ const MockInterview = () => {
 
         {/* Input Area */}
         {interviewStarted && (
-          <div className="p-4 bg-gray-900/50 backdrop-blur-xl border-t border-gray-700/50">
+          <div className="p-4 bg-gray-900/50 backdrop-blur-xl border-t border-gray-700/50 sticky bottom-0 left-0 right-0 z-10">
             <div className="relative">
               <textarea
                 ref={textareaRef}
@@ -666,20 +723,37 @@ const MockInterview = () => {
                 {aiResponseLoading ? (
                   <DotLottieLoader size="w-5 h-5" />
                 ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 12h14M12 5l7 7-7 7"
+                    />
                   </svg>
                 )}
               </button>
             </div>
             <div className="flex justify-center mt-2 text-xs text-gray-400">
-              Press <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-600 rounded mx-1">Enter</kbd> to send,
-              <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-600 rounded mx-1">Shift+Enter</kbd> for new line
+              Press{" "}
+              <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-600 rounded mx-1">
+                Enter
+              </kbd>{" "}
+              to send,
+              <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-600 rounded mx-1">
+                Shift+Enter
+              </kbd>{" "}
+              for new line
             </div>
           </div>
         )}
       </div>
-      
+
       {/* End Interview Modal */}
       {showEndModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
@@ -743,12 +817,12 @@ const MockInterview = () => {
           </div>
         </div>
       )}
-      
+
       {/* Animations */}
       {showStreakAnimation && <StreakAnimation />}
       {showLevelUpAnimation && <LevelUpAnimation />}
       {showAchievementAnimation && <AchievementAnimation />}
-      
+
       {/* Custom CSS for animations and scrollbar */}
       <style>{`
         @keyframes fadeIn {
