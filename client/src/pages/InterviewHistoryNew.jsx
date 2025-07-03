@@ -30,6 +30,7 @@ const InterviewHistory = () => {
   const [selectedInterview, setSelectedInterview] = useState(null);
   const [conversation, setConversation] = useState([]);
   const [feedback, setFeedback] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Redux selectors
   const interviews = useSelector(selectInterviewHistory);
@@ -188,7 +189,7 @@ const InterviewHistory = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-black flex relative overflow-hidden pt-0"
+      className="min-h-screen bg-black flex relative pt-0"
     >
       {/* Background */}
       <div className="absolute inset-0">
@@ -220,15 +221,53 @@ const InterviewHistory = () => {
         ></div>
       </div>
 
-      {/* Sidebar - Interview History List */}
+      {/* Mobile Sidebar Toggle */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed top-20 left-0 z-30 p-3 bg-primary text-white rounded-r-lg md:hidden shadow-lg"
+        aria-label="Toggle sidebar"
+      >
+        {isSidebarOpen ? (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+            />
+          </svg>
+        ) : (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 5l7 7-7 7M5 5l7 7-7 7"
+            />
+          </svg>
+        )}
+      </button>
+
+      {/* Sidebar - Interview History List (Fixed) */}
       <AnimatePresence>
-        <motion.div
-          initial={{ x: 0 }}
-          animate={{ x: 0 }}
-          exit={{ x: "-100%" }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="w-80 bg-gray-900/50 backdrop-blur-xl border-r border-gray-700/50 overflow-hidden relative z-10 flex flex-col"
-        >
+        {isSidebarOpen && (
+          <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="w-80 bg-gray-900/50 backdrop-blur-xl border-r border-gray-700/50 fixed top-16 bottom-0 left-0 z-20 flex flex-col h-[calc(100vh-4rem)]"
+          >
           {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-700/50">
             <div className="flex items-center justify-between mb-4">
@@ -393,12 +432,13 @@ const InterviewHistory = () => {
             )}
           </div>
         </motion.div>
+        )}
       </AnimatePresence>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-800 backdrop-blur-sm bg-gray-900/50 flex items-center justify-between">
+      {/* Main Content - with conditional left margin to accommodate fixed sidebar */}
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'md:ml-80' : 'ml-0'}`}>
+        {/* Header - Fixed */}
+        <div className="p-4 border-b border-gray-800 backdrop-blur-sm bg-gray-900/50 flex items-center justify-between sticky top-16 z-10">
           {activeSessionId && selectedInterview ? (
             <div className="flex items-center space-x-3">
               <div
@@ -435,8 +475,8 @@ const InterviewHistory = () => {
           </div>
         </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Content Area - Scrollable */}
+        <div className="flex-1 overflow-y-auto pb-16">
           {!activeSessionId ? (
             <div className="h-full flex items-center justify-center p-8">
               <div className="text-center max-w-md">
