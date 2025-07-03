@@ -311,9 +311,9 @@ const MockInterview = () => {
         setTimeout(() => {
           setTypewriterActive(false);
           setTypewriterMessageIndex(-1);
-        }, 800); // Keep the completed message for a moment before removing the cursor
+        }, 500); // Keep the completed message for a moment before removing the cursor
       }
-    }, 15); // Moderate typing speed for readability
+    }, 5); // Fast typing speed
 
     return () => clearInterval(interval);
   }, [typewriterActive, typewriterText]);
