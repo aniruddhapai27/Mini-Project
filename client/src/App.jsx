@@ -15,7 +15,7 @@ import QuizResults from "./pages/QuizResults";
 import MockInterviewSelection from "./pages/MockInterviewSelection";
 import MockInterview from "./pages/MockInterview";
 import MockInterviewResults from "./pages/MockInterviewResults";
-import InterviewHistory from "./pages/InterviewHistoryNew";
+import InterviewHistory from "./pages/InterviewHistory";
 import StudyAssistant from "./pages/StudyAssistant";
 import ResumeATSPage from "./pages/ResumeATSPage";
 import { Route, Routes } from "react-router-dom";
