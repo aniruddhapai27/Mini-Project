@@ -253,6 +253,7 @@ const InterviewHistory = () => {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
+          style={{ maxHeight: "80vh" }}
         >
           {feedback ? (
             <div className="space-y-4">
@@ -813,7 +814,7 @@ const InterviewHistory = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="h-screen bg-black flex relative overflow-hidden"
+      className="h-full  bg-black flex relative overflow-hidden"
     >
       {/* Background */}
       <div className="absolute inset-0">
