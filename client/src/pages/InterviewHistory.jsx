@@ -26,6 +26,8 @@ const InterviewHistory = () => {
   const [conversation, setConversation] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState("chat"); // New tab state
+  const [sessionLoading, setSessionLoading] = useState(false); // Loading state for session data
 
   // Redux selectors
   const interviews = useSelector(selectInterviewHistory);
@@ -42,6 +44,7 @@ const InterviewHistory = () => {
   useEffect(() => {
     const fetchSessionData = async (id) => {
       try {
+        setSessionLoading(true);
         setActiveSessionId(id);
 
         // Fetch session data
@@ -57,20 +60,29 @@ const InterviewHistory = () => {
           setConversation(formattedConversation);
         }
 
-        // Fetch feedback if available
-        if (sessionResult) {
-          const feedbackResult = await dispatch(
-            getInterviewFeedback(id)
-          ).unwrap();
-          if (feedbackResult && feedbackResult.feedback) {
-            setFeedback(feedbackResult.feedback);
-          } else if (sessionResult.feedBack) {
-            setFeedback(sessionResult.feedBack);
+        // Fetch feedback if available - prioritize feedBack from session data
+        if (sessionResult && sessionResult.feedBack) {
+          // Use feedback directly from the interview schema
+          setFeedback(sessionResult.feedBack);
+        } else {
+          // Fallback to API call if not in schema
+          try {
+            const feedbackResult = await dispatch(
+              getInterviewFeedback(id)
+            ).unwrap();
+            if (feedbackResult && feedbackResult.feedback) {
+              setFeedback(feedbackResult.feedback);
+            }
+          } catch {
+            console.log("No feedback available from API");
           }
         }
+
+        setSessionLoading(false);
       } catch (error) {
         console.error("Error fetching session data:", error);
         toast.error("Failed to load interview session");
+        setSessionLoading(false);
       }
     };
 
@@ -109,13 +121,56 @@ const InterviewHistory = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const renderContent = () => {
-    if (!selectedInterview) return null;
+  const renderTabContent = () => {
+    if (sessionLoading && activeSessionId) {
+      return (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mb-4"></div>
+            <p className="text-gray-400">Loading session data...</p>
+          </div>
+        </div>
+      );
+    }
 
-    return (
-      <>
-        {/* Conversation Section */}
-        <div className="space-y-6">
+    if (!selectedInterview) {
+      return (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-300 mb-2">
+              Select an Interview
+            </h3>
+            <p className="text-gray-400 text-sm">
+              Choose an interview session from the sidebar to view its details.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab === "chat") {
+      return (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-6"
+        >
           <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
             Interview Conversation
           </h2>
@@ -162,40 +217,224 @@ const InterviewHistory = () => {
                 </div>
               ))
             ) : (
-              <p className="text-gray-400 text-center py-4">
-                No conversation data available
-              </p>
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg
+                    className="w-8 h-8 text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-300 mb-2">
+                  No Conversation Data
+                </h3>
+                <p className="text-gray-400 text-sm">
+                  No conversation data is available for this interview session.
+                </p>
+              </div>
             )}
             <div ref={messagesEndRef} />
           </div>
-        </div>
+        </motion.div>
+      );
+    }
 
-        {/* Feedback Section */}
-        {feedback && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
-              Interview Feedback
-            </h2>
+    if (activeTab === "feedback") {
+      return (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {feedback ? (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
+                Interview Feedback & Analysis
+              </h2>
 
-            <div className="bg-gradient-to-r from-gray-800/60 to-gray-900/60 border border-gray-700/50 rounded-lg p-6">
-              <div className="space-y-4">
-                {typeof feedback === "object" ? (
-                  <>
-                    {feedback.overallFeedback && (
-                      <div>
-                        <h3 className="text-lg font-medium text-white mb-2">
-                          Overall Feedback
-                        </h3>
-                        <div className="prose prose-invert prose-sm max-w-none bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-                          <ReactMarkdown>
-                            {feedback.overallFeedback}
-                          </ReactMarkdown>
+              <div className="bg-gradient-to-r from-gray-800/60 to-gray-900/60 border border-gray-700/50 rounded-lg p-6">
+                <div className="space-y-6">
+                  {typeof feedback === "object" ? (
+                    <>
+                      {/* Overall Score Display */}
+                      {feedback.overall_score && (
+                        <div className="text-center">
+                          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full text-white text-2xl font-bold">
+                            {feedback.overall_score}
+                          </div>
+                          <p className="text-gray-300 mt-2">Overall Score</p>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {feedback.strengthPoints &&
-                      feedback.strengthPoints.length > 0 && (
+                      {/* Technical Knowledge */}
+                      {feedback.feedback?.technical_knowledge && (
+                        <div>
+                          <h3 className="text-lg font-medium text-white mb-2 flex items-center">
+                            <svg
+                              className="w-5 h-5 mr-2 text-blue-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            Technical Knowledge
+                          </h3>
+                          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                            <p className="text-gray-300">
+                              {feedback.feedback.technical_knowledge}
+                            </p>
+                            {feedback.feedback.suggestions
+                              ?.technical_knowledge && (
+                              <div className="mt-3 p-3 bg-blue-500/10 border-l-4 border-blue-500 rounded">
+                                <p className="text-blue-300 text-sm font-medium">
+                                  Improvement Suggestion:
+                                </p>
+                                <p className="text-gray-300 text-sm mt-1">
+                                  {
+                                    feedback.feedback.suggestions
+                                      .technical_knowledge
+                                  }
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Communication Skills */}
+                      {feedback.feedback?.communication_skills && (
+                        <div>
+                          <h3 className="text-lg font-medium text-white mb-2 flex items-center">
+                            <svg
+                              className="w-5 h-5 mr-2 text-green-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                              />
+                            </svg>
+                            Communication Skills
+                          </h3>
+                          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                            <p className="text-gray-300">
+                              {feedback.feedback.communication_skills}
+                            </p>
+                            {feedback.feedback.suggestions
+                              ?.communication_skills && (
+                              <div className="mt-3 p-3 bg-green-500/10 border-l-4 border-green-500 rounded">
+                                <p className="text-green-300 text-sm font-medium">
+                                  Improvement Suggestion:
+                                </p>
+                                <p className="text-gray-300 text-sm mt-1">
+                                  {
+                                    feedback.feedback.suggestions
+                                      .communication_skills
+                                  }
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Confidence */}
+                      {feedback.feedback?.confidence && (
+                        <div>
+                          <h3 className="text-lg font-medium text-white mb-2 flex items-center">
+                            <svg
+                              className="w-5 h-5 mr-2 text-purple-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                              />
+                            </svg>
+                            Confidence Level
+                          </h3>
+                          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                            <p className="text-gray-300">
+                              {feedback.feedback.confidence}
+                            </p>
+                            {feedback.feedback.suggestions?.confidence && (
+                              <div className="mt-3 p-3 bg-purple-500/10 border-l-4 border-purple-500 rounded">
+                                <p className="text-purple-300 text-sm font-medium">
+                                  Improvement Suggestion:
+                                </p>
+                                <p className="text-gray-300 text-sm mt-1">
+                                  {feedback.feedback.suggestions.confidence}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Problem Solving */}
+                      {feedback.feedback?.problem_solving && (
+                        <div>
+                          <h3 className="text-lg font-medium text-white mb-2 flex items-center">
+                            <svg
+                              className="w-5 h-5 mr-2 text-orange-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"
+                              />
+                            </svg>
+                            Problem Solving
+                          </h3>
+                          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                            <p className="text-gray-300">
+                              {feedback.feedback.problem_solving}
+                            </p>
+                            {feedback.feedback.suggestions?.problem_solving && (
+                              <div className="mt-3 p-3 bg-orange-500/10 border-l-4 border-orange-500 rounded">
+                                <p className="text-orange-300 text-sm font-medium">
+                                  Improvement Suggestion:
+                                </p>
+                                <p className="text-gray-300 text-sm mt-1">
+                                  {
+                                    feedback.feedback.suggestions
+                                      .problem_solving
+                                  }
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Strengths */}
+                      {feedback.strengths && feedback.strengths.length > 0 && (
                         <div>
                           <h3 className="text-lg font-medium text-cyan-400 mb-2 flex items-center">
                             <svg
@@ -211,22 +450,54 @@ const InterviewHistory = () => {
                                 d="M5 13l4 4L19 7"
                               />
                             </svg>
-                            Strengths
+                            Key Strengths
                           </h3>
-                          <ul className="list-disc list-inside space-y-2 pl-4">
-                            {feedback.strengthPoints.map((point, idx) => (
-                              <li key={idx} className="text-white">
-                                {point}
+                          <ul className="list-disc list-inside space-y-2 pl-4 bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                            {feedback.strengths.map((strength, idx) => (
+                              <li key={idx} className="text-gray-300">
+                                {strength}
                               </li>
                             ))}
                           </ul>
                         </div>
                       )}
 
-                    {feedback.improvementPoints &&
-                      feedback.improvementPoints.length > 0 && (
+                      {/* Areas for Improvement */}
+                      {feedback.areas_for_improvement &&
+                        feedback.areas_for_improvement.length > 0 && (
+                          <div>
+                            <h3 className="text-lg font-medium text-rose-400 mb-2 flex items-center">
+                              <svg
+                                className="w-5 h-5 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
+                              </svg>
+                              Areas for Improvement
+                            </h3>
+                            <ul className="list-disc list-inside space-y-2 pl-4 bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                              {feedback.areas_for_improvement.map(
+                                (area, idx) => (
+                                  <li key={idx} className="text-gray-300">
+                                    {area}
+                                  </li>
+                                )
+                              )}
+                            </ul>
+                          </div>
+                        )}
+
+                      {/* Domain-Specific Insights */}
+                      {feedback.domain_specific_insights && (
                         <div>
-                          <h3 className="text-lg font-medium text-rose-400 mb-2 flex items-center">
+                          <h3 className="text-lg font-medium text-amber-400 mb-2 flex items-center">
                             <svg
                               className="w-5 h-5 mr-2"
                               fill="none"
@@ -237,58 +508,250 @@ const InterviewHistory = () => {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                               />
                             </svg>
-                            Areas for Improvement
+                            Domain-Specific Insights
                           </h3>
-                          <ul className="list-disc list-inside space-y-2 pl-4">
-                            {feedback.improvementPoints.map((point, idx) => (
-                              <li key={idx} className="text-white">
-                                {point}
-                              </li>
-                            ))}
-                          </ul>
+                          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                            <p className="text-gray-300">
+                              {feedback.domain_specific_insights}
+                            </p>
+                          </div>
                         </div>
                       )}
 
-                    {feedback.tipsSuggestions && (
-                      <div>
-                        <h3 className="text-lg font-medium text-amber-400 mb-2 flex items-center">
-                          <svg
-                            className="w-5 h-5 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                            />
-                          </svg>
-                          Tips & Suggestions
-                        </h3>
-                        <div className="prose prose-invert prose-sm max-w-none bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-                          <ReactMarkdown>
-                            {feedback.tipsSuggestions}
-                          </ReactMarkdown>
+                      {/* Recommended Next Steps */}
+                      {feedback.recommended_next_steps &&
+                        feedback.recommended_next_steps.length > 0 && (
+                          <div>
+                            <h3 className="text-lg font-medium text-indigo-400 mb-2 flex items-center">
+                              <svg
+                                className="w-5 h-5 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                                />
+                              </svg>
+                              Recommended Next Steps
+                            </h3>
+                            <ol className="list-decimal list-inside space-y-2 pl-4 bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                              {feedback.recommended_next_steps.map(
+                                (step, idx) => (
+                                  <li key={idx} className="text-gray-300">
+                                    {step}
+                                  </li>
+                                )
+                              )}
+                            </ol>
+                          </div>
+                        )}
+
+                      {/* Interview Metrics */}
+                      {(feedback.questions_answered ||
+                        feedback.interview_duration_minutes ||
+                        feedback.confidence_level) && (
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-400 mb-2 flex items-center">
+                            <svg
+                              className="w-5 h-5 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                              />
+                            </svg>
+                            Interview Metrics
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {feedback.questions_answered && (
+                              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 text-center">
+                                <div className="text-2xl font-bold text-cyan-400">
+                                  {feedback.questions_answered}
+                                </div>
+                                <div className="text-gray-400 text-sm">
+                                  Questions Answered
+                                </div>
+                              </div>
+                            )}
+                            {feedback.interview_duration_minutes && (
+                              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 text-center">
+                                <div className="text-2xl font-bold text-green-400">
+                                  {feedback.interview_duration_minutes}
+                                </div>
+                                <div className="text-gray-400 text-sm">
+                                  Minutes
+                                </div>
+                              </div>
+                            )}
+                            {feedback.confidence_level && (
+                              <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50 text-center">
+                                <div className="text-2xl font-bold text-purple-400 capitalize">
+                                  {feedback.confidence_level}
+                                </div>
+                                <div className="text-gray-400 text-sm">
+                                  Confidence Level
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="prose prose-invert prose-sm max-w-none bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
-                    <ReactMarkdown>{feedback}</ReactMarkdown>
-                  </div>
-                )}
+                      )}
+
+                      {/* Legacy feedback support */}
+                      {feedback.overallFeedback && (
+                        <div>
+                          <h3 className="text-lg font-medium text-white mb-2">
+                            Overall Feedback
+                          </h3>
+                          <div className="prose prose-invert prose-sm max-w-none bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                            <ReactMarkdown>
+                              {feedback.overallFeedback}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
+
+                      {feedback.strengthPoints &&
+                        feedback.strengthPoints.length > 0 && (
+                          <div>
+                            <h3 className="text-lg font-medium text-cyan-400 mb-2 flex items-center">
+                              <svg
+                                className="w-5 h-5 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              Strengths
+                            </h3>
+                            <ul className="list-disc list-inside space-y-2 pl-4">
+                              {feedback.strengthPoints.map((point, idx) => (
+                                <li key={idx} className="text-white">
+                                  {point}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                      {feedback.improvementPoints &&
+                        feedback.improvementPoints.length > 0 && (
+                          <div>
+                            <h3 className="text-lg font-medium text-rose-400 mb-2 flex items-center">
+                              <svg
+                                className="w-5 h-5 mr-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
+                              </svg>
+                              Areas for Improvement
+                            </h3>
+                            <ul className="list-disc list-inside space-y-2 pl-4">
+                              {feedback.improvementPoints.map((point, idx) => (
+                                <li key={idx} className="text-white">
+                                  {point}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                      {feedback.tipsSuggestions && (
+                        <div>
+                          <h3 className="text-lg font-medium text-amber-400 mb-2 flex items-center">
+                            <svg
+                              className="w-5 h-5 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                              />
+                            </svg>
+                            Tips & Suggestions
+                          </h3>
+                          <div className="prose prose-invert prose-sm max-w-none bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                            <ReactMarkdown>
+                              {feedback.tipsSuggestions}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="prose prose-invert prose-sm max-w-none bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                      <ReactMarkdown>{feedback}</ReactMarkdown>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </>
-    );
+          ) : (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-white border-b border-gray-700 pb-2">
+                Interview Feedback & Analysis
+              </h2>
+              <div className="bg-gradient-to-r from-gray-800/60 to-gray-900/60 border border-gray-700/50 rounded-lg p-6 text-center">
+                <div className="text-gray-400 mb-4">
+                  <svg
+                    className="w-16 h-16 mx-auto mb-4 opacity-50"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-300 mb-2">
+                  No Feedback Available
+                </h3>
+                <p className="text-gray-400 text-sm">
+                  Feedback has not been generated for this interview session
+                  yet. Complete the interview to receive comprehensive feedback
+                  and analysis.
+                </p>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      );
+    }
+
+    return null;
   };
 
   // Map domain to display name and icon
@@ -523,15 +986,31 @@ const InterviewHistory = () => {
                               {domainInfo.icon}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-white text-sm font-medium truncate">
-                                {domainInfo.name}
-                              </p>
+                              <div className="flex items-center justify-between">
+                                <p className="text-white text-sm font-medium truncate">
+                                  {domainInfo.name}
+                                </p>
+                                {interview.feedBack && (
+                                  <span
+                                    className="flex-shrink-0 w-2 h-2 bg-cyan-400 rounded-full ml-2"
+                                    title="Feedback Available"
+                                  ></span>
+                                )}
+                              </div>
                               <div className="flex items-center text-gray-400 text-xs">
                                 <span>{formatDate(interview.createdAt)}</span>
                                 <span className="mx-1">•</span>
                                 <span className="capitalize">
                                   {interview.difficulty}
                                 </span>
+                                {interview.QnA && (
+                                  <>
+                                    <span className="mx-1">•</span>
+                                    <span>
+                                      {interview.QnA.length} questions
+                                    </span>
+                                  </>
+                                )}
                               </div>
                             </div>
                             <div
@@ -640,7 +1119,7 @@ const InterviewHistory = () => {
       <div
         className={`fixed transition-all duration-300 ${
           isSidebarOpen ? "md:left-80" : "left-0"
-        } right-0 top-32 bottom-0 overflow-hidden`}
+        } right-0 top-32 bottom-0 overflow-hidden flex flex-col`}
       >
         {!activeSessionId ? (
           <div className="h-full flex items-center justify-center p-8">
@@ -669,9 +1148,78 @@ const InterviewHistory = () => {
             </div>
           </div>
         ) : (
-          <div className="h-full overflow-y-auto custom-scrollbar">
-            <div className="p-6 space-y-8">{renderContent()}</div>
-          </div>
+          <>
+            {/* Fixed Tab Navigation */}
+            <div className="flex-shrink-0 p-6 pb-0">
+              <div className="border-b border-gray-700">
+                <nav className="-mb-px flex space-x-8">
+                  <button
+                    onClick={() => setActiveTab("chat")}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                      activeTab === "chat"
+                        ? "border-cyan-500 text-cyan-400"
+                        : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"
+                        />
+                      </svg>
+                      <span>Interview Chat</span>
+                      {conversation.length > 0 && (
+                        <span className="bg-gray-600 text-xs px-2 py-0.5 rounded-full">
+                          {Math.floor(conversation.length / 2)}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("feedback")}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                      activeTab === "feedback"
+                        ? "border-purple-500 text-purple-400"
+                        : "border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      <span>Feedback & Analysis</span>
+                      {feedback && (
+                        <span className="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                      )}
+                    </div>
+                  </button>
+                </nav>
+              </div>
+            </div>
+
+            {/* Scrollable Tab Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-6 pt-6">{renderTabContent()}</div>
+            </div>
+          </>
         )}
       </div>
     </motion.div>

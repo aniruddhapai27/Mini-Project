@@ -3,13 +3,11 @@
 /* Prevent page-level scrolling */
 html,
 body {
-  overflow: hidden;
   height: 100%;
 }
 
 #root {
   height: 100vh;
-  overflow: hidden;
 }
 
 /* Hide scrollbars for calendar */
