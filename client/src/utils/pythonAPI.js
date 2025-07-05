@@ -1,8 +1,9 @@
-const axios = require("axios");
+import axios from "axios";
 
-// Create API instance for Python service
-const pythonAPI = axios.create({
-  baseURL: process.env.PYTHON_SERVICE_URL || "http://localhost:8000",
+// Create API instance for Python service via Node.js proxy
+export const pythonAPI = axios.create({
+  baseURL: import.meta.env.VITE_APP_BACKEND_URL || "http://localhost:5000",
+  withCredentials: true, // Include cookies for authentication
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",
@@ -19,5 +20,3 @@ pythonAPI.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
-module.exports = pythonAPI;

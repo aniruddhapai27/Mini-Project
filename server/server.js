@@ -59,16 +59,27 @@ app.get("/", (req, res) => {
 app.use(
   "/api/v1/services",
   createProxyMiddleware({
-    target: "http://localhost:8000",
+    target: "https://my-project.tech/services",
     changeOrigin: true,
     pathRewrite: {
-      "^/api/v1/services": "/",
+      "^/api/v1/services": "",
+    },
+    onProxyReq: (proxyReq, req, res) => {
+      console.log("🔄 Proxying request to:", proxyReq.path);
+      console.log(
+        "🔄 Target URL:",
+        `https://my-project.tech/services${proxyReq.path}`
+      );
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      console.log("✅ Proxy response status:", proxyRes.statusCode);
     },
     onError: (err, req, res) => {
-      console.log("Python API proxy error:", err.message);
+      console.log("❌ Python API proxy error:", err.message);
       res.status(503).json({
         success: false,
         message: "Python API service unavailable",
+        error: err.message,
       });
     },
   })

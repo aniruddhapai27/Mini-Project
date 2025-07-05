@@ -26,6 +26,7 @@ import {
   addUserMessage,
 } from "../redux/slices/interviewSlice";
 import DotLottieLoader from "../components/DotLottieLoader";
+import TextToSpeechPlayer from "../components/TextToSpeechPlayer";
 import { AnimatePresence, motion } from "framer-motion";
 import ErrorBoundary from "../components/ErrorBoundary";
 
@@ -682,7 +683,7 @@ const MockInterview = () => {
                             </div>
                           ) : (
                             <div className="leading-relaxed">
-                              <p>
+                              <div>
                                 {typewriterActive &&
                                 typewriterMessageIndex === index ? (
                                   <span className="animate-typing">
@@ -703,7 +704,26 @@ const MockInterview = () => {
                                       className="inline-block ml-1 align-middle text-cyan-400"
                                     />
                                   )}
-                              </p>
+                              </div>
+
+                              {/* Text-to-Speech Player for AI messages */}
+                              {(message.type === "ai" ||
+                                message.type === "assistant") &&
+                                message.message &&
+                                typeof message.message === "string" &&
+                                !message.isThinking && (
+                                  <div className="mt-3 pt-2 border-t border-gray-700/50">
+                                    <TextToSpeechPlayer
+                                      text={message.message}
+                                      autoPlay={false}
+                                      showControls={true}
+                                      className="justify-start"
+                                      onError={(error) =>
+                                        console.error("TTS Error:", error)
+                                      }
+                                    />
+                                  </div>
+                                )}
                             </div>
                           )}
                         </ErrorBoundary>
