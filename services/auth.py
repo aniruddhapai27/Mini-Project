@@ -1,7 +1,7 @@
 import jwt
 import os
 from fastapi import HTTPException, Request, status, Depends
-from fastapi.security import APIKeyCookie
+from fastapi.security import APIKeyCookie, HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from database.db_config import get_database
 from bson import ObjectId
@@ -14,10 +14,15 @@ SECRET_KEY = os.getenv("JWT_SECRET", "this_is_the_JWT_secret_123_mini")
 ALGORITHM = "HS256"
 COOKIE_NAME = "jwt"
 
-# Swagger support for cookie authentication
+# Security schemes for Swagger UI
 api_key_cookie = APIKeyCookie(name=COOKIE_NAME, auto_error=False)
+bearer_scheme = HTTPBearer(auto_error=False)
 
-async def get_current_user(token: str = Depends(api_key_cookie), request: Request = None) -> Optional[dict]:
+async def get_current_user(
+    token: str = Depends(api_key_cookie), 
+    bearer_token: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    request: Request = None
+) -> Optional[dict]:
     """
     Extract and validate JWT token from cookies or Authorization header.
     Compatible with Node.js Express backend authentication.
@@ -31,8 +36,14 @@ async def get_current_user(token: str = Depends(api_key_cookie), request: Reques
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    # If no token from cookie, try Authorization header as fallback
-    if token is None and request:
+    # Try different token sources in order of preference:
+    # 1. Bearer token (for Swagger UI)
+    # 2. Cookie token (for web app)  
+    # 3. Authorization header (fallback)
+    
+    if bearer_token and bearer_token.credentials:
+        token = bearer_token.credentials
+    elif token is None and request:
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
