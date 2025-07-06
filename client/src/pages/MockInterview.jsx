@@ -28,6 +28,11 @@ import {
 import DotLottieLoader from "../components/DotLottieLoader";
 import { AnimatePresence, motion } from "framer-motion";
 import ErrorBoundary from "../components/ErrorBoundary";
+import {
+  playTextToSpeech,
+  stopAudio,
+  isTextToSpeechSupported,
+} from "../utils/textToSpeech";
 
 const MockInterview = () => {
   const navigate = useNavigate();
@@ -68,6 +73,13 @@ const MockInterview = () => {
   const [typewriterMessageIndex, setTypewriterMessageIndex] = useState(-1);
   const [isThinking, setIsThinking] = useState(false);
 
+  // Text-to-speech state
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState(null);
+  const [playingMessageIndex, setPlayingMessageIndex] = useState(-1);
+  const [ttsSupported, setTtsSupported] = useState(false);
+  const [autoPlayTTS, setAutoPlayTTS] = useState(true); // Auto-play enabled by default
+
   // Domain formatting helpers
   const getDomainIcon = (domain) => {
     const icons = {
@@ -88,6 +100,108 @@ const MockInterview = () => {
     };
     return names[domain] || domain;
   };
+
+  // Text-to-speech functions
+  const handlePlayTextToSpeech = useCallback(
+    async (text, messageIndex) => {
+      try {
+        // Stop any currently playing audio
+        if (currentAudio) {
+          stopAudio(currentAudio);
+          setCurrentAudio(null);
+          setPlayingMessageIndex(-1);
+          setIsPlayingAudio(false);
+        }
+
+        setIsPlayingAudio(true);
+        setPlayingMessageIndex(messageIndex);
+
+        const audio = await playTextToSpeech(
+          text,
+          "Aaliyah-PlayAI", // Default voice
+          () => {
+            // On start
+            console.log("Audio started playing");
+          },
+          () => {
+            // On end
+            setIsPlayingAudio(false);
+            setPlayingMessageIndex(-1);
+            setCurrentAudio(null);
+          },
+          (error) => {
+            // On error
+            console.error("Audio playback error:", error);
+            setIsPlayingAudio(false);
+            setPlayingMessageIndex(-1);
+            setCurrentAudio(null);
+          }
+        );
+
+        setCurrentAudio(audio);
+      } catch (error) {
+        console.error("Failed to play text-to-speech:", error);
+        setIsPlayingAudio(false);
+        setPlayingMessageIndex(-1);
+        setCurrentAudio(null);
+      }
+    },
+    [currentAudio]
+  );
+
+  const handleStopTextToSpeech = useCallback(() => {
+    if (currentAudio) {
+      stopAudio(currentAudio);
+      setCurrentAudio(null);
+      setPlayingMessageIndex(-1);
+      setIsPlayingAudio(false);
+    }
+  }, [currentAudio]);
+
+  // Check TTS support on component mount
+  useEffect(() => {
+    setTtsSupported(isTextToSpeechSupported());
+  }, []);
+
+  // Auto-play TTS for new AI messages (optional feature)
+  useEffect(() => {
+    if (conversation.length > 0 && ttsSupported && autoPlayTTS) {
+      const lastMessage = conversation[conversation.length - 1];
+
+      // Auto-play only if it's an AI message and not already playing audio
+      if (
+        (lastMessage.type === "ai" || lastMessage.type === "assistant") &&
+        lastMessage.message &&
+        typeof lastMessage.message === "string" &&
+        !lastMessage.isThinking &&
+        !isPlayingAudio &&
+        !typewriterActive // Don't auto-play during typewriter effect
+      ) {
+        // Optional: Add a small delay before auto-playing
+        const autoPlayTimer = setTimeout(() => {
+          handlePlayTextToSpeech(lastMessage.message, conversation.length - 1);
+        }, 1000); // 1 second delay
+
+        return () => clearTimeout(autoPlayTimer);
+      }
+    }
+  }, [
+    conversation,
+    ttsSupported,
+    autoPlayTTS,
+    isPlayingAudio,
+    typewriterActive,
+    handlePlayTextToSpeech,
+  ]);
+
+  // Clean up audio when component unmounts
+  useEffect(() => {
+    return () => {
+      if (currentAudio) {
+        stopAudio(currentAudio);
+      }
+    };
+  }, [currentAudio]);
 
   // Handle sending user response
   const handleSendResponse = useCallback(async () => {
@@ -512,6 +626,33 @@ const MockInterview = () => {
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Text-to-Speech Toggle */}
+            {ttsSupported && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-400">Auto-Play:</span>
+                <button
+                  onClick={() => setAutoPlayTTS(!autoPlayTTS)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
+                    autoPlayTTS ? "bg-cyan-500" : "bg-gray-600"
+                  }`}
+                  title={
+                    autoPlayTTS
+                      ? "Disable auto-play TTS"
+                      : "Enable auto-play TTS"
+                  }
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+                      autoPlayTTS ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+                <span className="text-xs text-gray-500">
+                  {autoPlayTTS ? "🔊" : "🔇"}
+                </span>
+              </div>
+            )}
+
             {interviewStarted && (
               <div className="text-center">
                 <div className="text-sm text-gray-400">Progress</div>
@@ -704,6 +845,64 @@ const MockInterview = () => {
                                     />
                                   )}
                               </p>
+
+                              {/* Text-to-Speech Button for AI Messages */}
+                              {(message.type === "ai" ||
+                                message.type === "assistant") &&
+                                ttsSupported &&
+                                message.message &&
+                                typeof message.message === "string" &&
+                                !message.isThinking && (
+                                  <div className="mt-3 flex items-center space-x-2">
+                                    {playingMessageIndex === index ? (
+                                      <button
+                                        onClick={handleStopTextToSpeech}
+                                        className="flex items-center space-x-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 text-sm transition-all duration-300"
+                                        title="Stop audio"
+                                      >
+                                        <svg
+                                          className="w-4 h-4"
+                                          fill="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <rect
+                                            x="6"
+                                            y="4"
+                                            width="4"
+                                            height="16"
+                                          />
+                                          <rect
+                                            x="14"
+                                            y="4"
+                                            width="4"
+                                            height="16"
+                                          />
+                                        </svg>
+                                        <span>Stop</span>
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() =>
+                                          handlePlayTextToSpeech(
+                                            message.message,
+                                            index
+                                          )
+                                        }
+                                        className="flex items-center space-x-2 px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-cyan-300 text-sm transition-all duration-300"
+                                        title="Play audio"
+                                      >
+                                        <svg
+                                          className="w-4 h-4"
+                                          fill="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path d="M8 5v14l11-7z" />
+                                        </svg>
+                                        <span>🔊 Listen</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
                             </div>
                           )}
                         </ErrorBoundary>

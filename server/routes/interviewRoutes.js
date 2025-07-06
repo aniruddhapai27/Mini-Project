@@ -12,6 +12,7 @@ const {
   createResumeBasedInterview,
   continueResumeBasedInterview,
   continueInterviewSession,
+  textToSpeech,
 } = require("../controllers/interviewController");
 const { isLogin } = require("../middlewares/isLogin");
 
@@ -19,6 +20,9 @@ const router = express.Router();
 
 // Protect all routes - user must be logged in
 router.use(isLogin);
+
+// Text-to-speech route
+router.post("/text-to-speech", textToSpeech);
 
 // Interview session routes - Resume-based interviews use stored user resume
 router.post("/sessions", createResumeBasedInterview);

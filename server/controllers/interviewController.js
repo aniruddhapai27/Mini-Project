@@ -346,7 +346,9 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
       );
 
       aiResponse = response.data.ai;
-      pythonSessionId = response.data.session_id || `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      pythonSessionId =
+        response.data.session_id ||
+        `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     } catch (pythonError) {
       console.log(
         "Python service unavailable, using fallback:",
@@ -370,8 +372,8 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
       pythonSessionId = `fallback_${Date.now()}_${Math.random()
         .toString(36)
         .substr(2, 9)}`;
-    } 
-    
+    }
+
     // Create interview session in MongoDB with initial AI response
     const newInterview = new Interview({
       user: userId,
@@ -442,10 +444,12 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
   // Ensure we have a valid Python session ID
   if (!interview.sessionId) {
     console.log("⚠️ No Python session ID found, generating fallback");
-    interview.sessionId = `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    interview.sessionId = `fallback_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
     await interview.save();
   }
-  
+
   try {
     let aiResponse;
 
@@ -487,7 +491,9 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
         }
       );
 
-      aiResponse = response.data?.ai || "Thank you for your response. Can you tell me more about that?";
+      aiResponse =
+        response.data?.ai ||
+        "Thank you for your response. Can you tell me more about that?";
     } catch (pythonError) {
       console.log("Python service unavailable, using fallback responses");
 
@@ -535,8 +541,8 @@ exports.continueResumeBasedInterview = catchAsync(async (req, res) => {
         domainResponses[interview.domain] || domainResponses.fullTechnical;
       const responseIndex = interview.QnA.length % responses.length;
       aiResponse = responses[responseIndex];
-    } 
-    
+    }
+
     // Update interview session with new Q&A
     // Only add non-greeting messages to the conversation history
     const isGreeting =
@@ -656,9 +662,13 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
         }
       );
 
-      aiResponse = response.data?.ai || "Thank you for your response. Can you tell me more about that?";
+      aiResponse =
+        response.data?.ai ||
+        "Thank you for your response. Can you tell me more about that?";
     } catch (pythonError) {
-      console.log("Python service unavailable for continuation, using fallback");
+      console.log(
+        "Python service unavailable for continuation, using fallback"
+      );
 
       // Fallback responses when Python service is unavailable
       const fallbackResponses = [
@@ -675,8 +685,8 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
       ]; // Use a different response based on conversation length
       const responseIndex = interview.QnA.length % fallbackResponses.length;
       aiResponse = fallbackResponses[responseIndex];
-    } 
-    
+    }
+
     // Update interview session with new Q&A
     // Only add non-greeting messages to the conversation history
     const isGreeting =
@@ -854,6 +864,82 @@ exports.getInterviewFeedback = catchAsync(async (req, res) => {
       message: "Failed to generate AI feedback, providing fallback response",
       data: fallbackFeedback,
       error: error.response?.data?.detail || error.message,
+    });
+  }
+});
+
+// Text-to-speech functionality
+exports.textToSpeech = catchAsync(async (req, res) => {
+  const { text, voice = "Aaliyah-PlayAI" } = req.body;
+
+  if (!text) {
+    return res.status(400).json({
+      success: false,
+      message: "Text is required for text-to-speech conversion",
+    });
+  }
+
+  try {
+    // Get the auth token from cookies
+    const token = req.cookies.jwt;
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication token not found",
+      });
+    }
+
+    // Call the Python API with the token in cookies
+    const response = await axios.post(
+      "https://my-project.tech/services/api/v1/interview/text-to-speech",
+      {
+        text: text,
+        voice: voice,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `jwt=${token}`,
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+        maxRedirects: 5,
+        responseType: "arraybuffer", // Important for audio data
+        timeout: 30000, // 30 second timeout
+      }
+    );
+
+    // Set appropriate headers for audio response
+    res.set({
+      "Content-Type": "audio/mpeg",
+      "Content-Length": response.data.length,
+      "Cache-Control": "no-cache",
+      "Accept-Ranges": "bytes",
+    });
+
+    // Send the audio data back to the client
+    res.status(200).send(response.data);
+  } catch (error) {
+    console.error("Text-to-speech error:", error);
+
+    if (error.response) {
+      return res.status(error.response.status).json({
+        success: false,
+        message: error.response.data?.detail || "Failed to generate speech",
+      });
+    }
+
+    if (error.code === "ECONNABORTED") {
+      return res.status(408).json({
+        success: false,
+        message: "Request timeout while generating speech",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while generating speech",
     });
   }
 });
