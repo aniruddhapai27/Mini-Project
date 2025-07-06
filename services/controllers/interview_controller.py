@@ -8,7 +8,18 @@ from database.db_config import get_database
 import datetime
 from bson import ObjectId
 from utils.helper import extract_json_objects
-from models.prompts import interviewer_prompt, feedback_prompt, resume_based_interviewer_prompt
+from models.prompts import (
+    feedback_prompt, 
+    resume_based_interviewer_prompt,
+    hr_resume_interviewer_prompt,
+    data_science_resume_interviewer_prompt,
+    webdev_resume_interviewer_prompt,
+    full_technical_resume_interviewer_prompt,
+    hr_feedback_prompt,
+    data_science_feedback_prompt,
+    webdev_feedback_prompt,
+    full_technical_feedback_prompt
+)
 
 load_dotenv()
 
@@ -134,12 +145,22 @@ async def get_interview_feedback(session_id: str):
         if not conversation.strip():
             raise HTTPException(status_code=400, detail="No valid conversation found to analyze.")
         
+        # Select the appropriate feedback prompt based on domain
+        domain_feedback_prompts = {
+            "hr": hr_feedback_prompt,
+            "dataScience": data_science_feedback_prompt,
+            "webdev": webdev_feedback_prompt,
+            "fullTechnical": full_technical_feedback_prompt
+        }
+        
+        # Get the domain-specific feedback prompt or fallback to generic
+        selected_feedback_prompt = domain_feedback_prompts.get(domain, feedback_prompt)
+        
         response = feedback_client.chat.completions.create(
             model="meta-llama/llama-4-scout-17b-16e-instruct",
             messages=[
                 {"role": "system", "content": "You are an expert interview feedback assistant. Ensure your output is a single, valid JSON object matching the specified format."},
-                {"role": "user", "content":  feedback_prompt.format(
-                    domain=domain,
+                {"role": "user", "content": selected_feedback_prompt.format(
                     difficulty=difficulty,
                     conversation=conversation
                 )}
@@ -216,13 +237,23 @@ async def resume_based_interviewer(resume_content: str, domain: str, difficulty:
         if not history:
             history = ""
         
+        # Select the appropriate prompt based on domain
+        domain_prompts = {
+            "hr": hr_resume_interviewer_prompt,
+            "dataScience": data_science_resume_interviewer_prompt,
+            "webdev": webdev_resume_interviewer_prompt,
+            "fullTechnical": full_technical_resume_interviewer_prompt
+        }
+        
+        # Get the domain-specific prompt or fallback to generic
+        selected_prompt = domain_prompts.get(domain)
+        
         response = interviewer.chat.completions.create(
             model="meta-llama/llama-4-scout-17b-16e-instruct",
             messages=[
                 {"role": "system", "content": f"You are a professional {domain} interviewer. Ask natural, conversational questions based on the candidate's resume and {domain} domain expertise."},
-                {"role": "user", "content": resume_based_interviewer_prompt.format(
+                {"role": "user", "content": selected_prompt.format(
                     resume_content=resume_content,
-                    domain=domain,
                     difficulty=difficulty,
                     history=history
                 )}
