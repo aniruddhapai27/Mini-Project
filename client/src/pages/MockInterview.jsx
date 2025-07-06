@@ -26,6 +26,7 @@ import {
   addUserMessage,
 } from "../redux/slices/interviewSlice";
 import DotLottieLoader from "../components/DotLottieLoader";
+import VoiceRecorder from "../components/VoiceRecorder";
 import { AnimatePresence, motion } from "framer-motion";
 import ErrorBoundary from "../components/ErrorBoundary";
 import {
@@ -246,6 +247,32 @@ const MockInterview = () => {
     conversation,
     dispatch,
   ]);
+
+  // Handle voice transcript
+  const handleVoiceTranscript = useCallback((transcriptText) => {
+    if (transcriptText && transcriptText.trim()) {
+      // Set the transcribed text in the input field
+      dispatch(setUserResponse(transcriptText.trim()));
+      
+      // Focus the textarea so user can see the text and edit if needed
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        // Place cursor at the end of the text
+        setTimeout(() => {
+          const textarea = textareaRef.current;
+          if (textarea) {
+            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+          }
+        }, 0);
+      }
+    }
+  }, [dispatch]);
+
+  // Handle voice recording error
+  const handleVoiceError = useCallback((error) => {
+    console.error("Voice recording error:", error);
+    // You could add a toast notification here if needed
+  }, []);
 
   // Handle starting the interview
   const handleStartInterview = async () => {
@@ -963,12 +990,25 @@ const MockInterview = () => {
                 value={userResponse}
                 onChange={(e) => dispatch(setUserResponse(e.target.value))}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your response here..."
-                className="w-full p-4 pr-16 bg-gray-800/70 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
+                placeholder="Type your response here or use voice recording..."
+                className="w-full p-4 pr-24 bg-gray-800/70 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
                 rows={1}
                 style={{ minHeight: "52px" }}
                 disabled={aiResponseLoading}
               />
+              
+              {/* Voice Recorder Button */}
+              <div className="absolute right-14 top-1/2 -translate-y-1/2">
+                <VoiceRecorder
+                  onTranscript={handleVoiceTranscript}
+                  onError={handleVoiceError}
+                  disabled={aiResponseLoading}
+                  size="w-8 h-8"
+                  className="bg-gray-600 hover:bg-gray-700"
+                />
+              </div>
+
+              {/* Send Button */}
               <button
                 onClick={handleSendResponse}
                 disabled={!userResponse.trim() || aiResponseLoading}
@@ -1002,7 +1042,13 @@ const MockInterview = () => {
               <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-600 rounded mx-1">
                 Shift+Enter
               </kbd>{" "}
-              for new line
+              for new line, or use{" "}
+              <span className="inline-flex items-center mx-1">
+                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                </svg>
+                voice
+              </span>
             </div>
           </div>
         )}

@@ -943,3 +943,91 @@ exports.textToSpeech = catchAsync(async (req, res) => {
     });
   }
 });
+
+// Voice-to-text functionality
+exports.voiceToText = catchAsync(async (req, res) => {
+  console.log("📝 Voice-to-text request received");
+
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "Audio file is required for voice-to-text conversion",
+    });
+  }
+
+  try {
+    // Get the auth token from cookies
+    const token = req.cookies.jwt;
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication token not found",
+      });
+    }
+
+    // Create FormData to send to Python service
+    const FormData = require("form-data");
+    const formData = new FormData();
+
+    // Add the audio file to form data
+    formData.append("file", req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+    });
+
+    console.log("🔊 Sending audio file to Python transcript service:", {
+      filename: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+    });
+
+    // Call the Python API with the token in cookies
+    const response = await axios.post(
+      "https://my-project.tech/services/api/v1/interview/transcript",
+      formData,
+      {
+        headers: {
+          ...formData.getHeaders(),
+          Cookie: `jwt=${token}`,
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+        maxRedirects: 5,
+        timeout: 30000, // 30 second timeout
+      }
+    );
+
+    console.log("✅ Voice-to-text conversion successful");
+
+    // Return the transcribed text
+    res.status(200).json({
+      success: true,
+      data: {
+        text: response.data.text,
+      },
+    });
+  } catch (error) {
+    console.error("Voice-to-text error:", error);
+
+    if (error.response) {
+      return res.status(error.response.status).json({
+        success: false,
+        message:
+          error.response.data?.detail || "Failed to convert voice to text",
+      });
+    }
+
+    if (error.code === "ECONNABORTED") {
+      return res.status(408).json({
+        success: false,
+        message: "Request timeout while converting voice to text",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while converting voice to text",
+    });
+  }
+});

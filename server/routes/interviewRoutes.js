@@ -1,4 +1,5 @@
 const express = require("express");
+const multer = require("multer");
 const {
   getInterviewSession,
   getUserInterviewHistory,
@@ -13,13 +14,33 @@ const {
   continueResumeBasedInterview,
   continueInterviewSession,
   textToSpeech,
+  voiceToText,
 } = require("../controllers/interviewController");
 const { isLogin } = require("../middlewares/isLogin");
+
+// Configure multer for audio file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept audio files
+    if (file.mimetype.startsWith("audio/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only audio files are allowed!"), false);
+    }
+  },
+});
 
 const router = express.Router();
 
 // Protect all routes - user must be logged in
 router.use(isLogin);
+
+// Voice-to-text route
+router.post("/voice-to-text", upload.single("audio"), voiceToText);
 
 // Text-to-speech route
 router.post("/text-to-speech", textToSpeech);
