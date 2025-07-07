@@ -126,7 +126,6 @@ export const studyAssistantApi = {
   // Get paginated session history
   getPaginatedHistory: async (page = 1, limit = 10) => {
     try {
-      console.log("Getting paginated history:", { page, limit });
       const response = await api.get("/api/v1/assistant/paginated-history", {
         params: { page, limit },
       });
