@@ -378,8 +378,9 @@ const StudyAssistant = () => {
 
   // Format date helper function
   const formatSessionDate = (session) => {
-    // Check all possible date fields in the session object, prioritizing lastActivity
+    // Use the date field sent from backend, with fallback to other fields
     const date =
+      session.date ||
       session.lastActivity ||
       session.updatedAt ||
       session.createdAt ||
