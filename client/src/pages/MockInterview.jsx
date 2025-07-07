@@ -79,7 +79,6 @@ const MockInterview = () => {
   const [currentAudio, setCurrentAudio] = useState(null);
   const [playingMessageIndex, setPlayingMessageIndex] = useState(-1);
   const [ttsSupported, setTtsSupported] = useState(false);
-  const [autoPlayTTS, setAutoPlayTTS] = useState(true); // Auto-play enabled by default
 
   // Domain formatting helpers
   const getDomainIcon = (domain) => {
@@ -164,36 +163,7 @@ const MockInterview = () => {
     setTtsSupported(isTextToSpeechSupported());
   }, []);
 
-  // Auto-play TTS for new AI messages (optional feature)
-  useEffect(() => {
-    if (conversation.length > 0 && ttsSupported && autoPlayTTS) {
-      const lastMessage = conversation[conversation.length - 1];
-
-      // Auto-play only if it's an AI message and not already playing audio
-      if (
-        (lastMessage.type === "ai" || lastMessage.type === "assistant") &&
-        lastMessage.message &&
-        typeof lastMessage.message === "string" &&
-        !lastMessage.isThinking &&
-        !isPlayingAudio &&
-        !typewriterActive // Don't auto-play during typewriter effect
-      ) {
-        // Optional: Add a small delay before auto-playing
-        const autoPlayTimer = setTimeout(() => {
-          handlePlayTextToSpeech(lastMessage.message, conversation.length - 1);
-        }, 1000); // 1 second delay
-
-        return () => clearTimeout(autoPlayTimer);
-      }
-    }
-  }, [
-    conversation,
-    ttsSupported,
-    autoPlayTTS,
-    isPlayingAudio,
-    typewriterActive,
-    handlePlayTextToSpeech,
-  ]);
+  // Auto-play TTS functionality removed
 
   // Clean up audio when component unmounts
   useEffect(() => {
@@ -249,24 +219,30 @@ const MockInterview = () => {
   ]);
 
   // Handle voice transcript
-  const handleVoiceTranscript = useCallback((transcriptText) => {
-    if (transcriptText && transcriptText.trim()) {
-      // Set the transcribed text in the input field
-      dispatch(setUserResponse(transcriptText.trim()));
-      
-      // Focus the textarea so user can see the text and edit if needed
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        // Place cursor at the end of the text
-        setTimeout(() => {
-          const textarea = textareaRef.current;
-          if (textarea) {
-            textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-          }
-        }, 0);
+  const handleVoiceTranscript = useCallback(
+    (transcriptText) => {
+      if (transcriptText && transcriptText.trim()) {
+        // Set the transcribed text in the input field
+        dispatch(setUserResponse(transcriptText.trim()));
+
+        // Focus the textarea so user can see the text and edit if needed
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          // Place cursor at the end of the text
+          setTimeout(() => {
+            const textarea = textareaRef.current;
+            if (textarea) {
+              textarea.setSelectionRange(
+                textarea.value.length,
+                textarea.value.length
+              );
+            }
+          }, 0);
+        }
       }
-    }
-  }, [dispatch]);
+    },
+    [dispatch]
+  );
 
   // Handle voice recording error
   const handleVoiceError = useCallback((error) => {
@@ -653,33 +629,6 @@ const MockInterview = () => {
           </div>
 
           <div className="flex items-center space-x-4">
-            {/* Text-to-Speech Toggle */}
-            {ttsSupported && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-400">Auto-Play:</span>
-                <button
-                  onClick={() => setAutoPlayTTS(!autoPlayTTS)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 ${
-                    autoPlayTTS ? "bg-cyan-500" : "bg-gray-600"
-                  }`}
-                  title={
-                    autoPlayTTS
-                      ? "Disable auto-play TTS"
-                      : "Enable auto-play TTS"
-                  }
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
-                      autoPlayTTS ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-                <span className="text-xs text-gray-500">
-                  {autoPlayTTS ? "🔊" : "🔇"}
-                </span>
-              </div>
-            )}
-
             {interviewStarted && (
               <div className="text-center">
                 <div className="text-sm text-gray-400">Progress</div>
@@ -996,7 +945,7 @@ const MockInterview = () => {
                 style={{ minHeight: "52px" }}
                 disabled={aiResponseLoading}
               />
-              
+
               {/* Voice Recorder Button */}
               <div className="absolute right-14 top-1/2 -translate-y-1/2">
                 <VoiceRecorder
@@ -1044,8 +993,12 @@ const MockInterview = () => {
               </kbd>{" "}
               for new line, or use{" "}
               <span className="inline-flex items-center mx-1">
-                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                <svg
+                  className="w-3 h-3 mr-1"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z" />
                 </svg>
                 voice
               </span>
