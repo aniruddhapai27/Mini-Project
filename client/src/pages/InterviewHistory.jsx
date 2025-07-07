@@ -11,6 +11,9 @@ import {
   selectHistoryLoading,
   selectHistoryTotalPages,
   selectHistoryCurrentPage,
+  selectHistoryTotalInterviews,
+  selectHistoryPageSize,
+  setPageSize,
 } from "../redux/slices/interviewSlice";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -34,11 +37,16 @@ const InterviewHistory = () => {
   const loading = useSelector(selectHistoryLoading);
   const totalPages = useSelector(selectHistoryTotalPages);
   const currentPage = useSelector(selectHistoryCurrentPage);
+  const totalInterviews = useSelector(selectHistoryTotalInterviews);
+  const pageSize = useSelector(selectHistoryPageSize);
 
-  // Fetch interviews on component mount
+  // Fetch interviews on component mount with proper page size handling
   useEffect(() => {
-    dispatch(fetchInterviewHistory({ page: currentPage, limit: 10 }));
-  }, [dispatch, currentPage]);
+    // Only fetch if we have valid pagination parameters
+    if (currentPage >= 1 && pageSize >= 1) {
+      dispatch(fetchInterviewHistory({ page: currentPage, limit: pageSize }));
+    }
+  }, [dispatch, currentPage, pageSize]);
 
   // Fetch session details if sessionId is provided or selected
   useEffect(() => {
@@ -102,11 +110,32 @@ const InterviewHistory = () => {
     }
   }, [conversation]);
 
-  // Handle pagination
+  // Enhanced pagination handler
   const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      dispatch(fetchInterviewHistory({ page, limit: 10 }));
+    if (page >= 1 && page <= totalPages && page !== currentPage && !loading) {
+      dispatch(fetchInterviewHistory({ page, limit: pageSize }));
+
+      // Close any active interview to avoid confusion
+      if (page !== currentPage) {
+        setActiveSessionId(null);
+        setSelectedInterview(null);
+        setConversation([]);
+        setFeedback(null);
+      }
     }
+  };
+
+  // Page size handler
+  const handlePageSizeChange = (newLimit) => {
+    // First update the page size in Redux state
+    dispatch(setPageSize(newLimit));
+
+    // Then fetch with the new page size
+    dispatch(fetchInterviewHistory({ page: 1, limit: newLimit }));
+    setActiveSessionId(null);
+    setSelectedInterview(null);
+    setConversation([]);
+    setFeedback(null);
   };
 
   // Format date
@@ -891,7 +920,7 @@ const InterviewHistory = () => {
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="w-80 bg-gray-900/50 backdrop-blur-xl border-r border-gray-700/50 fixed top-16 bottom-0 left-0 z-20 flex flex-col h-[calc(100vh-4rem)]"
+            className="w-80 bg-gray-900/50 backdrop-blur-xl border-r border-gray-700/50 fixed top-16 bottom-0 left-0 z-20 flex flex-col h-[calc(100vh-4rem)] overflow-x-hidden"
           >
             {/* Sidebar Header */}
             <div className="p-4 border-b border-gray-700/50">
@@ -921,10 +950,11 @@ const InterviewHistory = () => {
             </div>
 
             {/* Interview List */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-2 relative">
               {loading ? (
-                <div className="flex justify-center items-center h-32">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
+                <div className="flex flex-col justify-center items-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500 mb-3"></div>
+                  <p className="text-gray-500 text-sm">Loading interviews...</p>
                 </div>
               ) : interviews.length === 0 ? (
                 <div className="text-center py-8">
@@ -1035,37 +1065,170 @@ const InterviewHistory = () => {
                 </motion.div>
               )}
 
-              {/* Pagination Controls */}
+              {/* Page Size Selector */}
+              {(interviews.length > 0 || totalPages > 0) && (
+                <div className="flex justify-between items-center pt-3 pb-2 border-t border-gray-700/50 mt-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500">Show:</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) =>
+                        handlePageSizeChange(parseInt(e.target.value))
+                      }
+                      className="bg-gray-800 text-gray-300 text-xs rounded px-2 py-1 border border-gray-600 focus:border-cyan-500 focus:outline-none"
+                      disabled={loading}
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={15}>15</option>
+                      <option value={20}>20</option>
+                      <option value={25}>25</option>
+                    </select>
+                    <span className="text-xs text-gray-500">per page</span>
+                  </div>
+
+                  <div className="text-xs text-gray-500">
+                    Total: {totalInterviews || 0} interviews
+                  </div>
+                </div>
+              )}
+
+              {/* Enhanced Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex justify-center pt-4 pb-2 border-t border-gray-700/50 mt-4">
-                  <div className="flex space-x-1">
+                <div className="flex flex-col items-center pt-4 pb-2 border-t border-gray-700/50 mt-4">
+                  <div className="flex items-center space-x-1 mb-2">
+                    {/* First Page Button */}
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={currentPage === 1}
+                      className={`w-8 h-8 rounded flex items-center justify-center ${
+                        currentPage === 1
+                          ? "text-gray-600 cursor-not-allowed"
+                          : "text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                      }`}
+                      title="First page"
+                    >
+                      ⟨⟨
+                    </button>
+
+                    {/* Previous Page Button */}
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                       className={`w-8 h-8 rounded flex items-center justify-center ${
                         currentPage === 1
                           ? "text-gray-600 cursor-not-allowed"
-                          : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                          : "text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
                       }`}
+                      title="Previous page"
                     >
-                      &larr;
+                      ‹
                     </button>
 
-                    <span className="px-2 text-sm text-gray-400 flex items-center">
-                      {currentPage} / {totalPages}
-                    </span>
+                    {/* Page Numbers */}
+                    {(() => {
+                      const pages = [];
 
+                      if (totalPages <= 4) {
+                        // If 4 or fewer pages, show all pages
+                        for (let i = 1; i <= totalPages; i++) {
+                          pages.push(
+                            <button
+                              key={i}
+                              onClick={() => handlePageChange(i)}
+                              className={`w-8 h-8 rounded flex items-center justify-center text-sm transition-colors ${
+                                i === currentPage
+                                  ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+                                  : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                              }`}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+                      } else {
+                        // More than 4 pages: show pattern like "1 2 3 ..... 9"
+                        // Always show first 3 pages
+                        for (let i = 1; i <= 3; i++) {
+                          pages.push(
+                            <button
+                              key={i}
+                              onClick={() => handlePageChange(i)}
+                              className={`w-8 h-8 rounded flex items-center justify-center text-sm transition-colors ${
+                                i === currentPage
+                                  ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+                                  : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                              }`}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+
+                        // Add ellipsis if there's a gap
+                        if (totalPages > 4) {
+                          pages.push(
+                            <span
+                              key="ellipsis"
+                              className="text-gray-600 px-1 text-sm"
+                            >
+                              .....
+                            </span>
+                          );
+                        }
+
+                        // Always show last page
+                        pages.push(
+                          <button
+                            key={totalPages}
+                            onClick={() => handlePageChange(totalPages)}
+                            className={`w-8 h-8 rounded flex items-center justify-center text-sm transition-colors ${
+                              totalPages === currentPage
+                                ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+                                : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                            }`}
+                          >
+                            {totalPages}
+                          </button>
+                        );
+                      }
+
+                      return pages;
+                    })()}
+
+                    {/* Next Page Button */}
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className={`w-8 h-8 rounded flex items-center justify-center ${
                         currentPage === totalPages
                           ? "text-gray-600 cursor-not-allowed"
-                          : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                          : "text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
                       }`}
+                      title="Next page"
                     >
-                      &rarr;
+                      ›
                     </button>
+
+                    {/* Last Page Button */}
+                    <button
+                      onClick={() => handlePageChange(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className={`w-8 h-8 rounded flex items-center justify-center ${
+                        currentPage === totalPages
+                          ? "text-gray-600 cursor-not-allowed"
+                          : "text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                      }`}
+                      title="Last page"
+                    >
+                      ⟩⟩
+                    </button>
+                  </div>
+
+                  {/* Page Info */}
+                  <div className="text-xs text-gray-500">
+                    Page {currentPage} of {totalPages} • {interviews.length}{" "}
+                    interviews shown
                   </div>
                 </div>
               )}

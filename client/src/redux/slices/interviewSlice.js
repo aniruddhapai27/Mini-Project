@@ -290,6 +290,13 @@ const initialState = {
   historyLoading: false,
   historyError: null,
 
+  // Enhanced pagination metadata
+  pagination: {
+    limit: 10,
+    hasNextPage: false,
+    hasPrevPage: false,
+  },
+
   // Gamification elements
   streakCount: 0,
   totalXP: 0,
@@ -548,14 +555,6 @@ const interviewSlice = createSlice({
       state.aiResponseError = null;
     },
 
-    addUserMessage: (state, action) => {
-      state.conversation.push({
-        type: "user",
-        message: action.payload,
-        timestamp: new Date().toISOString(),
-      });
-    },
-
     addAIMessage: (state, action) => {
       state.conversation.push({
         type: "ai",
@@ -583,6 +582,14 @@ const interviewSlice = createSlice({
 
     setAiResponseLoading: (state, action) => {
       state.aiResponseLoading = action.payload;
+    },
+
+    // Pagination management
+    setPageSize: (state, action) => {
+      const newLimit = action.payload;
+      if (newLimit >= 1 && newLimit <= 50) {
+        state.pagination.limit = newLimit;
+      }
     },
   },
 
@@ -859,6 +866,15 @@ const interviewSlice = createSlice({
         state.totalPages = action.payload.totalPages;
         state.currentPage = action.payload.currentPage;
         state.totalInterviews = action.payload.totalInterviews;
+
+        // Update enhanced pagination metadata if available
+        if (action.payload.pagination) {
+          state.pagination = {
+            limit: action.payload.pagination.limit,
+            hasNextPage: action.payload.pagination.hasNextPage,
+            hasPrevPage: action.payload.pagination.hasPrevPage,
+          };
+        }
       })
       .addCase(fetchInterviewHistory.rejected, (state, action) => {
         state.historyLoading = false;
@@ -898,6 +914,7 @@ export const {
   resetInterview,
   clearAiResponseError,
   setAiResponseLoading,
+  setPageSize,
 } = interviewSlice.actions;
 
 // Selectors
@@ -984,5 +1001,7 @@ export const selectHistoryTotalPages = (state) => state.interview.totalPages;
 export const selectHistoryCurrentPage = (state) => state.interview.currentPage;
 export const selectHistoryTotalInterviews = (state) =>
   state.interview.totalInterviews;
+export const selectHistoryPageSize = (state) =>
+  state.interview.pagination.limit;
 
 export default interviewSlice.reducer;
