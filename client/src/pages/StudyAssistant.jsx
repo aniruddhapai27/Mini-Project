@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { toast } from 'react-hot-toast';
-import { studyAssistantApi } from '../utils/api';
-import ReactMarkdown from 'react-markdown';
-import ErrorBoundary from '../components/ErrorBoundary';
-import DotLottieLoader from '../components/DotLottieLoader';
-import { FaTrash } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { toast } from "react-hot-toast";
+import { studyAssistantApi } from "../utils/api";
+import ReactMarkdown from "react-markdown";
+import ErrorBoundary from "../components/ErrorBoundary";
+import DotLottieLoader from "../components/DotLottieLoader";
+import { FaTrash } from "react-icons/fa";
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from "framer-motion";
 
 const StudyAssistant = () => {
   const { sessionId } = useParams();
@@ -19,154 +20,197 @@ const StudyAssistant = () => {
   const [sessions, setSessions] = useState([]);
   const [currentSession, setCurrentSession] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('ADA');
+  const [inputMessage, setInputMessage] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("ADA");
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [deletingSessionId, setDeletingSessionId] = useState(null);
   const [typewriterActive, setTypewriterActive] = useState(false);
-  const [typewriterText, setTypewriterText] = useState('');
+  const [typewriterText, setTypewriterText] = useState("");
+  // eslint-disable-next-line no-unused-vars
   const [isThinking, setIsThinking] = useState(false);
 
   const subjects = [
-    { key: 'ADA', name: 'Algorithm Design & Analysis', icon: '🔢', color: 'from-blue-500 to-cyan-500' },
-    { key: 'CN', name: 'Computer Networks', icon: '🌐', color: 'from-green-500 to-emerald-500' },
-    { key: 'DBMS', name: 'Database Management', icon: '💾', color: 'from-purple-500 to-violet-500' },
-    { key: 'OS', name: 'Operating Systems', icon: '💻', color: 'from-orange-500 to-red-500' },
-    { key: 'SE', name: 'Software Engineering', icon: '⚙️', color: 'from-indigo-500 to-blue-500' },
-    { key: 'DS', name: 'Data Structures', icon: '📊', color: 'from-pink-500 to-rose-500' }
+    {
+      key: "ADA",
+      name: "Algorithm Design & Analysis",
+      icon: "🔢",
+      color: "from-blue-500 to-cyan-500",
+    },
+    {
+      key: "CN",
+      name: "Computer Networks",
+      icon: "🌐",
+      color: "from-green-500 to-emerald-500",
+    },
+    {
+      key: "DBMS",
+      name: "Database Management",
+      icon: "💾",
+      color: "from-purple-500 to-violet-500",
+    },
+    {
+      key: "OS",
+      name: "Operating Systems",
+      icon: "💻",
+      color: "from-orange-500 to-red-500",
+    },
+    {
+      key: "SE",
+      name: "Software Engineering",
+      icon: "⚙️",
+      color: "from-indigo-500 to-blue-500",
+    },
+    {
+      key: "DS",
+      name: "Data Structures",
+      icon: "📊",
+      color: "from-pink-500 to-rose-500",
+    },
   ];
   // Fetch chat history
   const fetchChatHistory = useCallback(async () => {
     try {
       setIsLoadingSessions(true);
       const response = await studyAssistantApi.getHistory();
-      console.log('History response:', response);
+      console.log("History response:", response);
       setSessions(response.sessions || []);
     } catch (error) {
-      console.error('Error fetching chat history:', error);
-      toast.error('Failed to load chat history');
+      console.error("Error fetching chat history:", error);
+      toast.error("Failed to load chat history");
     } finally {
       setIsLoadingSessions(false);
     }
   }, []);
 
   // Load session messages
-  const loadSessionMessages = useCallback(async (sessionIdToLoad) => {
-    try {
-      console.log('Loading session messages for ID:', sessionIdToLoad);
-      setIsLoading(true);
-      const response = await studyAssistantApi.getSession(sessionIdToLoad);
-      console.log('Session response:', response);
-      
-      if (response && response.messages) {
-        setMessages(response.messages);
-        setCurrentSession(response.session);
-        setSelectedSubject(response.session?.subject || 'ADA');
-        setActiveSessionId(sessionIdToLoad);
-      } else {
-        console.error('Invalid session response format:', response);
-        toast.error('Invalid session data format');
-      }    } catch (error) {
-      console.error('Error loading session:', error);
-      
-      // Check if it's a 404 (session not found) vs other errors
-      if (error.response && error.response.status === 404) {
-        toast.error('Chat session not found. Redirecting to new session...');
-      } else {
-        toast.error('Failed to load chat session: ' + (error.message || 'Unknown error'));
+  const loadSessionMessages = useCallback(
+    async (sessionIdToLoad) => {
+      try {
+        console.log("Loading session messages for ID:", sessionIdToLoad);
+        setIsLoading(true);
+        const response = await studyAssistantApi.getSession(sessionIdToLoad);
+        console.log("Session response:", response);
+
+        if (response && response.messages) {
+          setMessages(response.messages);
+          setCurrentSession(response.session);
+          setSelectedSubject(response.session?.subject || "ADA");
+          setActiveSessionId(sessionIdToLoad);
+        } else {
+          console.error("Invalid session response format:", response);
+          toast.error("Invalid session data format");
+        }
+      } catch (error) {
+        console.error("Error loading session:", error);
+
+        // Check if it's a 404 (session not found) vs other errors
+        if (error.response && error.response.status === 404) {
+          toast.error("Chat session not found. Redirecting to new session...");
+        } else {
+          toast.error(
+            "Failed to load chat session: " + (error.message || "Unknown error")
+          );
+        }
+
+        // If the session doesn't exist or can't be loaded, redirect to new session after a brief delay
+        setTimeout(() => {
+          navigate("/study-assistant/new", { replace: true });
+        }, 1500);
+      } finally {
+        setIsLoading(false);
       }
-      
-      // If the session doesn't exist or can't be loaded, redirect to new session after a brief delay
-      setTimeout(() => {
-        navigate('/study-assistant/new', { replace: true });
-      }, 1500);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [navigate]);  // Create new chat session
-  const createNewSession = useCallback(async (subject = selectedSubject) => {
-    try {
-      console.log('Starting new session for subject:', subject);
-      
-      // Don't create session immediately - just reset state and navigate
-      const newSessionUrl = `/study-assistant/new`;
-      console.log('Navigating to new session URL:', newSessionUrl);
-      
-      // Update URL and navigate
-      navigate(newSessionUrl, { replace: true });
-      
-      // Reset current state - no session created yet
-      setCurrentSession(null);
-      setMessages([]);
-      setSelectedSubject(subject);
-      setActiveSessionId(null);
-      
-      return 'new'; // Return 'new' as placeholder
-    } catch (error) {
-      console.error('Error setting up new session:', error);
-      toast.error('Failed to start new chat session: ' + (error.message || 'Unknown error'));
-      throw error;
-    }
-  }, [navigate, selectedSubject]);  // Send message
+    },
+    [navigate]
+  ); // Create new chat session
+  const createNewSession = useCallback(
+    async (subject = selectedSubject) => {
+      try {
+        console.log("Starting new session for subject:", subject);
+
+        // Don't create session immediately - just reset state and navigate
+        const newSessionUrl = `/study-assistant/new`;
+        console.log("Navigating to new session URL:", newSessionUrl);
+
+        // Update URL and navigate
+        navigate(newSessionUrl, { replace: true });
+
+        // Reset current state - no session created yet
+        setCurrentSession(null);
+        setMessages([]);
+        setSelectedSubject(subject);
+        setActiveSessionId(null);
+
+        return "new"; // Return 'new' as placeholder
+      } catch (error) {
+        console.error("Error setting up new session:", error);
+        toast.error(
+          "Failed to start new chat session: " +
+            (error.message || "Unknown error")
+        );
+        throw error;
+      }
+    },
+    [navigate, selectedSubject]
+  ); // Send message
   const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading) return;
 
     const userMessage = inputMessage.trim();
-    setInputMessage('');
+    setInputMessage("");
 
     // Add user message immediately
     const userMessageObj = {
-      type: 'user',
+      type: "user",
       content: userMessage,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    setMessages(prev => [...prev, userMessageObj]);
+    setMessages((prev) => [...prev, userMessageObj]);
 
     try {
       setIsLoading(true);
       setIsThinking(true);
       setTypewriterActive(false);
-      setTypewriterText('');
-      
+      setTypewriterText("");
+
       // Add thinking message
       const thinkingMessageObj = {
-        type: 'assistant',
-        content: '',
+        type: "assistant",
+        content: "",
         timestamp: new Date().toISOString(),
-        isThinking: true
+        isThinking: true,
       };
-      setMessages(prev => [...prev, thinkingMessageObj]);
-      
-      console.log('Processing message:', userMessage);
-      
+      setMessages((prev) => [...prev, thinkingMessageObj]);
+
+      console.log("Processing message:", userMessage);
+
       // Determine session ID - create session only when user sends first message
       let sessionIdToUse = currentSession?._id || sessionId;
-      console.log('Current session ID:', sessionIdToUse);
-      
+      console.log("Current session ID:", sessionIdToUse);
+
       // If no session exists or it's 'new', create a new session with this first message
-      if (!sessionIdToUse || sessionIdToUse === 'new') {
-        console.log('Creating new session with first user message');
-        
+      if (!sessionIdToUse || sessionIdToUse === "new") {
+        console.log("Creating new session with first user message");
+
         // Send message to API without session_id - this will create a new session
         const response = await studyAssistantApi.sendMessage({
           user_query: userMessage,
           subject: selectedSubject,
-          session_id: null // null will trigger session creation
+          session_id: null, // null will trigger session creation
         });
 
         // Update the session state with the new session ID
         const newSessionId = response.session_id;
-        console.log('New session created with ID:', newSessionId);
-        
+        console.log("New session created with ID:", newSessionId);
+
         setCurrentSession({ _id: newSessionId, subject: selectedSubject });
         setActiveSessionId(newSessionId);
-        
+
         // Update URL to reflect the new session
         navigate(`/study-assistant/${newSessionId}`, { replace: true });
-        
+
         // Refresh sessions list to include the new session
         fetchChatHistory();
 
@@ -174,59 +218,75 @@ const StudyAssistant = () => {
         setIsThinking(false);
         setTypewriterText(response.response);
         setTypewriterActive(true);
-        setMessages(prev => {
+        setMessages((prev) => {
           const newMsgs = [...prev];
-          const thinkingIndex = newMsgs.findIndex(m => m.isThinking);
+          const thinkingIndex = newMsgs.findIndex((m) => m.isThinking);
           if (thinkingIndex !== -1) {
-            newMsgs[thinkingIndex] = { type: 'assistant', content: '', timestamp: new Date().toISOString(), isTypewriter: true };
+            newMsgs[thinkingIndex] = {
+              type: "assistant",
+              content: "",
+              timestamp: new Date().toISOString(),
+              isTypewriter: true,
+            };
           }
           return newMsgs;
         });
-        
       } else {
         // Session already exists, continue the conversation
-        console.log('Continuing existing session:', sessionIdToUse);
-        
+        console.log("Continuing existing session:", sessionIdToUse);
+
         const response = await studyAssistantApi.sendMessage({
           user_query: userMessage,
           subject: selectedSubject,
-          session_id: sessionIdToUse
+          session_id: sessionIdToUse,
         });
 
         // Add AI response with typewriter effect
         setIsThinking(false);
         setTypewriterText(response.response);
         setTypewriterActive(true);
-        setMessages(prev => {
+        setMessages((prev) => {
           const newMsgs = [...prev];
-          const thinkingIndex = newMsgs.findIndex(m => m.isThinking);
+          const thinkingIndex = newMsgs.findIndex((m) => m.isThinking);
           if (thinkingIndex !== -1) {
-            newMsgs[thinkingIndex] = { type: 'assistant', content: '', timestamp: new Date().toISOString(), isTypewriter: true };
+            newMsgs[thinkingIndex] = {
+              type: "assistant",
+              content: "",
+              timestamp: new Date().toISOString(),
+              isTypewriter: true,
+            };
           }
           return newMsgs;
         });
       }
-
     } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
-      
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
+
       // Remove user message and thinking message on error
-      setMessages(prev => prev.slice(0, -2));
+      setMessages((prev) => prev.slice(0, -2));
       setIsThinking(false);
     } finally {
       setIsLoading(false);
     }
-  }, [inputMessage, isLoading, currentSession, sessionId, selectedSubject, navigate, fetchChatHistory]);
+  }, [
+    inputMessage,
+    isLoading,
+    currentSession,
+    sessionId,
+    selectedSubject,
+    navigate,
+    fetchChatHistory,
+  ]);
 
   // Typewriter effect for last assistant message
   useEffect(() => {
     if (!typewriterActive || !typewriterText) return;
-    let idx = messages.findIndex(m => m.isTypewriter);
+    let idx = messages.findIndex((m) => m.isTypewriter);
     if (idx === -1) return;
     let i = 0;
     const interval = setInterval(() => {
-      setMessages(prev => {
+      setMessages((prev) => {
         const newMsgs = [...prev];
         if (newMsgs[idx]) newMsgs[idx].content = typewriterText.slice(0, i + 1);
         return newMsgs;
@@ -235,8 +295,8 @@ const StudyAssistant = () => {
       if (i >= typewriterText.length) {
         clearInterval(interval);
         setTypewriterActive(false);
-        setTypewriterText('');
-        setMessages(prev => prev.map(m => ({ ...m, isTypewriter: false })));
+        setTypewriterText("");
+        setMessages((prev) => prev.map((m) => ({ ...m, isTypewriter: false })));
       }
     }, 3);
     return () => clearInterval(interval);
@@ -246,16 +306,16 @@ const StudyAssistant = () => {
   // Initialize component
   useEffect(() => {
     fetchChatHistory();
-    
+
     // Load specific session if sessionId provided
-    if (sessionId && sessionId !== 'new') {
+    if (sessionId && sessionId !== "new") {
       loadSessionMessages(sessionId);
     }
   }, [sessionId, navigate, loadSessionMessages, fetchChatHistory]);
 
   // Handle Enter key
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -263,20 +323,21 @@ const StudyAssistant = () => {
 
   // Scroll to bottom
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
   // Get subject info
-  const getSubjectInfo = (key) => subjects.find(s => s.key === key) || subjects[0];
+  const getSubjectInfo = (key) =>
+    subjects.find((s) => s.key === key) || subjects[0];
 
   // Show loading screen when initially loading a session
-  if (isLoading && !currentSession && sessionId && sessionId !== 'new') {
+  if (isLoading && !currentSession && sessionId && sessionId !== "new") {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center pt-16">
-        <DotLottieLoader 
+        <DotLottieLoader
           size="w-20 h-20"
           text="Loading chat session..."
           textSize="text-lg"
@@ -290,80 +351,145 @@ const StudyAssistant = () => {
     try {
       setDeletingSessionId(sessionIdToDelete);
       await studyAssistantApi.deleteSession(sessionIdToDelete);
-      toast.success('Session deleted');
+      toast.success("Session deleted");
       // Remove from local state
-      setSessions(prev => prev.filter(s => s._id !== sessionIdToDelete));
+      setSessions((prev) => prev.filter((s) => s._id !== sessionIdToDelete));
       // If current session is deleted, go to new
       if (activeSessionId === sessionIdToDelete) {
-        navigate('/study-assistant/new', { replace: true });
+        navigate("/study-assistant/new", { replace: true });
         setCurrentSession(null);
         setMessages([]);
         setActiveSessionId(null);
-      }    } catch (error) {
-      console.error('Error deleting session:', error);
-      toast.error('Failed to delete session');
+      }
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      toast.error("Failed to delete session");
     } finally {
       setDeletingSessionId(null);
     }
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="min-h-screen bg-black flex relative overflow-hidden pt-0"
+      className="bg-black relative overflow-hidden"
     >
       {/* Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="study-grid" width="50" height="50" patternUnits="userSpaceOnUse">
-                <path d="M 50 0 L 0 0 0 50" fill="none" stroke="cyan" strokeWidth="1"/>
+              <pattern
+                id="study-grid"
+                width="50"
+                height="50"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 50 0 L 0 0 0 50"
+                  fill="none"
+                  stroke="cyan"
+                  strokeWidth="1"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#study-grid)" />
           </svg>
         </div>
-        
+
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-cyan-500/5 to-purple-500/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "2s" }}></div>
+        <div
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
-      {/* Sidebar */}
+      {/* Mobile Sidebar Toggle */}
+      <button
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="fixed top-20 left-0 z-30 p-3 bg-cyan-600 text-white rounded-r-lg md:hidden shadow-lg"
+        aria-label="Toggle sidebar"
+      >
+        {isSidebarOpen ? (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+            />
+          </svg>
+        ) : (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 5l7 7-7 7M5 5l7 7-7 7"
+            />
+          </svg>
+        )}
+      </button>
+
+      {/* Sidebar - Fixed */}
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.div
-            initial={{ x: '-100%' }}
+            initial={{ x: "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="w-80 bg-gray-900/50 backdrop-blur-xl border-r border-gray-700/50 overflow-hidden relative z-10 flex flex-col"
+            exit={{ x: "-100%" }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="w-80 bg-gray-900/50 backdrop-blur-xl border-r border-gray-700/50 fixed top-16 bottom-0 left-0 z-20 flex flex-col h-[calc(100vh-4rem)] overflow-x-hidden"
           >
-            {/* Sidebar Header */}
-            <div className="p-4 border-b border-gray-700/50">
+            {/* Fixed Sidebar Header - Subject Selection */}
+            <div className="flex-shrink-0 p-4 border-b border-gray-700/50">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">Study Assistant</h2>
+                <h2 className="text-xl font-bold text-white">
+                  Study Assistant
+                </h2>
                 <button
                   onClick={() => setIsSidebarOpen(false)}
                   className="p-2 text-gray-400 hover:text-white transition-colors lg:hidden"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
 
               {/* Subject Selector */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Subject</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Subject
+                </label>
                 <select
                   value={selectedSubject}
                   onChange={(e) => setSelectedSubject(e.target.value)}
                   className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 >
-                  {subjects.map(subject => (
+                  {subjects.map((subject) => (
                     <option key={subject.key} value={subject.key}>
                       {subject.icon} {subject.name}
                     </option>
@@ -377,137 +503,191 @@ const StudyAssistant = () => {
                 className="w-full p-3 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-300 font-medium shadow-lg hover:shadow-cyan-500/25"
               >
                 <div className="flex items-center justify-center space-x-2">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
                   </svg>
                   <span>New Chat</span>
                 </div>
               </button>
             </div>
 
-            {/* Chat History */}
-            <div className="flex-1 overflow-y-auto p-4">
-              <h3 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wide">Recent Chats</h3>
-              
-              {isLoadingSessions ? (
-                <div className="flex justify-center py-8">
-                  <DotLottieLoader 
-                    size="w-12 h-12"
-                    text="Loading sessions..."
-                    textSize="text-xs"
-                  />
-                </div>
-              ) : sessions.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
-                    </svg>
+            {/* Scrollable Chat History */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-4">
+                <h3 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wide">
+                  Recent Chats
+                </h3>
+
+                {isLoadingSessions ? (
+                  <div className="flex justify-center py-8">
+                    <DotLottieLoader
+                      size="w-12 h-12"
+                      text="Loading sessions..."
+                      textSize="text-xs"
+                    />
                   </div>
-                  <p className="text-gray-500 text-sm">No chat history yet</p>
-                  <p className="text-gray-600 text-xs mt-1">Start a new conversation</p>
-                </div>
-              ) : (
-                <motion.div layout className="space-y-2">
-                  <AnimatePresence>
-                    {sessions.map(session => {
-                      const subjectInfo = getSubjectInfo(session.subject);
-                      const isActive = activeSessionId === session._id;
-                      
-                      return (
-                        <motion.div 
-                          key={session._id} 
-                          layout
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, x: "-100%" }}
-                          transition={{ duration: 0.3 }}
-                          className="relative group"
-                        >
-                          <button
-                            onClick={() => {
-                              if (!isActive) {
-                                navigate(`/study-assistant/${session._id}`);
-                              }
-                            }}
-                            className={`w-full p-3 rounded-lg text-left transition-all duration-200 flex items-center space-x-3 ${
-                              isActive 
-                                ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 ring-2 ring-cyan-400/40' 
-                                : 'bg-gray-800/30 hover:bg-gray-800/50 border border-transparent'
-                            }`}
+                ) : sessions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <svg
+                        className="w-6 h-6 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-gray-500 text-sm">No chat history yet</p>
+                    <p className="text-gray-600 text-xs mt-1">
+                      Start a new conversation
+                    </p>
+                  </div>
+                ) : (
+                  <motion.div layout className="space-y-2">
+                    <AnimatePresence>
+                      {sessions.map((session) => {
+                        const subjectInfo = getSubjectInfo(session.subject);
+                        const isActive = activeSessionId === session._id;
+
+                        return (
+                          <motion.div
+                            key={session._id}
+                            layout
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, x: "-100%" }}
+                            transition={{ duration: 0.3 }}
+                            className="relative group"
                           >
-                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${subjectInfo.color} flex items-center justify-center text-sm`}>
-                              {subjectInfo.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white text-sm font-medium truncate">
-                                {subjectInfo.name}
-                              </p>
-                              <p className="text-gray-400 text-xs">
-                                {new Date(session.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
                             <button
-                              className="ml-2 p-1 rounded hover:bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Delete session"
-                              onClick={e => {
-                                e.stopPropagation();
-                                handleDeleteSession(session._id);
+                              onClick={() => {
+                                if (!isActive) {
+                                  navigate(`/study-assistant/${session._id}`);
+                                }
                               }}
-                              disabled={deletingSessionId === session._id}
+                              className={`w-full p-3 rounded-lg text-left transition-all duration-200 flex items-center space-x-3 ${
+                                isActive
+                                  ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 ring-2 ring-cyan-400/40"
+                                  : "bg-gray-800/30 hover:bg-gray-800/50 border border-transparent"
+                              }`}
                             >
-                              {deletingSessionId === session._id ? (
-                                <DotLottieLoader size="w-4 h-4" />
-                              ) : (
-                                <FaTrash size={14} />
-                              )}
+                              <div
+                                className={`w-8 h-8 rounded-lg bg-gradient-to-r ${subjectInfo.color} flex items-center justify-center text-sm`}
+                              >
+                                {subjectInfo.icon}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-medium truncate">
+                                  {subjectInfo.name}
+                                </p>
+                                <p className="text-gray-400 text-xs">
+                                  {new Date(
+                                    session.created_at
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <button
+                                className="ml-2 p-1 rounded hover:bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Delete session"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSession(session._id);
+                                }}
+                                disabled={deletingSessionId === session._id}
+                              >
+                                {deletingSessionId === session._id ? (
+                                  <DotLottieLoader size="w-4 h-4" />
+                                ) : (
+                                  <FaTrash size={14} />
+                                )}
+                              </button>
                             </button>
-                          </button>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                </motion.div>
-              )}
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col relative z-0">
-        {/* Chat Header */}
-        <div className="bg-gray-900/50 backdrop-blur-xl border-b border-gray-700/50 p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {!isSidebarOpen && (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 text-gray-400 hover:text-white transition-colors"
+      {/* Fixed Header for Main Content */}
+      <div
+        className={`fixed transition-all duration-300 ${
+          isSidebarOpen ? "md:left-80" : "left-0"
+        } right-0 top-16 z-10 bg-gray-900/50 backdrop-blur-xl border-b border-gray-700/50 p-4 flex items-center justify-between`}
+      >
+        <div className="flex items-center space-x-4">
+          {!isSidebarOpen && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 text-gray-400 hover:text-white transition-colors"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
-            
-            <div className="flex items-center space-x-3">
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${getSubjectInfo(selectedSubject).color} flex items-center justify-center`}>
-                {getSubjectInfo(selectedSubject).icon}
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">{getSubjectInfo(selectedSubject).name}</h1>
-                <p className="text-sm text-gray-400">AI Study Assistant</p>
-              </div>
-            </div>
-          </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          )}
 
-          <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm text-gray-400">AI Assistant</span>
+          <div className="flex items-center space-x-3">
+            <div
+              className={`w-10 h-10 rounded-lg bg-gradient-to-r ${
+                getSubjectInfo(selectedSubject).color
+              } flex items-center justify-center`}
+            >
+              {getSubjectInfo(selectedSubject).icon}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">
+                {getSubjectInfo(selectedSubject).name}
+              </h1>
+              <p className="text-sm text-gray-400">AI Study Assistant</p>
+            </div>
           </div>
         </div>
 
-        {/* Messages Area */}
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-sm text-gray-400">AI Assistant</span>
+        </div>
+      </div>
+
+      {/* Main Content Area - Fixed positioning */}
+      <div
+        className={`fixed transition-all duration-300 ${
+          isSidebarOpen ? "md:left-80" : "left-0"
+        } right-0 top-32 bottom-20 overflow-hidden`}
+      >
+        {/* Scrollable Messages Area */}
         <AnimatePresence>
           <motion.div
             key={sessionId}
@@ -515,24 +695,43 @@ const StudyAssistant = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 overflow-y-auto p-6 space-y-4"
+            className="h-full overflow-y-auto custom-scrollbar p-6 space-y-4"
           >
             {messages.length === 0 && !currentSession ? (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center max-w-md">
                   <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z" />
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"
+                      />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">Welcome to Study Assistant</h3>
-                  <p className="text-gray-400 mb-4">Ask me anything about {getSubjectInfo(selectedSubject).name}. I'm here to help you learn!</p>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    Welcome to Study Assistant
+                  </h3>
+                  <p className="text-gray-400 mb-4">
+                    Ask me anything about {getSubjectInfo(selectedSubject).name}
+                    . I'm here to help you learn!
+                  </p>
                   <div className="grid grid-cols-1 gap-2 text-sm">
                     <div className="bg-gray-800/30 rounded-lg p-3 text-left">
-                      <p className="text-gray-300">💡 Try asking: "Explain binary search algorithm"</p>
+                      <p className="text-gray-300">
+                        💡 Try asking: "Explain binary search algorithm"
+                      </p>
                     </div>
                     <div className="bg-gray-800/30 rounded-lg p-3 text-left">
-                      <p className="text-gray-300">🔍 Or: "What are the types of database normalization?"</p>
+                      <p className="text-gray-300">
+                        🔍 Or: "What are the types of database normalization?"
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -548,38 +747,48 @@ const StudyAssistant = () => {
                     exit={{ opacity: 0, y: 10 }}
                     transition={{ duration: 0.3 }}
                     className={`flex items-start space-x-4 ${
-                      message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                      message.type === "user"
+                        ? "flex-row-reverse space-x-reverse"
+                        : ""
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
-                      message.type === 'assistant' 
-                        ? 'bg-gradient-to-r from-cyan-500 to-purple-500' 
-                        : 'bg-gradient-to-r from-purple-500 to-pink-500'
-                    }`}>
-                      {message.type === 'assistant' ? '🤖' : (
-                        _user?.profilePic ? (
-                          <img 
-                            src={_user.profilePic} 
-                            alt="User"
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          '👤'
-                        )
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
+                        message.type === "assistant"
+                          ? "bg-gradient-to-r from-cyan-500 to-purple-500"
+                          : "bg-gradient-to-r from-purple-500 to-pink-500"
+                      }`}
+                    >
+                      {message.type === "assistant" ? (
+                        "🤖"
+                      ) : _user?.profilePic ? (
+                        <img
+                          src={_user.profilePic}
+                          alt="User"
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        "👤"
                       )}
                     </div>
-                    
-                    <div className={`flex-1 max-w-[70%] ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
-                      <div className={`p-4 rounded-2xl backdrop-blur-sm ${
-                        message.type === 'assistant'
-                          ? 'bg-gray-800/50 border border-gray-700/50 text-white'
-                          : 'bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white'
-                      }`}>
-                        {message.type === 'assistant' ? (
+
+                    <div
+                      className={`flex-1 max-w-[70%] ${
+                        message.type === "user" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      <div
+                        className={`p-4 rounded-2xl backdrop-blur-sm ${
+                          message.type === "assistant"
+                            ? "bg-gray-800/50 border border-gray-700/50 text-white"
+                            : "bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white"
+                        }`}
+                      >
+                        {message.type === "assistant" ? (
                           <ErrorBoundary fallbackMessage="Error rendering AI response">
                             {message.isThinking ? (
                               <div className="flex items-center justify-center py-2">
-                                <DotLottieLoader 
+                                <DotLottieLoader
                                   size="w-8 h-8"
                                   text="Assistant is thinking..."
                                   textSize="text-sm"
@@ -588,29 +797,103 @@ const StudyAssistant = () => {
                               </div>
                             ) : (
                               <div className="markdown-content leading-relaxed prose prose-invert prose-sm max-w-none">
-                                {message.content && typeof message.content === 'string' ? (
-                                  <ReactMarkdown 
+                                {message.content &&
+                                typeof message.content === "string" ? (
+                                  <ReactMarkdown
                                     components={{
-                                      p: ({children, ...props}) => <p className="mb-2 last:mb-0" {...props}>{children}</p>,
-                                      code: ({inline, children, ...props}) => 
+                                      p: ({ children, ...props }) => (
+                                        <p
+                                          className="mb-2 last:mb-0"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </p>
+                                      ),
+                                      code: ({ inline, children, ...props }) =>
                                         inline ? (
-                                          <code className="bg-gray-700/50 px-1 py-0.5 rounded text-cyan-300" {...props}>
+                                          <code
+                                            className="bg-gray-700/50 px-1 py-0.5 rounded text-cyan-300"
+                                            {...props}
+                                          >
                                             {children}
                                           </code>
                                         ) : (
-                                          <code className="block bg-gray-700/50 p-2 rounded-md text-green-300 overflow-x-auto" {...props}>
+                                          <code
+                                            className="block bg-gray-700/50 p-2 rounded-md text-green-300 overflow-x-auto"
+                                            {...props}
+                                          >
                                             {children}
                                           </code>
                                         ),
-                                      pre: ({children, ...props}) => <pre className="bg-gray-700/50 p-2 rounded-md overflow-x-auto" {...props}>{children}</pre>,
-                                      ul: ({children, ...props}) => <ul className="list-disc list-inside mb-2" {...props}>{children}</ul>,
-                                      ol: ({children, ...props}) => <ol className="list-decimal list-inside mb-2" {...props}>{children}</ol>,
-                                      li: ({children, ...props}) => <li className="mb-1" {...props}>{children}</li>,
-                                      h1: ({children, ...props}) => <h1 className="text-lg font-bold mb-2 text-cyan-300" {...props}>{children}</h1>,
-                                      h2: ({children, ...props}) => <h2 className="text-base font-semibold mb-2 text-cyan-300" {...props}>{children}</h2>,
-                                      h3: ({children, ...props}) => <h3 className="text-sm font-semibold mb-1 text-cyan-300" {...props}>{children}</h3>,
-                                      strong: ({children, ...props}) => <strong className="font-semibold text-white" {...props}>{children}</strong>,
-                                      em: ({children, ...props}) => <em className="italic text-gray-300" {...props}>{children}</em>,
+                                      pre: ({ children, ...props }) => (
+                                        <pre
+                                          className="bg-gray-700/50 p-2 rounded-md overflow-x-auto"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </pre>
+                                      ),
+                                      ul: ({ children, ...props }) => (
+                                        <ul
+                                          className="list-disc list-inside mb-2"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </ul>
+                                      ),
+                                      ol: ({ children, ...props }) => (
+                                        <ol
+                                          className="list-decimal list-inside mb-2"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </ol>
+                                      ),
+                                      li: ({ children, ...props }) => (
+                                        <li className="mb-1" {...props}>
+                                          {children}
+                                        </li>
+                                      ),
+                                      h1: ({ children, ...props }) => (
+                                        <h1
+                                          className="text-lg font-bold mb-2 text-cyan-300"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </h1>
+                                      ),
+                                      h2: ({ children, ...props }) => (
+                                        <h2
+                                          className="text-base font-semibold mb-2 text-cyan-300"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </h2>
+                                      ),
+                                      h3: ({ children, ...props }) => (
+                                        <h3
+                                          className="text-sm font-semibold mb-1 text-cyan-300"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </h3>
+                                      ),
+                                      strong: ({ children, ...props }) => (
+                                        <strong
+                                          className="font-semibold text-white"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </strong>
+                                      ),
+                                      em: ({ children, ...props }) => (
+                                        <em
+                                          className="italic text-gray-300"
+                                          {...props}
+                                        >
+                                          {children}
+                                        </em>
+                                      ),
                                     }}
                                   >
                                     {message.content}
@@ -619,7 +902,10 @@ const StudyAssistant = () => {
                                   <p>Received non-string content.</p>
                                 )}
                                 {message.isTypewriter && typewriterActive && (
-                                  <DotLottieLoader size="w-3 h-3" className="inline-block ml-1 align-middle" />
+                                  <DotLottieLoader
+                                    size="w-3 h-3"
+                                    className="inline-block ml-1 align-middle"
+                                  />
                                 )}
                               </div>
                             )}
@@ -639,33 +925,47 @@ const StudyAssistant = () => {
             <div ref={messagesEndRef} />
           </motion.div>
         </AnimatePresence>
+      </div>
 
-        {/* Input Area */}
-        <div className="p-4 bg-gray-900/50 backdrop-blur-xl border-t border-gray-700/50">
-          <div className="relative">
-            <textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type your message..."
-              className="w-full p-4 pr-16 bg-gray-800/70 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
-              rows={1}
-              style={{ minHeight: '52px' }}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={isLoading || !inputMessage.trim()}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-full hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-            >
-              {isLoading ? (
-                <DotLottieLoader size="w-5 h-5" />
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              )}
-            </button>
-          </div>
+      {/* Fixed Input Area at Bottom */}
+      <div
+        className={`fixed transition-all duration-300 ${
+          isSidebarOpen ? "md:left-80" : "left-0"
+        } right-0 bottom-0 p-4 bg-gray-900/50 backdrop-blur-xl border-t border-gray-700/50`}
+      >
+        <div className="relative">
+          <textarea
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message..."
+            className="w-full p-4 pr-16 bg-gray-800/70 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
+            rows={1}
+            style={{ minHeight: "52px" }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={isLoading || !inputMessage.trim()}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-full hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          >
+            {isLoading ? (
+              <DotLottieLoader size="w-5 h-5" />
+            ) : (
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 12h14M12 5l7 7-7 7"
+                />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
     </motion.div>
