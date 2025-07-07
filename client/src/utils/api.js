@@ -122,6 +122,46 @@ export const studyAssistantApi = {
       throw error;
     }
   },
+
+  // Get paginated session history
+  getPaginatedHistory: async (page = 1, limit = 10) => {
+    try {
+      console.log("Getting paginated history:", { page, limit });
+      const response = await api.get("/api/v1/assistant/paginated-history", {
+        params: { page, limit },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error getting paginated history:", error);
+      throw error;
+    }
+  },
+
+  // Get recent sessions
+  getRecentSessions: async (limit = 5) => {
+    try {
+      console.log("Getting recent sessions:", { limit });
+      const response = await api.get("/api/v1/assistant/recent-sessions", {
+        params: { limit },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error getting recent sessions:", error);
+      throw error;
+    }
+  },
+
+  // Get assistant stats
+  getStats: async () => {
+    try {
+      console.log("Getting assistant stats");
+      const response = await api.get("/api/v1/assistant/stats");
+      return response.data;
+    } catch (error) {
+      console.error("Error getting stats:", error);
+      throw error;
+    }
+  },
   // Get specific session messages
   getSession: async (sessionId) => {
     try {

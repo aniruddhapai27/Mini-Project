@@ -80,11 +80,11 @@ async def get_chat_history(request: Request, user_id: str = None):
         db = await get_database()
         collection = db['assistants']
         
-        # Get all sessions for the user, sorted by creation date
+        # Get all sessions for the user, sorted by creation date (newest first)
         sessions = await collection.find(
             {"user": ObjectId(user_id)},
-            {"subject": 1, "created_at": 1, "QnA": {"$slice": 1}}  # Only get first QnA for preview
-        ).sort("created_at", -1).to_list(length=50)
+            {"subject": 1, "createdAt": 1, "updatedAt": 1, "QnA": {"$slice": 1}}  # Only get first QnA for preview
+        ).sort("createdAt", -1).to_list(length=50)
         
         # Format sessions for frontend
         formatted_sessions = []
@@ -92,7 +92,8 @@ async def get_chat_history(request: Request, user_id: str = None):
             formatted_sessions.append({
                 "_id": str(session["_id"]),
                 "subject": session.get("subject", "Unknown"),
-                "created_at": session.get("created_at", ""),
+                "createdAt": session.get("createdAt", ""),
+                "updatedAt": session.get("updatedAt", ""),
                 "preview": session.get("QnA", [{}])[0].get("user", "New chat") if session.get("QnA") else "New chat"
             })
         
@@ -148,7 +149,8 @@ async def get_session_messages(session_id: str, request: Request, user_id: str =
             "session": {
                 "_id": str(session["_id"]),
                 "subject": session.get("subject", "Unknown"),
-                "created_at": session.get("created_at", "")
+                "createdAt": session.get("createdAt", ""),
+                "updatedAt": session.get("updatedAt", "")
             },
             "messages": messages
         }

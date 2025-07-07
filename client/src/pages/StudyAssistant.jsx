@@ -32,6 +32,13 @@ const StudyAssistant = () => {
   // eslint-disable-next-line no-unused-vars
   const [isThinking, setIsThinking] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [showPagination, setShowPagination] = useState(false);
+
   const subjects = [
     {
       key: "ADA",
@@ -70,20 +77,53 @@ const StudyAssistant = () => {
       color: "from-pink-500 to-rose-500",
     },
   ];
-  // Fetch chat history
-  const fetchChatHistory = useCallback(async () => {
+  // Fetch chat history with pagination
+  const fetchChatHistory = useCallback(async (page = 1, limit = 10) => {
     try {
       setIsLoadingSessions(true);
-      const response = await studyAssistantApi.getHistory();
-      console.log("History response:", response);
-      setSessions(response.sessions || []);
+      const response = await studyAssistantApi.getPaginatedHistory(page, limit);
+      console.log("Paginated history response:", response);
+
+      if (response.success) {
+        setSessions(response.data.sessions || []);
+        setCurrentPage(response.data.currentPage || 1);
+        setTotalPages(response.data.totalPages || 1);
+        setTotalSessions(response.data.totalSessions || 0);
+        setShowPagination(response.data.totalPages > 1);
+      }
     } catch (error) {
       console.error("Error fetching chat history:", error);
-      toast.error("Failed to load chat history");
+      // Fallback to non-paginated version
+      try {
+        const fallbackResponse = await studyAssistantApi.getHistory();
+        setSessions(fallbackResponse.sessions || []);
+        setShowPagination(false);
+      } catch (fallbackError) {
+        console.error("Fallback also failed:", fallbackError);
+        toast.error("Failed to load chat history");
+      }
     } finally {
       setIsLoadingSessions(false);
     }
   }, []);
+
+  // Handle pagination
+  const handlePageChange = (newPage) => {
+    if (
+      newPage >= 1 &&
+      newPage <= totalPages &&
+      newPage !== currentPage &&
+      !isLoadingSessions
+    ) {
+      fetchChatHistory(newPage, pageSize);
+    }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    fetchChatHistory(1, newSize);
+  };
 
   // Load session messages
   const loadSessionMessages = useCallback(
@@ -211,8 +251,10 @@ const StudyAssistant = () => {
         // Update URL to reflect the new session
         navigate(`/study-assistant/${newSessionId}`, { replace: true });
 
-        // Refresh sessions list to include the new session
-        fetchChatHistory();
+        // Refresh sessions list to include the new session at the top (page 1)
+        // Reset to page 1 and refresh to ensure the new session appears at the top
+        setCurrentPage(1);
+        await fetchChatHistory(1, pageSize);
 
         // Replace thinking message with AI response with typewriter effect
         setIsThinking(false);
@@ -277,6 +319,7 @@ const StudyAssistant = () => {
     selectedSubject,
     navigate,
     fetchChatHistory,
+    pageSize,
   ]);
 
   // Typewriter effect for last assistant message
@@ -305,13 +348,13 @@ const StudyAssistant = () => {
 
   // Initialize component
   useEffect(() => {
-    fetchChatHistory();
+    fetchChatHistory(1, pageSize);
 
     // Load specific session if sessionId provided
     if (sessionId && sessionId !== "new") {
       loadSessionMessages(sessionId);
     }
-  }, [sessionId, navigate, loadSessionMessages, fetchChatHistory]);
+  }, [sessionId, loadSessionMessages, fetchChatHistory, pageSize]);
 
   // Handle Enter key
   const handleKeyPress = (e) => {
@@ -333,6 +376,39 @@ const StudyAssistant = () => {
   const getSubjectInfo = (key) =>
     subjects.find((s) => s.key === key) || subjects[0];
 
+  // Format date helper function
+  const formatSessionDate = (session) => {
+    // Check all possible date fields in the session object, prioritizing lastActivity
+    const date =
+      session.lastActivity ||
+      session.updatedAt ||
+      session.createdAt ||
+      session.created_at ||
+      session.updated_at;
+
+    if (!date) {
+      console.warn("No date found in session:", session);
+      return "No date available";
+    }
+
+    try {
+      const dateObj = new Date(date);
+      if (isNaN(dateObj.getTime())) {
+        console.warn("Invalid date format:", date);
+        return "Invalid date";
+      }
+
+      return dateObj.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error, "Date value:", date);
+      return "Invalid date";
+    }
+  };
+
   // Show loading screen when initially loading a session
   if (isLoading && !currentSession && sessionId && sessionId !== "new") {
     return (
@@ -352,8 +428,19 @@ const StudyAssistant = () => {
       setDeletingSessionId(sessionIdToDelete);
       await studyAssistantApi.deleteSession(sessionIdToDelete);
       toast.success("Session deleted");
-      // Remove from local state
-      setSessions((prev) => prev.filter((s) => s._id !== sessionIdToDelete));
+
+      // Refresh pagination data instead of just local filtering
+      const currentSessionsCount = sessions.length;
+      const isLastSessionOnPage = currentSessionsCount === 1 && currentPage > 1;
+
+      // If we're deleting the last session on a page that's not page 1, go to previous page
+      if (isLastSessionOnPage) {
+        fetchChatHistory(currentPage - 1, pageSize);
+      } else {
+        // Otherwise refresh current page
+        fetchChatHistory(currentPage, pageSize);
+      }
+
       // If current session is deleted, go to new
       if (activeSessionId === sessionIdToDelete) {
         navigate("/study-assistant/new", { replace: true });
@@ -486,7 +573,14 @@ const StudyAssistant = () => {
                 </label>
                 <select
                   value={selectedSubject}
-                  onChange={(e) => setSelectedSubject(e.target.value)}
+                  onChange={(e) => {
+                    const newSubject = e.target.value;
+                    if (newSubject !== selectedSubject) {
+                      setSelectedSubject(newSubject);
+                      // Automatically create a new chat session for the new subject
+                      createNewSession(newSubject);
+                    }
+                  }}
                   className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 >
                   {subjects.map((subject) => (
@@ -597,9 +691,7 @@ const StudyAssistant = () => {
                                   {subjectInfo.name}
                                 </p>
                                 <p className="text-gray-400 text-xs">
-                                  {new Date(
-                                    session.created_at
-                                  ).toLocaleDateString()}
+                                  {formatSessionDate(session)}
                                 </p>
                               </div>
                               <button
@@ -623,6 +715,117 @@ const StudyAssistant = () => {
                       })}
                     </AnimatePresence>
                   </motion.div>
+                )}
+
+                {/* Pagination Controls */}
+                {showPagination && (
+                  <div className="mt-4 space-y-3">
+                    {/* Page Size Selector */}
+                    <div className="flex justify-between items-center pt-3 border-t border-gray-700/50">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-gray-500">Show:</span>
+                        <select
+                          value={pageSize}
+                          onChange={(e) =>
+                            handlePageSizeChange(parseInt(e.target.value))
+                          }
+                          className="bg-gray-800 text-gray-300 text-xs rounded px-2 py-1 border border-gray-600 focus:border-cyan-500 focus:outline-none"
+                          disabled={isLoadingSessions}
+                        >
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={15}>15</option>
+                          <option value={20}>20</option>
+                        </select>
+                        <span className="text-xs text-gray-500">per page</span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Total: {totalSessions} sessions
+                      </div>
+                    </div>
+
+                    {/* Pagination Buttons */}
+                    {totalPages > 1 && (
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="flex items-center space-x-1">
+                          {/* Previous Page Button */}
+                          <button
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1 || isLoadingSessions}
+                            className={`w-8 h-8 rounded flex items-center justify-center text-sm ${
+                              currentPage === 1 || isLoadingSessions
+                                ? "text-gray-600 cursor-not-allowed"
+                                : "text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                            }`}
+                            title="Previous page"
+                          >
+                            ‹
+                          </button>
+
+                          {/* Page Numbers */}
+                          {(() => {
+                            const pages = [];
+                            const showPages = Math.min(5, totalPages);
+                            let startPage = Math.max(
+                              1,
+                              currentPage - Math.floor(showPages / 2)
+                            );
+                            let endPage = Math.min(
+                              totalPages,
+                              startPage + showPages - 1
+                            );
+
+                            if (endPage - startPage + 1 < showPages) {
+                              startPage = Math.max(1, endPage - showPages + 1);
+                            }
+
+                            for (let i = startPage; i <= endPage; i++) {
+                              pages.push(
+                                <button
+                                  key={i}
+                                  onClick={() => handlePageChange(i)}
+                                  disabled={isLoadingSessions}
+                                  className={`w-8 h-8 rounded flex items-center justify-center text-sm transition-colors ${
+                                    i === currentPage
+                                      ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white"
+                                      : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                                  } ${
+                                    isLoadingSessions
+                                      ? "cursor-not-allowed opacity-50"
+                                      : ""
+                                  }`}
+                                >
+                                  {i}
+                                </button>
+                              );
+                            }
+                            return pages;
+                          })()}
+
+                          {/* Next Page Button */}
+                          <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={
+                              currentPage === totalPages || isLoadingSessions
+                            }
+                            className={`w-8 h-8 rounded flex items-center justify-center text-sm ${
+                              currentPage === totalPages || isLoadingSessions
+                                ? "text-gray-600 cursor-not-allowed"
+                                : "text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                            }`}
+                            title="Next page"
+                          >
+                            ›
+                          </button>
+                        </div>
+
+                        {/* Page Info */}
+                        <div className="text-xs text-gray-500 text-center">
+                          Page {currentPage} of {totalPages}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
