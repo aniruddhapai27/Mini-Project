@@ -48,22 +48,39 @@ The TTS feature allows users to listen to AI-generated interview questions using
 
 ## Usage
 
-### Manual Control
+### Auto-Play Only
 
-Each AI message displays a "🔊 Listen" button that:
+AI messages now automatically play audio when they appear:
 
-- Converts text to speech using the backend API
-- Plays audio immediately
-- Shows "Stop" button during playback
-- Handles audio cleanup automatically
+- Text-to-speech starts automatically after the typewriter effect completes
+- No manual controls needed - audio plays immediately
+- Clean audio management with automatic cleanup
+- Graceful handling when TTS is not supported
 
-### Auto-Play
+### Removed Features
 
-Users can toggle auto-play functionality:
+The following manual controls have been removed:
 
-- **Enabled**: New AI messages play automatically after 1-second delay
-- **Disabled**: Only manual play is available
-- Toggle button in chat header shows current state
+- "🔊 Listen" button
+- "Stop" button during playback
+- Manual play/pause controls
+
+### Auto-Play Behavior
+
+New AI messages now automatically play audio with optimized preloading:
+
+- **Preloading**: Audio starts loading immediately when AI response is received
+- **Timing**: Audio loads in parallel with the typewriter effect
+- **Playback**: Audio plays instantly after typewriter effect completes (500ms delay)
+- **Performance**: Significantly faster playback due to preloading
+- **Seamless**: No noticeable delay between text completion and audio start
+
+### Technical Implementation
+
+- **Parallel Processing**: TTS conversion happens while typewriter effect runs
+- **Memory Management**: Preloaded audio is cleaned up after use
+- **Fallback**: If preloading fails, fresh audio is loaded as backup
+- **Error Handling**: Graceful degradation when TTS is unavailable
 
 ### Voice Selection
 
@@ -157,17 +174,18 @@ const defaultVoice = "Aaliyah-PlayAI";
 
 1. Start the mock interview
 2. Wait for AI response
-3. Click "🔊 Listen" button
-4. Verify audio plays correctly
-5. Test stop functionality
-6. Toggle auto-play and verify behavior
+3. Observe automatic audio playback after typewriter effect completes
+4. Verify audio plays without user interaction
+5. Test multiple AI responses to ensure consistent behavior
 
 ### Automated Testing
 
-Use the test utility:
+Use the test utilities:
 
 ```javascript
 // In browser console
+window.testAutoTTS(); // Test auto-play functionality with preloading
+window.testPreloadTiming(); // Test timing benefits of preloading
 window.testTTS.basic(); // Test basic functionality
 window.testTTS.voices(); // Test different voices
 ```
