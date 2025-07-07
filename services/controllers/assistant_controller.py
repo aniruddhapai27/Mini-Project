@@ -72,7 +72,7 @@ async def study_assistant(user_query: str, subject: str, session_id: str = None,
             new_session = {
                 "subject": subject,
                 "user": ObjectId(user_id) if user_id else None, 
-                "created_at": str(datetime.datetime.now()),
+                "createdAt": datetime.datetime.now(),  # Use datetime object for proper sorting
                 "QnA": [] 
             }
             result = await collection.insert_one(new_session)
@@ -109,11 +109,14 @@ async def study_assistant(user_query: str, subject: str, session_id: str = None,
         response_text = response.choices[0].message.content.strip()        
         await collection.update_one(
             {"_id": session}, 
-            {"$push": {"QnA": { 
-                "user": user_query,  
-                "bot": response_text,  
-                "createdAt": str(datetime.datetime.now())  
-            }}}
+            {
+                "$push": {"QnA": { 
+                    "user": user_query,  
+                    "bot": response_text,  
+                    "createdAt": datetime.datetime.now()  # Use datetime object for proper sorting
+                }},
+                "$set": {"updatedAt": datetime.datetime.now()}  # Update the session's updatedAt timestamp
+            }
         )        
         return {
             "session_id": str(session),

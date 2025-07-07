@@ -1,7 +1,7 @@
-const express = require('express');
-const multer = require('multer');
-const assistantController = require('../controllers/assistantController');
-const { isLogin } = require('../middlewares/isLogin');
+const express = require("express");
+const multer = require("multer");
+const assistantController = require("../controllers/assistantController");
+const { isLogin } = require("../middlewares/isLogin");
 
 const router = express.Router();
 
@@ -13,24 +13,45 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/pdf' || 
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        file.mimetype === 'text/plain') {
+    if (
+      file.mimetype === "application/pdf" ||
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.mimetype === "text/plain"
+    ) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF, DOCX, and TXT files are allowed'));
+      cb(new Error("Only PDF, DOCX, and TXT files are allowed"));
     }
-  }
+  },
 });
 
 // Protect all routes
 router.use(isLogin);
 
 // Assistant routes
-router.post('/chat', assistantController.chatWithAssistant);
-router.post('/resume', upload.single('file'), assistantController.analyzeResume);
-router.get('/history', assistantController.getSessionHistory);
-router.get('/session/:sessionId', assistantController.getSessionMessages);
-router.delete('/session/:sessionId', assistantController.deleteSession);
+router.post("/chat", assistantController.chatWithAssistant);
+router.post(
+  "/resume",
+  upload.single("file"),
+  assistantController.analyzeResume
+);
+router.get("/history", assistantController.getSessionHistory);
+router.get(
+  "/paginated-history",
+  assistantController.getAssistantSessionHistory
+);
+router.get("/recent-sessions", assistantController.getRecentAssistantSessions);
+router.get("/stats", assistantController.getAssistantStats);
+router.get("/session/:sessionId", assistantController.getSessionMessages);
+router.get(
+  "/session-details/:sessionId",
+  assistantController.getAssistantSession
+);
+router.delete("/session/:sessionId", assistantController.deleteSession);
+router.delete(
+  "/session-details/:sessionId",
+  assistantController.deleteAssistantSession
+);
 
 module.exports = router;
