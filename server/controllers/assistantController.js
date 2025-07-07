@@ -62,6 +62,7 @@ exports.getAssistantSessionHistory = catchAsync(async (req, res) => {
           ? session.QnA[session.QnA.length - 1].user.substring(0, 100) + "..."
           : "No messages yet",
       lastActivity: session.updatedAt || session.createdAt,
+      date: session.created_at, // Add date field mapping to created_at
     }));
 
     res.status(200).json({
@@ -113,6 +114,7 @@ exports.getRecentAssistantSessions = catchAsync(async (req, res) => {
           ? session.QnA[session.QnA.length - 1].user.substring(0, 100) + "..."
           : "No messages yet",
       lastActivity: session.updatedAt || session.createdAt,
+      date: session.createdAt, // Add date field mapping to created_at
     }));
 
     res.status(200).json({
@@ -152,6 +154,7 @@ exports.getAssistantSession = catchAsync(async (req, res) => {
       ...session.toObject(),
       messageCount: session.QnA ? session.QnA.length : 0,
       lastActivity: session.updatedAt || session.createdAt,
+      date: session.createdAt, // Add date field mapping to created_at
     };
 
     res.status(200).json({
