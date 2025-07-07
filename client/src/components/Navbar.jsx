@@ -223,41 +223,6 @@ const Navbar = () => {
                             </div>
                           </Link>
                           <Link
-                            to="/interview-history"
-                            className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
-                              isActive("/interview-history")
-                                ? "text-amber-400 bg-amber-500/10"
-                                : "text-gray-300 hover:text-amber-400 hover:bg-amber-500/5"
-                            }`}
-                            onClick={() => setActivitiesDropdownOpen(false)}
-                          >
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
-                                <svg
-                                  className="w-4 h-4 text-white"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                  />
-                                </svg>
-                              </div>
-                              <div>
-                                <div className="font-medium">
-                                  Interview History
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                  View past sessions
-                                </div>
-                              </div>
-                            </div>
-                          </Link>
-                          <Link
                             to="/study-assistant/new"
                             className={`block px-4 py-3 text-sm font-medium transition-all duration-300 ${
                               isActive("/study-assistant") ||
@@ -520,35 +485,6 @@ const Navbar = () => {
                           </svg>
                         </div>
                         <span>Mock Interview</span>
-                      </div>
-                    </Link>
-
-                    <Link
-                      to="/interview-history"
-                      className={`block px-4 py-2 rounded-lg text-base font-medium border transition-all duration-300 ${
-                        isActive("/interview-history")
-                          ? "text-amber-400 bg-amber-500/10 border-amber-500/30"
-                          : "text-gray-300 hover:text-amber-400 hover:bg-amber-500/5 border-transparent hover:border-amber-500/20"
-                      }`}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 rounded bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
-                          <svg
-                            className="w-3 h-3 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
-                        </div>
-                        <span>Interview History</span>
                       </div>
                     </Link>
 

@@ -124,6 +124,29 @@ const MockInterviewSelection = () => {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden py-8">
+      {/* Interview History Button */}
+      <div className="relative z-10 mb-6 flex justify-end px-6 lg:px-16">
+        <Link
+          to="/interview-history"
+          className="flex items-center gap-2 bg-gradient-to-br from-amber-500/20 to-yellow-600/20 hover:from-amber-500/30 hover:to-yellow-600/30 border border-amber-500/30 hover:border-amber-500/50 text-amber-400 px-4 py-2.5 rounded-lg shadow-lg transition-all duration-300 font-medium text-sm"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          Interview History
+        </Link>
+      </div>
+
       {/* Pure Black Geometric Background */}
       <div className="absolute inset-0">
         {/* Grid Pattern */}
@@ -424,21 +447,7 @@ const MockInterviewSelection = () => {
                   <p className="text-sm text-black/70 dark:text-white/70">
                     {domain.description}
                   </p>
-                  {selectedDomain === domain.id && (
-                    <div className="mt-3 animate-fadeIn">
-                      <svg
-                        className="w-6 h-6 text-cyan-400 mx-auto"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  )}
+                  {/* Only border highlight for selection, no tick icon */}
                 </div>
               </div>
             ))}
@@ -479,21 +488,7 @@ const MockInterviewSelection = () => {
                       {difficulty.xpMultiplier} XP
                     </span>
                   </div>
-                  {selectedDifficulty === difficulty.id && (
-                    <div className="mt-3 animate-fadeIn">
-                      <svg
-                        className="w-6 h-6 text-cyan-400 mx-auto"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                  )}
+                  {/* Only border highlight for selection, no tick icon */}
                 </div>
               </div>
             ))}
@@ -507,7 +502,7 @@ const MockInterviewSelection = () => {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col items-center justify-center gap-4">
             <button
               className={`py-4 px-8 rounded-2xl text-white font-semibold text-lg transition-all duration-300 shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 selectedDomain && selectedDifficulty && !createLoading
@@ -549,28 +544,7 @@ const MockInterviewSelection = () => {
                 "Select Domain & Difficulty First"
               )}
             </button>
-
-            <button
-              onClick={() => navigate("/interview-history")}
-              className="py-3 px-6 rounded-xl text-white font-medium text-base transition-all duration-300 bg-gradient-to-r from-gray-600/80 to-gray-800/80 hover:from-gray-700 hover:to-gray-900 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 shadow-lg"
-            >
-              <div className="flex items-center">
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                View Interview History
-              </div>
-            </button>
+            // ...Interview History button removed as requested...
           </div>
         </div>{" "}
         {/* Tips Section */}
