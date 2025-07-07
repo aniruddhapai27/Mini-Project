@@ -82,7 +82,6 @@ const StudyAssistant = () => {
     try {
       setIsLoadingSessions(true);
       const response = await studyAssistantApi.getPaginatedHistory(page, limit);
-      console.log("Paginated history response:", response);
 
       if (response.success) {
         setSessions(response.data.sessions || []);
@@ -670,13 +669,13 @@ const StudyAssistant = () => {
                             transition={{ duration: 0.3 }}
                             className="relative group"
                           >
-                            <button
+                            <div
                               onClick={() => {
                                 if (!isActive) {
                                   navigate(`/study-assistant/${session._id}`);
                                 }
                               }}
-                              className={`w-full p-3 rounded-lg text-left transition-all duration-200 flex items-center space-x-3 ${
+                              className={`w-full p-3 rounded-lg text-left transition-all duration-200 flex items-center space-x-3 cursor-pointer ${
                                 isActive
                                   ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 ring-2 ring-cyan-400/40"
                                   : "bg-gray-800/30 hover:bg-gray-800/50 border border-transparent"
@@ -710,7 +709,7 @@ const StudyAssistant = () => {
                                   <FaTrash size={14} />
                                 )}
                               </button>
-                            </button>
+                            </div>
                           </motion.div>
                         );
                       })}
