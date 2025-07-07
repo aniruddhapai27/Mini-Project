@@ -56,6 +56,7 @@ export const textToSpeech = async (text, voice = "Aaliyah-PlayAI") => {
  * @param {function} onStart - Callback when audio starts playing
  * @param {function} onEnd - Callback when audio ends
  * @param {function} onError - Callback when an error occurs
+ * @param {boolean} preloadOnly - If true, create audio but don't play immediately
  * @returns {Promise<HTMLAudioElement>} - Audio element for control
  */
 export const playTextToSpeech = async (
@@ -63,7 +64,8 @@ export const playTextToSpeech = async (
   voice = "Aaliyah-PlayAI",
   onStart = null,
   onEnd = null,
-  onError = null
+  onError = null,
+  preloadOnly = false
 ) => {
   try {
     // Get audio blob from API
@@ -76,9 +78,11 @@ export const playTextToSpeech = async (
     const audio = new Audio(audioUrl);
 
     // Set up event listeners
-    audio.addEventListener("loadstart", () => {
-      if (onStart) onStart();
-    });
+    if (onStart) {
+      audio.addEventListener("loadstart", () => {
+        onStart();
+      });
+    }
 
     audio.addEventListener("ended", () => {
       // Clean up object URL
@@ -92,8 +96,10 @@ export const playTextToSpeech = async (
       if (onError) onError(event);
     });
 
-    // Play the audio
-    await audio.play();
+    // Only play if not preload-only
+    if (!preloadOnly) {
+      await audio.play();
+    }
 
     return audio;
   } catch (error) {

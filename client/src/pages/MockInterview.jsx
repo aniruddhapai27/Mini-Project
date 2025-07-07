@@ -27,6 +27,7 @@ import {
 } from "../redux/slices/interviewSlice";
 import DotLottieLoader from "../components/DotLottieLoader";
 import VoiceRecorder from "../components/VoiceRecorder";
+// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from "framer-motion";
 import ErrorBoundary from "../components/ErrorBoundary";
 import {
@@ -75,10 +76,9 @@ const MockInterview = () => {
   const [isThinking, setIsThinking] = useState(false);
 
   // Text-to-speech state
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [currentAudio, setCurrentAudio] = useState(null);
-  const [playingMessageIndex, setPlayingMessageIndex] = useState(-1);
   const [ttsSupported, setTtsSupported] = useState(false);
+  const [preloadedAudio, setPreloadedAudio] = useState(null);
 
   // Domain formatting helpers
   const getDomainIcon = (domain) => {
@@ -102,61 +102,90 @@ const MockInterview = () => {
   };
 
   // Text-to-speech functions
+  const preloadTextToSpeech = useCallback(
+    async (text) => {
+      if (!ttsSupported || !text) return null;
+
+      try {
+        console.log("🔊 Preloading TTS audio...");
+        const audio = await playTextToSpeech(
+          text,
+          "Aaliyah-PlayAI", // Default voice
+          null, // No onStart callback during preload
+          null, // No onEnd callback during preload
+          (error) => {
+            console.error("Audio preload error:", error);
+          },
+          true // preloadOnly = true
+        );
+
+        console.log("✅ TTS audio preloaded successfully");
+        return audio;
+      } catch (error) {
+        console.error("Failed to preload text-to-speech:", error);
+        return null;
+      }
+    },
+    [ttsSupported]
+  );
+
   const handlePlayTextToSpeech = useCallback(
-    async (text, messageIndex) => {
+    async (text, usePreloaded = false) => {
       try {
         // Stop any currently playing audio
         if (currentAudio) {
           stopAudio(currentAudio);
           setCurrentAudio(null);
-          setPlayingMessageIndex(-1);
-          setIsPlayingAudio(false);
         }
 
-        setIsPlayingAudio(true);
-        setPlayingMessageIndex(messageIndex);
+        let audio;
+        if (usePreloaded && preloadedAudio) {
+          // Use preloaded audio
+          audio = preloadedAudio;
+          setPreloadedAudio(null); // Clear preloaded audio after use
+          console.log("🔊 Using preloaded audio");
+        } else {
+          // Load audio fresh
+          audio = await playTextToSpeech(
+            text,
+            "Aaliyah-PlayAI", // Default voice
+            () => {
+              // On start
+              console.log("Audio started playing");
+            },
+            () => {
+              // On end
+              setCurrentAudio(null);
+            },
+            (error) => {
+              // On error
+              console.error("Audio playback error:", error);
+              setCurrentAudio(null);
+            }
+          );
+        }
 
-        const audio = await playTextToSpeech(
-          text,
-          "Aaliyah-PlayAI", // Default voice
-          () => {
-            // On start
-            console.log("Audio started playing");
-          },
-          () => {
-            // On end
-            setIsPlayingAudio(false);
-            setPlayingMessageIndex(-1);
+        // Set up event listeners for preloaded audio
+        if (usePreloaded) {
+          audio.addEventListener("ended", () => {
             setCurrentAudio(null);
-          },
-          (error) => {
-            // On error
+          });
+          audio.addEventListener("error", (error) => {
             console.error("Audio playback error:", error);
-            setIsPlayingAudio(false);
-            setPlayingMessageIndex(-1);
             setCurrentAudio(null);
-          }
-        );
+          });
+        }
 
+        // Play the audio
+        await audio.play();
         setCurrentAudio(audio);
       } catch (error) {
         console.error("Failed to play text-to-speech:", error);
-        setIsPlayingAudio(false);
-        setPlayingMessageIndex(-1);
         setCurrentAudio(null);
       }
     },
-    [currentAudio]
+    [currentAudio, preloadedAudio]
   );
-
-  const handleStopTextToSpeech = useCallback(() => {
-    if (currentAudio) {
-      stopAudio(currentAudio);
-      setCurrentAudio(null);
-      setPlayingMessageIndex(-1);
-      setIsPlayingAudio(false);
-    }
-  }, [currentAudio]);
 
   // Check TTS support on component mount
   useEffect(() => {
@@ -171,8 +200,11 @@ const MockInterview = () => {
       if (currentAudio) {
         stopAudio(currentAudio);
       }
+      if (preloadedAudio) {
+        stopAudio(preloadedAudio);
+      }
     };
-  }, [currentAudio]);
+  }, [currentAudio, preloadedAudio]);
 
   // Handle sending user response
   const handleSendResponse = useCallback(async () => {
@@ -439,12 +471,25 @@ const MockInterview = () => {
         setTimeout(() => {
           setTypewriterActive(false);
           setTypewriterMessageIndex(-1);
+
+          // Auto-play TTS when typewriter effect is complete
+          if (ttsSupported && typewriterMessageIndex !== -1) {
+            setTimeout(() => {
+              handlePlayTextToSpeech(typewriterText, true); // Use preloaded audio
+            }, 500); // Small delay after typewriter completes
+          }
         }, 500); // Keep the completed message for a moment before removing the cursor
       }
     }, 5); // Fast typing speed
 
     return () => clearInterval(interval);
-  }, [typewriterActive, typewriterText]);
+  }, [
+    typewriterActive,
+    typewriterText,
+    ttsSupported,
+    typewriterMessageIndex,
+    handlePlayTextToSpeech,
+  ]);
 
   // Monitor AI response loading status to implement typewriter effect
   useEffect(() => {
@@ -471,9 +516,27 @@ const MockInterview = () => {
         setCurrentTypewriterText(""); // Start with empty text
         setTypewriterMessageIndex(actualIndex); // Track which message gets the typewriter
         setTypewriterActive(true);
+
+        // Preload TTS audio while typewriter effect is running
+        if (ttsSupported && messageContent) {
+          preloadTextToSpeech(messageContent).then((audio) => {
+            if (audio) {
+              setPreloadedAudio(audio);
+              console.log(
+                "🔊 Audio preloaded and ready for typewriter completion"
+              );
+            }
+          });
+        }
       }
     }
-  }, [aiResponseLoading, conversation, isThinking]);
+  }, [
+    aiResponseLoading,
+    conversation,
+    isThinking,
+    ttsSupported,
+    preloadTextToSpeech,
+  ]);
 
   // Update URL when sessionId changes
   useEffect(() => {
@@ -822,63 +885,7 @@ const MockInterview = () => {
                                   )}
                               </p>
 
-                              {/* Text-to-Speech Button for AI Messages */}
-                              {(message.type === "ai" ||
-                                message.type === "assistant") &&
-                                ttsSupported &&
-                                message.message &&
-                                typeof message.message === "string" &&
-                                !message.isThinking && (
-                                  <div className="mt-3 flex items-center space-x-2">
-                                    {playingMessageIndex === index ? (
-                                      <button
-                                        onClick={handleStopTextToSpeech}
-                                        className="flex items-center space-x-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-lg text-red-300 text-sm transition-all duration-300"
-                                        title="Stop audio"
-                                      >
-                                        <svg
-                                          className="w-4 h-4"
-                                          fill="currentColor"
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <rect
-                                            x="6"
-                                            y="4"
-                                            width="4"
-                                            height="16"
-                                          />
-                                          <rect
-                                            x="14"
-                                            y="4"
-                                            width="4"
-                                            height="16"
-                                          />
-                                        </svg>
-                                        <span>Stop</span>
-                                      </button>
-                                    ) : (
-                                      <button
-                                        onClick={() =>
-                                          handlePlayTextToSpeech(
-                                            message.message,
-                                            index
-                                          )
-                                        }
-                                        className="flex items-center space-x-2 px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-cyan-300 text-sm transition-all duration-300"
-                                        title="Play audio"
-                                      >
-                                        <svg
-                                          className="w-4 h-4"
-                                          fill="currentColor"
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path d="M8 5v14l11-7z" />
-                                        </svg>
-                                        <span>🔊 Listen</span>
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
+                              {/* Removed TTS Button - Auto-play enabled */}
                             </div>
                           )}
                         </ErrorBoundary>
