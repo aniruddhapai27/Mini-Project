@@ -194,28 +194,85 @@ exports.getInterviewStats = catchAsync(async (req, res) => {
   });
 });
 
-// Get user's interview history
+// Get user's interview history with enhanced pagination
 exports.getUserInterviewHistory = catchAsync(async (req, res) => {
   const userId = req.user._id;
-  const { page = 1, limit = 10 } = req.query;
+  let { page = 1, limit = 10 } = req.query;
 
-  const interviews = await Interview.find({ user: userId })
-    .sort({ createdAt: -1 })
-    .limit(limit * 1)
-    .skip((page - 1) * limit)
-    .select("domain difficulty score QnA createdAt feedBack");
+  // Convert to integers and validate
+  page = parseInt(page);
+  limit = parseInt(limit);
 
-  const total = await Interview.countDocuments({ user: userId });
+  // Validate pagination parameters
+  if (page < 1) {
+    return res.status(400).json({
+      success: false,
+      message: "Page number must be greater than 0",
+    });
+  }
 
-  res.status(200).json({
-    success: true,
-    data: {
-      interviews,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      totalInterviews: total,
-    },
-  });
+  // Set maximum limit to prevent abuse and ensure good performance
+  const MAX_LIMIT = 50;
+  const DEFAULT_LIMIT = 10;
+
+  if (limit < 1) {
+    limit = DEFAULT_LIMIT;
+  } else if (limit > MAX_LIMIT) {
+    limit = MAX_LIMIT;
+  }
+
+  const skip = (page - 1) * limit;
+
+  try {
+    // Use Promise.all for better performance
+    const [interviews, total] = await Promise.all([
+      Interview.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .skip(skip)
+        .select(
+          "domain difficulty score QnA createdAt feedBack resumeUsed sessionId"
+        )
+        .lean(), // Use lean() for better performance
+      Interview.countDocuments({ user: userId }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    // Validate if requested page exists
+    if (page > totalPages && total > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Page ${page} does not exist. Total pages: ${totalPages}`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        interviews,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalInterviews: total,
+          limit,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+        // Backward compatibility
+        totalPages,
+        currentPage: page,
+        totalInterviews: total,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching interview history:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch interview history",
+      error: error.message,
+    });
+  }
 });
 
 // Get recent interviews
