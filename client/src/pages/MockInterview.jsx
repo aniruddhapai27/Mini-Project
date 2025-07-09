@@ -319,17 +319,12 @@ const MockInterview = () => {
       if (!currentSessionId) {
         console.log("❌ No session ID found, using fallback navigation");
         // If no session ID, navigate with basic data
-        const finalScore = Math.max(
-          60,
-          Math.min(100, 60 + conversation.length * 5)
-        );
-
         navigate("/mock-interview-results", {
           state: {
             conversation,
             domain: sessionData.domain,
             difficulty: sessionData.difficulty,
-            score: finalScore,
+            score: null, // No score without feedback
             error: "No session ID available for feedback",
           },
         });
@@ -341,17 +336,10 @@ const MockInterview = () => {
         currentSessionId
       );
 
-      // Calculate a preliminary score based on conversation length and complexity
-      const finalScore = Math.max(
-        60,
-        Math.min(100, 60 + conversation.length * 5)
-      );
-
       // Use the integrated Redux thunk to end interview and get feedback
       const result = await dispatch(
         endInterviewWithFeedback({
           sessionId: currentSessionId,
-          finalScore: finalScore,
         })
       );
 
@@ -359,7 +347,10 @@ const MockInterview = () => {
 
       if (result.meta.requestStatus === "fulfilled") {
         console.log("✅ Interview ended and feedback received successfully");
-        const { feedback, sessionData: endedSessionData } = result.payload;
+        const { feedback } = result.payload;
+
+        // Extract score directly from feedback overall_score field
+        const score = feedback?.overall_score || null;
 
         navigate("/mock-interview-results", {
           state: {
@@ -367,7 +358,7 @@ const MockInterview = () => {
             conversation,
             domain: sessionData.domain,
             difficulty: sessionData.difficulty,
-            score: endedSessionData?.finalScore || finalScore,
+            score: score, // Use overall_score directly
             feedback: feedback,
           },
         });
@@ -385,13 +376,16 @@ const MockInterview = () => {
             ? feedbackResult.payload.feedback
             : null;
 
+        // Extract score directly from fallback feedback overall_score field
+        const score = fallbackFeedback?.overall_score || null;
+
         navigate("/mock-interview-results", {
           state: {
             sessionId: currentSessionId,
             conversation,
             domain: sessionData.domain,
             difficulty: sessionData.difficulty,
-            score: finalScore,
+            score: score, // Use overall_score directly
             feedback: fallbackFeedback,
             error: fallbackFeedback ? null : "Failed to generate AI feedback",
           },
@@ -400,18 +394,13 @@ const MockInterview = () => {
     } catch (error) {
       console.error("❌ Failed to end interview:", error);
 
-      // Fallback navigation
-      const fallbackScore = Math.max(
-        60,
-        Math.min(100, 60 + conversation.length * 5)
-      );
-
+      // Fallback navigation without artificial score
       navigate("/mock-interview-results", {
         state: {
           conversation,
           domain: sessionData.domain,
           difficulty: sessionData.difficulty,
-          score: fallbackScore,
+          score: null, // No artificial score
           error: "Failed to generate AI feedback",
         },
       });

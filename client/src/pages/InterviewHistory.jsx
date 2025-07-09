@@ -1047,6 +1047,10 @@ const InterviewHistory = () => {
                               if (!isActive) {
                                 setActiveSessionId(interview._id);
                                 navigate(`/interview-history/${interview._id}`);
+                                // Close sidebar on small screens for better mobile UX
+                                if (window.innerWidth < 1024) {
+                                  setIsSidebarOpen(false);
+                                }
                               }
                             }}
                             className={`w-full p-2 sm:p-3 rounded-lg text-left transition-all duration-200 flex items-center space-x-2 sm:space-x-3 ${
@@ -1094,15 +1098,16 @@ const InterviewHistory = () => {
                             </div>
                             <div
                               className={`rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-gradient-to-r ${
-                                interview.score >= 80
+                                (interview.feedBack?.overall_score || 0) >= 80
                                   ? "from-green-500 to-emerald-500"
-                                  : interview.score >= 60
+                                  : (interview.feedBack?.overall_score || 0) >=
+                                    60
                                   ? "from-yellow-500 to-amber-500"
                                   : "from-red-500 to-rose-500"
                               }`}
                             >
                               <span className="text-white text-xs font-bold">
-                                {interview.score}
+                                {interview.feedBack?.overall_score || 0}
                               </span>
                             </div>
                           </button>
@@ -1311,7 +1316,7 @@ const InterviewHistory = () => {
                   <span className="capitalize ml-1">
                     {selectedInterview.difficulty}
                   </span>{" "}
-                  • Score: {selectedInterview.score}%
+                  • Score: {selectedInterview.feedBack?.overall_score || 0}%
                 </span>
               </p>
             </div>
