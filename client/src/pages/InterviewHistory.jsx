@@ -15,6 +15,7 @@ import {
   selectHistoryPageSize,
   setPageSize,
 } from "../redux/slices/interviewSlice";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 
 const InterviewHistory = () => {
@@ -28,9 +29,30 @@ const InterviewHistory = () => {
   const [selectedInterview, setSelectedInterview] = useState(null);
   const [conversation, setConversation] = useState([]);
   const [feedback, setFeedback] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Start closed on mobile
   const [activeTab, setActiveTab] = useState("chat"); // New tab state
   const [sessionLoading, setSessionLoading] = useState(false); // Loading state for session data
+
+  // Handle responsive sidebar behavior
+  useEffect(() => {
+    const handleResize = () => {
+      // On large screens (lg and above), always keep sidebar open
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      } else {
+        // On small screens, start with sidebar closed for better UX
+        setIsSidebarOpen(false);
+      }
+    };
+
+    // Set initial state based on screen size
+    handleResize();
+
+    // Listen for window resize
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Redux selectors
   const interviews = useSelector(selectInterviewHistory);
@@ -875,44 +897,42 @@ const InterviewHistory = () => {
         ></div>
       </div>
 
-      {/* Mobile Sidebar Toggle */}
-      <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed top-20 left-0 z-30 p-3 bg-primary text-white rounded-r-lg md:hidden shadow-lg"
-        aria-label="Toggle sidebar"
-      >
-        {isSidebarOpen ? (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-            />
-          </svg>
-        ) : (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 5l7 7-7 7M5 5l7 7-7 7"
-            />
-          </svg>
-        )}
-      </button>
+      {/* Mobile Overlay - appears when sidebar is open on small screens */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-10 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-label="Close sidebar overlay"
+        />
+      )}
 
-      {/* Sidebar - Interview History List (Fixed) */}
+      {/* Sidebar Toggle Button - Only visible when sidebar is closed */}
+      {!isSidebarOpen && (
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="fixed top-1/2 -translate-y-1/2 left-0 z-30 transition-all duration-300 group text-white shadow-xl bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 rounded-r-lg px-2 py-3 hover:scale-105"
+          aria-label="Open sidebar"
+          title="Open Sidebar"
+        >
+          <div className="flex items-center justify-center">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </button>
+      )}
+
+      {/* Sidebar - Interview History List */}
       <AnimatePresence>
         {isSidebarOpen && (
           <motion.div
@@ -920,32 +940,56 @@ const InterviewHistory = () => {
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="w-80 bg-gray-900/50 backdrop-blur-xl border-r border-gray-700/50 fixed top-16 bottom-0 left-0 z-20 flex flex-col h-[calc(100vh-4rem)] overflow-x-hidden"
+            className="w-full sm:w-80 bg-gray-900/95 backdrop-blur-xl border-r border-gray-700/50 fixed top-16 bottom-0 left-0 z-20 flex flex-col h-[calc(100vh-4rem)] overflow-x-hidden shadow-2xl"
           >
             {/* Sidebar Header */}
-            <div className="p-4 border-b border-gray-700/50">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">
+            <div className="p-3 sm:p-4 border-b border-gray-700/50">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-white">
                   Interview History
                 </h2>
-                <button
-                  onClick={() => navigate("/mock-interview-selection")}
-                  className="p-2 text-gray-400 hover:text-white transition-colors"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                <div className="flex items-center space-x-2">
+                  {/* Close button - visible on small screens */}
+                  <button
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="p-2 text-gray-400 hover:text-white transition-colors lg:hidden"
+                    title="Close Sidebar"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-4 h-4 sm:w-5 sm:h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                  {/* New Interview button */}
+                  <button
+                    onClick={() => navigate("/mock-interview-selection")}
+                    className="p-2 text-gray-400 hover:text-white transition-colors"
+                    title="Start New Interview"
+                  >
+                    <svg
+                      className="w-4 h-4 sm:w-5 sm:h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1005,20 +1049,20 @@ const InterviewHistory = () => {
                                 navigate(`/interview-history/${interview._id}`);
                               }
                             }}
-                            className={`w-full p-3 rounded-lg text-left transition-all duration-200 flex items-center space-x-3 ${
+                            className={`w-full p-2 sm:p-3 rounded-lg text-left transition-all duration-200 flex items-center space-x-2 sm:space-x-3 ${
                               isActive
                                 ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 ring-1 ring-cyan-400/40"
                                 : "bg-gray-800/30 hover:bg-gray-800/50 border border-transparent"
                             }`}
                           >
                             <div
-                              className={`w-8 h-8 rounded-lg bg-gradient-to-r ${domainInfo.color} flex items-center justify-center text-sm`}
+                              className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-r ${domainInfo.color} flex items-center justify-center text-xs sm:text-sm`}
                             >
                               {domainInfo.icon}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <p className="text-white text-sm font-medium truncate">
+                                <p className="text-white text-xs sm:text-sm font-medium truncate">
                                   {domainInfo.name}
                                 </p>
                                 {interview.feedBack && (
@@ -1029,15 +1073,19 @@ const InterviewHistory = () => {
                                 )}
                               </div>
                               <div className="flex items-center text-gray-400 text-xs">
-                                <span>{formatDate(interview.createdAt)}</span>
-                                <span className="mx-1">•</span>
-                                <span className="capitalize">
+                                <span className="truncate">
+                                  {formatDate(interview.createdAt)}
+                                </span>
+                                <span className="mx-1 hidden sm:inline">•</span>
+                                <span className="capitalize hidden sm:inline">
                                   {interview.difficulty}
                                 </span>
                                 {interview.QnA && (
                                   <>
-                                    <span className="mx-1">•</span>
-                                    <span>
+                                    <span className="mx-1 hidden sm:inline">
+                                      •
+                                    </span>
+                                    <span className="hidden sm:inline">
                                       {interview.QnA.length} questions
                                     </span>
                                   </>
@@ -1045,7 +1093,7 @@ const InterviewHistory = () => {
                               </div>
                             </div>
                             <div
-                              className={`rounded-full w-8 h-8 flex items-center justify-center bg-gradient-to-r ${
+                              className={`rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center bg-gradient-to-r ${
                                 interview.score >= 80
                                   ? "from-green-500 to-emerald-500"
                                   : interview.score >= 60
@@ -1237,11 +1285,11 @@ const InterviewHistory = () => {
         )}
       </AnimatePresence>
 
-      {/* Fixed Header - Absolutely positioned to not scroll */}
+      {/* Fixed Header - Responsive positioning based on sidebar state */}
       <div
         className={`fixed top-16 right-0 transition-all duration-300 ${
-          isSidebarOpen ? "md:left-80" : "left-0"
-        } p-4 border-b border-gray-800 backdrop-blur-sm bg-gray-900/50 flex items-center justify-between z-30 h-16`}
+          isSidebarOpen ? "lg:left-80 left-0" : "left-0"
+        } p-4 border-b border-gray-800 backdrop-blur-sm bg-gray-900/80 flex items-center justify-between z-10 h-16`}
       >
         {activeSessionId && selectedInterview ? (
           <div className="flex items-center space-x-3">
@@ -1253,15 +1301,18 @@ const InterviewHistory = () => {
               {getDomainInfo(selectedInterview.domain).icon}
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">
+              <h1 className="text-md md:text-xl font-bold text-white">
                 {getDomainInfo(selectedInterview.domain).name} Interview
               </h1>
-              <p className="text-sm text-gray-400">
-                {formatDate(selectedInterview.createdAt)} •
-                <span className="capitalize ml-1">
-                  {selectedInterview.difficulty}
-                </span>{" "}
-                • Score: {selectedInterview.score}%
+              <p className="text-xs sm:text-sm text-gray-400">
+                {formatDate(selectedInterview.createdAt)}
+                <span className="mx-1 hidden sm:inline">•</span>
+                <span className="block sm:inline">
+                  <span className="capitalize ml-1">
+                    {selectedInterview.difficulty}
+                  </span>{" "}
+                  • Score: {selectedInterview.score}%
+                </span>
               </p>
             </div>
           </div>
@@ -1279,18 +1330,18 @@ const InterviewHistory = () => {
         </div>
       </div>
 
-      {/* Content Area - Main content with fixed positioning and scrollable inner content */}
+      {/* Content Area - Responsive layout with proper sidebar spacing */}
       <div
         className={`fixed transition-all duration-300 ${
-          isSidebarOpen ? "md:left-80" : "left-0"
+          isSidebarOpen ? "lg:left-80 left-0" : "left-0"
         } right-0 top-32 bottom-0 overflow-hidden flex flex-col`}
       >
         {!activeSessionId ? (
-          <div className="h-full flex items-center justify-center p-8">
+          <div className="h-full flex items-center justify-center p-4 sm:p-8">
             <div className="text-center max-w-md">
-              <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg
-                  className="w-8 h-8 text-white"
+                  className="w-6 h-6 sm:w-8 sm:h-8 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -1303,10 +1354,10 @@ const InterviewHistory = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
                 Select an Interview
               </h3>
-              <p className="text-gray-400 mb-4">
+              <p className="text-gray-400 mb-4 text-sm sm:text-base">
                 Choose an interview from the sidebar to view details
               </p>
             </div>
@@ -1314,9 +1365,9 @@ const InterviewHistory = () => {
         ) : (
           <>
             {/* Fixed Tab Navigation */}
-            <div className="flex-shrink-0 p-6 pb-0">
+            <div className="flex-shrink-0 p-3 sm:p-6 pb-0">
               <div className="border-b border-gray-700">
-                <nav className="-mb-px flex space-x-8">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8">
                   <button
                     onClick={() => setActiveTab("chat")}
                     className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
