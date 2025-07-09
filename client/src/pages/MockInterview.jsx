@@ -213,7 +213,12 @@ const MockInterview = () => {
     const userMessage = userResponse.trim();
 
     // Add user message to the conversation immediately
-    dispatch(addUserMessage(userMessage));
+    dispatch(
+      addUserMessage({
+        message: userMessage,
+        timestamp: new Date().toISOString(),
+      })
+    );
 
     // Reset user response input
     dispatch(setUserResponse(""));
