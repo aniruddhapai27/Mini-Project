@@ -288,32 +288,34 @@ const MockInterviewSelection = () => {
       <div className="container mx-auto px-4 max-w-6xl relative z-10">
         {" "}
         {/* Header with Gamification Elements */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4 animate-fadeIn">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-white mb-3 sm:mb-4 animate-fadeIn">
             Mock Interview Challenge
           </h1>
-          <p className="text-lg text-gray-300 mb-6 animate-fadeIn">
+          <p className="text-base sm:text-lg text-gray-300 mb-4 sm:mb-6 animate-fadeIn">
             Test your skills with AI-powered interview simulation
           </p>{" "}
           {/* Gamification Stats */}
-          <div className="flex justify-center items-center space-x-6 mb-8">
-            <div className="bg-gradient-to-br from-gray-600/10 to-gray-800/10 border border-gray-500/30 rounded-xl p-4 text-center">
-              <div className="text-2xl mb-1">🏆</div>
-              <div className="text-xl font-bold text-gray-400">
+          <div className="flex justify-center items-center space-x-3 sm:space-x-6 mb-6 sm:mb-8">
+            <div className="bg-gradient-to-br from-gray-600/10 to-gray-800/10 border border-gray-500/30 rounded-xl p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl mb-1">🏆</div>
+              <div className="text-sm sm:text-xl font-bold text-gray-400">
                 Level {level}
               </div>
               <div className="text-xs text-gray-400">Current Level</div>
             </div>
 
-            <div className="bg-gradient-to-br from-gray-700/10 to-gray-900/10 border border-gray-600/30 rounded-xl p-4 text-center">
-              <div className="text-2xl mb-1">⭐</div>
-              <div className="text-xl font-bold text-gray-400">{totalXP}</div>
+            <div className="bg-gradient-to-br from-gray-700/10 to-gray-900/10 border border-gray-600/30 rounded-xl p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl mb-1">⭐</div>
+              <div className="text-sm sm:text-xl font-bold text-gray-400">
+                {totalXP}
+              </div>
               <div className="text-xs text-gray-400">Total XP</div>
             </div>
 
-            <div className="bg-gradient-to-br from-gray-500/10 to-gray-700/10 border border-gray-400/30 rounded-xl p-4 text-center">
-              <div className="text-2xl mb-1">🔥</div>
-              <div className="text-xl font-bold text-gray-400">
+            <div className="bg-gradient-to-br from-gray-500/10 to-gray-700/10 border border-gray-400/30 rounded-xl p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl mb-1">🔥</div>
+              <div className="text-sm sm:text-xl font-bold text-gray-400">
                 {streakCount}
               </div>
               <div className="text-xs text-gray-400">Day Streak</div>
@@ -418,17 +420,17 @@ const MockInterviewSelection = () => {
           </div>
         </div>
         {/* Domain Selection */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 text-center">
             Choose Your Interview Domain
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {domains.map((domain) => (
               <div
                 key={domain.id}
                 className={`bg-gradient-to-br ${
                   domain.color
-                } border-2 backdrop-blur-xl rounded-xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 focus:scale-105 focus:outline-none shadow-lg animate-fadeIn ${
+                } border-2 backdrop-blur-xl rounded-xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:scale-105 focus:scale-105 focus:outline-none shadow-lg animate-fadeIn ${
                   selectedDomain === domain.id
                     ? "ring-2 ring-cyan-400 scale-105"
                     : ""
@@ -440,11 +442,13 @@ const MockInterviewSelection = () => {
                 }}
               >
                 <div className="text-center">
-                  <div className="text-4xl mb-3">{domain.icon}</div>
-                  <h3 className="text-lg font-semibold text-black dark:text-white mb-2">
+                  <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">
+                    {domain.icon}
+                  </div>
+                  <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white mb-1 sm:mb-2">
                     {domain.name}
                   </h3>
-                  <p className="text-sm text-black/70 dark:text-white/70">
+                  <p className="text-xs sm:text-sm text-black/70 dark:text-white/70">
                     {domain.description}
                   </p>
                   {/* Only border highlight for selection, no tick icon */}
@@ -454,11 +458,11 @@ const MockInterviewSelection = () => {
           </div>
         </div>
         {/* Difficulty Selection */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-black dark:text-white mb-6 text-center">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-black dark:text-white mb-4 sm:mb-6 text-center">
             Select Difficulty Level
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
             {difficulties.map((difficulty) => (
               <div
                 key={difficulty.id}
@@ -466,7 +470,7 @@ const MockInterviewSelection = () => {
                   selectedDifficulty === difficulty.id
                     ? "border-cyan-400 ring-2 ring-cyan-400 scale-105"
                     : "border-black/10 dark:border-white/10"
-                } rounded-xl p-6 cursor-pointer transition-all duration-300 hover:scale-105 focus:scale-105 focus:outline-none shadow-lg animate-fadeIn`}
+                } rounded-xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:scale-105 focus:scale-105 focus:outline-none shadow-lg animate-fadeIn`}
                 tabIndex={0}
                 onClick={() => setSelectedDifficulty(difficulty.id)}
                 onKeyPress={(e) => {
@@ -474,11 +478,13 @@ const MockInterviewSelection = () => {
                 }}
               >
                 <div className="text-center">
-                  <div className="text-4xl mb-3">{difficulty.icon}</div>
-                  <h3 className="text-lg font-semibold text-black dark:text-white mb-2">
+                  <div className="text-3xl sm:text-4xl mb-2 sm:mb-3">
+                    {difficulty.icon}
+                  </div>
+                  <h3 className="text-base sm:text-lg font-semibold text-black dark:text-white mb-1 sm:mb-2">
                     {difficulty.name}
                   </h3>
-                  <p className="text-sm text-black/70 dark:text-white/70 mb-3">
+                  <p className="text-xs sm:text-sm text-black/70 dark:text-white/70 mb-2 sm:mb-3">
                     {difficulty.description}
                   </p>
                   <div className="flex items-center justify-center space-x-2">
@@ -497,14 +503,14 @@ const MockInterviewSelection = () => {
         {/* Start Interview Button */}
         <div className="text-center">
           {createError && (
-            <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
+            <div className="mb-4 p-3 sm:p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
               {createError}
             </div>
           )}
 
           <div className="flex flex-col items-center justify-center gap-4">
             <button
-              className={`py-4 px-8 rounded-2xl text-white font-semibold text-lg transition-all duration-300 shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              className={`py-3 px-6 sm:py-4 sm:px-8 rounded-2xl text-white font-semibold text-base sm:text-lg transition-all duration-300 shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                 selectedDomain && selectedDifficulty && !createLoading
                   ? "bg-gradient-to-r from-gray-600 to-gray-800 hover:from-gray-700 hover:to-gray-900 hover:scale-105 focus:ring-gray-500"
                   : "bg-gray-600 cursor-not-allowed opacity-50"
