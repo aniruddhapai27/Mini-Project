@@ -3,16 +3,20 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
+import { FaTrash } from "react-icons/fa";
+import DotLottieLoader from "../components/DotLottieLoader";
 import {
   fetchInterviewHistory,
   getInterviewSession,
   getInterviewFeedback,
+  deleteInterviewSession,
   selectInterviewHistory,
   selectHistoryLoading,
   selectHistoryTotalPages,
   selectHistoryCurrentPage,
   selectHistoryTotalInterviews,
   selectHistoryPageSize,
+  selectDeletingSessionId,
   setPageSize,
 } from "../redux/slices/interviewSlice";
 // eslint-disable-next-line no-unused-vars
@@ -61,6 +65,7 @@ const InterviewHistory = () => {
   const currentPage = useSelector(selectHistoryCurrentPage);
   const totalInterviews = useSelector(selectHistoryTotalInterviews);
   const pageSize = useSelector(selectHistoryPageSize);
+  const deletingSessionId = useSelector(selectDeletingSessionId);
 
   // Fetch interviews on component mount with proper page size handling
   useEffect(() => {
@@ -73,6 +78,11 @@ const InterviewHistory = () => {
   // Fetch session details if sessionId is provided or selected
   useEffect(() => {
     const fetchSessionData = async (id) => {
+      // Don't fetch if this session is currently being deleted
+      if (deletingSessionId === id) {
+        return;
+      }
+
       try {
         setSessionLoading(true);
         setActiveSessionId(id);
@@ -111,19 +121,43 @@ const InterviewHistory = () => {
         setSessionLoading(false);
       } catch (error) {
         console.error("Error fetching session data:", error);
-        toast.error("Failed to load interview session");
+
+        // If the session is not found and we're not on the main history page,
+        // navigate back to avoid showing error for deleted sessions
+        if (error.message && error.message.includes("not found")) {
+          toast.error("Interview session not found");
+          setActiveSessionId(null);
+          setSelectedInterview(null);
+          setConversation([]);
+          setFeedback(null);
+          navigate("/interview-history", { replace: true });
+        } else {
+          toast.error("Failed to load interview session");
+        }
         setSessionLoading(false);
       }
     };
 
-    if (sessionId) {
+    if (sessionId && sessionId !== "undefined") {
       fetchSessionData(sessionId);
-    } else if (activeSessionId) {
+    } else if (activeSessionId && activeSessionId !== sessionId) {
       fetchSessionData(activeSessionId);
-    } else if (interviews && interviews.length > 0 && !activeSessionId) {
+    } else if (
+      interviews &&
+      interviews.length > 0 &&
+      !activeSessionId &&
+      !sessionId
+    ) {
       fetchSessionData(interviews[0]._id);
     }
-  }, [dispatch, sessionId, interviews, activeSessionId]);
+  }, [
+    dispatch,
+    sessionId,
+    interviews,
+    activeSessionId,
+    deletingSessionId,
+    navigate,
+  ]);
 
   // Scroll to bottom of messages
   useEffect(() => {
@@ -160,6 +194,41 @@ const InterviewHistory = () => {
     setFeedback(null);
   };
 
+  // Delete session handler
+  const handleDeleteSession = async (sessionIdToDelete) => {
+    try {
+      // Immediately clear the session if it's the one being deleted
+      if (activeSessionId === sessionIdToDelete) {
+        setActiveSessionId(null);
+        setSelectedInterview(null);
+        setConversation([]);
+        setFeedback(null);
+        setSessionLoading(false);
+        navigate("/interview-history", { replace: true });
+      }
+
+      // Perform the deletion
+      await dispatch(deleteInterviewSession(sessionIdToDelete)).unwrap();
+      toast.success("Interview session deleted");
+
+      // Refresh the current page to get updated results
+      dispatch(fetchInterviewHistory({ page: currentPage, limit: pageSize }));
+    } catch (error) {
+      console.error("Error deleting interview session:", error);
+      toast.error("Failed to delete interview session");
+
+      // If deletion failed and we cleared the session, we should try to restore it
+      if (activeSessionId === null && sessionIdToDelete) {
+        // Only restore if the user was viewing this session before deletion attempt
+        const urlSessionId = window.location.pathname.split("/").pop();
+        if (urlSessionId === sessionIdToDelete) {
+          // Don't restore - user intended to delete it
+          // Just stay on the history page without any session selected
+        }
+      }
+    }
+  };
+
   // Format date
   const formatDate = (dateString) => {
     const options = {
@@ -186,11 +255,11 @@ const InterviewHistory = () => {
 
     if (!selectedInterview) {
       return (
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="flex items-center justify-center py-20 h-full">
+          <div className="text-center max-w-md mx-auto p-8">
+            <div className="w-20 h-20 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-cyan-500/30">
               <svg
-                className="w-8 h-8 text-gray-500"
+                className="w-10 h-10 text-cyan-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -199,16 +268,29 @@ const InterviewHistory = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.414L3 21l2.414-5.094A8.959 8.959 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-300 mb-2">
-              Select an Interview
+            <h3 className="text-xl font-bold text-white mb-3">
+              Your Interview History
             </h3>
-            <p className="text-gray-400 text-sm">
-              Choose an interview session from the sidebar to view its details.
+            <p className="text-gray-400 text-sm leading-relaxed mb-6">
+              Select an interview session from the sidebar to view the
+              conversation, feedback, and detailed analysis of your performance.
             </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="bg-gray-800/30 rounded-lg p-3 text-center">
+                <div className="text-cyan-400 mb-1">📊</div>
+                <div className="font-medium text-gray-300">View Feedback</div>
+                <div className="text-gray-500">Detailed AI analysis</div>
+              </div>
+              <div className="bg-gray-800/30 rounded-lg p-3 text-center">
+                <div className="text-purple-400 mb-1">💬</div>
+                <div className="font-medium text-gray-300">Review Answers</div>
+                <div className="text-gray-500">Complete conversation</div>
+              </div>
+            </div>
           </div>
         </div>
       );
@@ -1044,6 +1126,11 @@ const InterviewHistory = () => {
                         >
                           <button
                             onClick={() => {
+                              // Don't allow selection if this session is being deleted
+                              if (deletingSessionId === interview._id) {
+                                return;
+                              }
+
                               if (!isActive) {
                                 setActiveSessionId(interview._id);
                                 navigate(`/interview-history/${interview._id}`);
@@ -1054,10 +1141,13 @@ const InterviewHistory = () => {
                               }
                             }}
                             className={`w-full p-2 sm:p-3 rounded-lg text-left transition-all duration-200 flex items-center space-x-2 sm:space-x-3 ${
-                              isActive
+                              deletingSessionId === interview._id
+                                ? "bg-red-500/10 border border-red-500/30 opacity-50 cursor-not-allowed"
+                                : isActive
                                 ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 ring-1 ring-cyan-400/40"
                                 : "bg-gray-800/30 hover:bg-gray-800/50 border border-transparent"
                             }`}
+                            disabled={deletingSessionId === interview._id}
                           >
                             <div
                               className={`w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-r ${domainInfo.color} flex items-center justify-center text-xs sm:text-sm`}
@@ -1110,6 +1200,21 @@ const InterviewHistory = () => {
                                 {interview.feedBack?.overall_score || 0}
                               </span>
                             </div>
+                            <button
+                              className="ml-2 p-1 rounded hover:bg-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Delete interview session"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteSession(interview._id);
+                              }}
+                              disabled={deletingSessionId === interview._id}
+                            >
+                              {deletingSessionId === interview._id ? (
+                                <DotLottieLoader size="w-4 h-4" />
+                              ) : (
+                                <FaTrash size={14} />
+                              )}
+                            </button>
                           </button>
                         </motion.div>
                       );

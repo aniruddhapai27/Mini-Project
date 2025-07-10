@@ -95,6 +95,14 @@ export const interviewApi = {
     );
     return response.data;
   },
+
+  // Delete interview session
+  deleteSession: async (sessionId) => {
+    const response = await api.delete(
+      `/api/v1/interview/sessions/${sessionId}`
+    );
+    return response.data;
+  },
 };
 
 // Study Assistant API functions

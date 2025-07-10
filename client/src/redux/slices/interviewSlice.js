@@ -263,6 +263,22 @@ export const fetchInterviewHistory = createAsyncThunk(
   }
 );
 
+export const deleteInterviewSession = createAsyncThunk(
+  "interview/deleteSession",
+  async (sessionId, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(
+        `/api/v1/interview/sessions/${sessionId}`
+      );
+      return { sessionId, data: response.data };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete interview session"
+      );
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   // Current interview session
@@ -289,6 +305,11 @@ const initialState = {
   totalInterviews: 0,
   historyLoading: false,
   historyError: null,
+
+  // Interview session deletion
+  deleteSessionLoading: false,
+  deleteSessionError: null,
+  deletingSessionId: null,
 
   // Enhanced pagination metadata
   pagination: {
@@ -880,6 +901,39 @@ const interviewSlice = createSlice({
         state.historyLoading = false;
         state.historyError = action.payload || action.error.message;
         console.error("❌ Redux: Failed to fetch interview history:", action);
+      })
+
+      // Delete interview session
+      .addCase(deleteInterviewSession.pending, (state, action) => {
+        state.deleteSessionLoading = true;
+        state.deleteSessionError = null;
+        state.deletingSessionId = action.meta.arg; // Store the session ID being deleted
+      })
+      .addCase(deleteInterviewSession.fulfilled, (state, action) => {
+        state.deleteSessionLoading = false;
+        state.deletingSessionId = null;
+        const deletedSessionId = action.payload.sessionId;
+
+        // Remove the deleted session from interview history
+        state.interviewHistory = state.interviewHistory.filter(
+          (interview) => interview._id !== deletedSessionId
+        );
+
+        // Update total count
+        if (state.totalInterviews > 0) {
+          state.totalInterviews -= 1;
+        }
+
+        // Clear session feedback cache for the deleted session
+        if (state.sessionFeedbacks[deletedSessionId]) {
+          delete state.sessionFeedbacks[deletedSessionId];
+        }
+      })
+      .addCase(deleteInterviewSession.rejected, (state, action) => {
+        state.deleteSessionLoading = false;
+        state.deleteSessionError = action.payload || action.error.message;
+        state.deletingSessionId = null;
+        console.error("❌ Redux: Failed to delete interview session:", action);
       });
   },
 });
@@ -1003,5 +1057,13 @@ export const selectHistoryTotalInterviews = (state) =>
   state.interview.totalInterviews;
 export const selectHistoryPageSize = (state) =>
   state.interview.pagination.limit;
+
+// Interview session deletion selectors
+export const selectDeleteSessionLoading = (state) =>
+  state.interview.deleteSessionLoading;
+export const selectDeleteSessionError = (state) =>
+  state.interview.deleteSessionError;
+export const selectDeletingSessionId = (state) =>
+  state.interview.deletingSessionId;
 
 export default interviewSlice.reducer;
