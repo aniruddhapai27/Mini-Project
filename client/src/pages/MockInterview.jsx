@@ -372,6 +372,7 @@ const MockInterview = () => {
     const messageData = {
       domain: sessionData.domain,
       difficulty: sessionData.difficulty,
+      useResume: sessionData.useResume !== undefined ? sessionData.useResume : true, // Include useResume flag with default to true
       userResponse: userMessage,
       sessionId: currentSessionId,
     };
@@ -443,6 +444,7 @@ const MockInterview = () => {
     const initialMessageData = {
       domain: sessionData.domain,
       difficulty: sessionData.difficulty,
+      useResume: sessionData.useResume !== undefined ? sessionData.useResume : true, // Include useResume flag with default to true
       userResponse:
         "Hello, I'm ready to start the interview. Please begin with your first question.",
       sessionId: sessionIdToUse, // Use existing session ID or null for a new one

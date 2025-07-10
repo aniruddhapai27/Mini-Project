@@ -105,7 +105,7 @@ export const getRecentInterviews = createAsyncThunk(
 export const sendInterviewMessage = createAsyncThunk(
   "interview/sendMessage",
   async (
-    { domain, difficulty, userResponse, sessionId },
+    { domain, difficulty, userResponse, sessionId, useResume = true },
     { rejectWithValue }
   ) => {
     try {
@@ -114,6 +114,7 @@ export const sendInterviewMessage = createAsyncThunk(
         const response = await api.post("/api/v1/interview/sessions", {
           domain,
           difficulty,
+          useResume, // Include useResume flag in the API request
         });
 
         return {

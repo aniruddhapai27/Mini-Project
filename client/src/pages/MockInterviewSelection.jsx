@@ -26,6 +26,7 @@ const MockInterviewSelection = () => {
   const [selectedDomain, setSelectedDomain] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
   const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [useResume, setUseResume] = useState(true); // New state for resume selection
 
   // Available domains and difficulties
   const domains = [
@@ -108,6 +109,7 @@ const MockInterviewSelection = () => {
         state: {
           domain: selectedDomain,
           difficulty: selectedDifficulty,
+          useResume: hasResume && useResume, // Only use resume if it exists and is selected
         },
       });
     } catch (error) {
@@ -352,13 +354,50 @@ const MockInterviewSelection = () => {
                     </svg>
                   </div>
                   <h3 className="text-lg font-bold text-green-400">
-                    Resume Ready
+                    Resume Available
                   </h3>
                 </div>
-                <p className="text-green-300 text-center mb-4">
-                  Your interviews will be personalized based on your uploaded
-                  resume
-                </p>
+                
+                {/* Resume Toggle Section */}
+                <div className="mb-4 p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h4 className="text-white font-medium">Use Resume for Interview</h4>
+                      <p className="text-gray-400 text-sm">
+                        {useResume 
+                          ? "Get personalized questions based on your resume" 
+                          : "Conduct a general interview without resume context"
+                        }
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={useResume}
+                        onChange={(e) => setUseResume(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300/25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                    </label>
+                  </div>
+                  
+                  {useResume && (
+                    <div className="text-center">
+                      <p className="text-green-300 text-sm mb-3">
+                        Your interviews will be personalized based on your uploaded resume
+                      </p>
+                    </div>
+                  )}
+                  
+                  {!useResume && (
+                    <div className="text-center">
+                      <p className="text-yellow-300 text-sm mb-3">
+                        You'll receive general interview questions without resume context
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-center gap-3">
                   <button
                     onClick={() => window.open(user.resume, "_blank")}

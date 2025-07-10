@@ -294,7 +294,7 @@ exports.getRecentInterviews = catchAsync(async (req, res) => {
 // Resume-based interview controller - Updated to use user's stored resume
 exports.createResumeBasedInterview = catchAsync(async (req, res) => {
   const userId = req.user._id;
-  const { domain, difficulty } = req.body;
+  const { domain, difficulty, useResume = true } = req.body;
 
   console.log(
     "Creating interview session for userId:",
@@ -330,7 +330,7 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
     let resumeBuffer = null;
     let resumeFilename = "no_resume.txt";
 
-    if (user && user.resume) {
+    if (useResume && user && user.resume) {
       try {
         // Download resume from Cloudinary
         const response = await axios.get(user.resume, {
@@ -444,7 +444,7 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
         },
       ],
       sessionId: pythonSessionId,
-      resumeUsed: user?.resume || null, // Store which resume was used
+      resumeUsed: (useResume && user?.resume) || null, // Store which resume was used
     });
 
     await newInterview.save();
