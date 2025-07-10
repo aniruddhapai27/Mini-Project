@@ -471,9 +471,20 @@ const MockInterview = () => {
   // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height =
-        Math.min(textareaRef.current.scrollHeight, 150) + "px";
+      const textarea = textareaRef.current;
+
+      // Reset height to calculate scroll height properly
+      textarea.style.height = "52px";
+
+      // Calculate the required height based on content
+      const scrollHeight = textarea.scrollHeight;
+      const maxHeight = 120;
+      const minHeight = 52;
+
+      // Set height to content height, but within bounds
+      if (scrollHeight > minHeight) {
+        textarea.style.height = Math.min(scrollHeight, maxHeight) + "px";
+      }
     }
   }, [userResponse]);
 
@@ -782,9 +793,12 @@ const MockInterview = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 pb-4"
+            className="flex-1 overflow-y-auto px-4 py-6 space-y-6 pb-6"
             ref={chatContainerRef}
-            style={{ height: "calc(100vh - 136px)" }}
+            style={{
+              height: "calc(100vh - 160px)",
+              scrollBehavior: "smooth",
+            }}
           >
             {!interviewStarted ? (
               /* Interview Introduction */
@@ -886,11 +900,11 @@ const MockInterview = () => {
                           ? 0.1
                           : 0,
                     }}
-                    className={`flex items-start space-x-2 sm:space-x-4 ${
+                    className={`flex items-start space-x-3 sm:space-x-4 ${
                       message.type === "user"
                         ? "flex-row-reverse space-x-reverse"
                         : ""
-                    }`}
+                    } mb-4`}
                   >
                     <div
                       className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg text-sm sm:text-base ${
@@ -910,10 +924,10 @@ const MockInterview = () => {
                       }`}
                     >
                       <div
-                        className={`p-3 sm:p-4 rounded-2xl backdrop-blur-sm ${
+                        className={`p-4 sm:p-5 rounded-2xl backdrop-blur-sm shadow-lg ${
                           message.type === "ai" || message.type === "assistant"
-                            ? "bg-gray-800/50 border border-gray-700/50 text-white"
-                            : "bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 text-white"
+                            ? "bg-gray-800/60 border border-gray-700/60 text-white"
+                            : "bg-gradient-to-r from-cyan-500/15 to-purple-500/15 border border-cyan-500/40 text-white"
                         }`}
                       >
                         <ErrorBoundary fallbackMessage="Error rendering message">
@@ -1005,85 +1019,101 @@ const MockInterview = () => {
 
         {/* Input Area */}
         {interviewStarted && (
-          <div className="p-3 sm:p-4 bg-gray-900/50 backdrop-blur-xl border-t border-gray-700/50 sticky bottom-0 left-0 right-0 z-10">
-            <div className="relative">
-              <textarea
-                ref={textareaRef}
-                value={userResponse}
-                onChange={(e) => dispatch(setUserResponse(e.target.value))}
-                onKeyPress={handleKeyPress}
-                placeholder={
-                  isInterviewEnding
-                    ? "Interview is ending... Please wait for results."
-                    : "Type your response here or use voice recording..."
-                }
-                className="w-full p-3 pr-20 sm:p-4 sm:pr-24 bg-gray-800/70 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-sm sm:text-base"
-                rows={1}
-                style={{ minHeight: "44px" }}
-                disabled={aiResponseLoading || isInterviewEnding}
-              />
+          <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-900/80 backdrop-blur-xl border-t border-gray-700/50 sticky bottom-0 left-0 right-0 z-30">
+            <div className="max-w-4xl mx-auto">
+              <div className="relative flex items-end gap-2 sm:gap-3">
+                <div className="flex-1 relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={userResponse}
+                    onChange={(e) => dispatch(setUserResponse(e.target.value))}
+                    onKeyPress={handleKeyPress}
+                    placeholder={
+                      isInterviewEnding
+                        ? "Interview is ending... Please wait for results."
+                        : "Type your response here or use voice recording..."
+                    }
+                    className="w-full px-4 py-3 pr-14 sm:pr-16 bg-gray-800/90 border border-gray-600/80 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 resize-none text-sm sm:text-base placeholder-gray-400 shadow-lg transition-all duration-200 custom-scrollbar"
+                    rows={1}
+                    style={{
+                      height: "52px",
+                      maxHeight: "120px",
+                      lineHeight: "1.5",
+                      overflow: "auto",
+                    }}
+                    disabled={aiResponseLoading || isInterviewEnding}
+                  />
 
-              {/* Voice Recorder Button */}
-              <div className="absolute right-12 sm:right-14 top-1/2 -translate-y-1/2">
-                <VoiceRecorder
-                  onTranscript={handleVoiceTranscript}
-                  onError={handleVoiceError}
-                  disabled={aiResponseLoading || isInterviewEnding}
-                  size="w-7 h-7 sm:w-8 sm:h-8"
-                  className="bg-gray-600 hover:bg-gray-700"
-                />
+                  {/* Voice Recorder Button - Inside textarea */}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
+                    <VoiceRecorder
+                      onTranscript={handleVoiceTranscript}
+                      onError={handleVoiceError}
+                      disabled={aiResponseLoading || isInterviewEnding}
+                      size="w-7 h-7 sm:w-8 sm:h-8"
+                      className="bg-gray-700/80 hover:bg-gray-600/80 rounded-lg p-1.5 transition-all duration-200 shadow-md"
+                    />
+                  </div>
+                </div>
+
+                {/* Send Button - Outside textarea */}
+                <button
+                  onClick={handleSendResponse}
+                  disabled={
+                    !userResponse.trim() ||
+                    aiResponseLoading ||
+                    isInterviewEnding
+                  }
+                  className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-xl hover:from-cyan-600 hover:to-purple-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 shadow-lg flex items-center justify-center"
+                  title={aiResponseLoading ? "Sending..." : "Send message"}
+                >
+                  {aiResponseLoading ? (
+                    <DotLottieLoader size="w-5 h-5" />
+                  ) : (
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 12h14M12 5l7 7-7 7"
+                      />
+                    </svg>
+                  )}
+                </button>
               </div>
 
-              {/* Send Button */}
-              <button
-                onClick={handleSendResponse}
-                disabled={
-                  !userResponse.trim() || aiResponseLoading || isInterviewEnding
-                }
-                className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-full hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-              >
-                {aiResponseLoading ? (
-                  <DotLottieLoader size="w-4 h-4 sm:w-5 sm:h-5" />
-                ) : (
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 12h14M12 5l7 7-7 7"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-            <div className="flex justify-center mt-2 text-xs text-gray-400">
-              <span className="hidden sm:inline">
-                Press{" "}
-                <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-600 rounded mx-1">
-                  Enter
-                </kbd>{" "}
-                to send,{" "}
-                <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-600 rounded mx-1">
-                  Shift+Enter
-                </kbd>{" "}
-                for new line, or use{" "}
-                <span className="inline-flex items-center mx-1">
-                  <svg
-                    className="w-3 h-3 mr-1"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z" />
-                  </svg>
-                  voice
+              {/* Helper Text */}
+              <div className="flex justify-center mt-3 text-xs text-gray-400/80">
+                <span className="hidden sm:inline text-center">
+                  Press{" "}
+                  <kbd className="px-2 py-1 bg-gray-800/60 border border-gray-600/60 rounded text-xs mx-1">
+                    Enter
+                  </kbd>{" "}
+                  to send •{" "}
+                  <kbd className="px-2 py-1 bg-gray-800/60 border border-gray-600/60 rounded text-xs mx-1">
+                    Shift+Enter
+                  </kbd>{" "}
+                  for new line •{" "}
+                  <span className="inline-flex items-center mx-1">
+                    <svg
+                      className="w-3 h-3 mr-1"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z" />
+                    </svg>
+                    use voice
+                  </span>
                 </span>
-              </span>
-              <span className="sm:hidden">Tap Enter to send, or use voice</span>
+                <span className="sm:hidden text-center">
+                  Tap Enter to send • Use voice recording
+                </span>
+              </div>
             </div>
           </div>
         )}
@@ -1173,6 +1203,35 @@ const MockInterview = () => {
 
         .animate-fadeIn {
           animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        /* Custom scrollbar for textarea */
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(156, 163, 175, 0.6) rgba(55, 65, 81, 0.3);
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(55, 65, 81, 0.3);
+          border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(156, 163, 175, 0.6);
+          border-radius: 3px;
+          transition: background 0.2s ease;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(156, 163, 175, 0.8);
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:active {
+          background: rgba(96, 165, 250, 0.8);
         }
       `}</style>
     </motion.div>
