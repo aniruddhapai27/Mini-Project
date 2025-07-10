@@ -57,7 +57,15 @@ const QuizResults = () => {
     };
 
     checkQuizData();
-  }, [results, loading, error, quizState, location.state, navigate, reduxResults]);
+  }, [
+    results,
+    loading,
+    error,
+    quizState,
+    location.state,
+    navigate,
+    reduxResults,
+  ]);
 
   const handleRetakeQuiz = () => {
     dispatch(resetQuiz());
@@ -71,20 +79,7 @@ const QuizResults = () => {
     navigate("/quiz-selection");
   };
 
-  // Helper function to format time
-  const formatTime = (milliseconds) => {
-    const seconds = Math.floor(milliseconds / 1000);
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Helper function to format time in seconds
-  const formatTimeSeconds = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  // Time formatting functions have been removed
 
   const getPerformanceIcon = (performance) => {
     switch (performance) {
@@ -151,7 +146,7 @@ const QuizResults = () => {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
         <div className="text-center bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-8 shadow-xl">
-          <DotLottieLoader 
+          <DotLottieLoader
             size="w-12 h-12"
             text="Calculating results..."
             textColor="text-white"
@@ -205,7 +200,10 @@ const QuizResults = () => {
               strokeWidth={2}
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L5.232 16.5c-.77.833.192 2.5 1.732 2.5z"
             />
-          </svg>          <p className="mt-4 text-black dark:text-white">No quiz results found</p>
+          </svg>{" "}
+          <p className="mt-4 text-black dark:text-white">
+            No quiz results found
+          </p>
           <button
             className="mt-6 py-2 px-6 bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-all duration-200"
             onClick={handleNewQuiz}
@@ -216,7 +214,7 @@ const QuizResults = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden py-8">
       {/* Pure Black Geometric Background */}
@@ -225,8 +223,18 @@ const QuizResults = () => {
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
+              <pattern
+                id="grid"
+                width="40"
+                height="40"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M 40 0 L 0 0 0 40"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="1"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#grid)" />
@@ -237,8 +245,20 @@ const QuizResults = () => {
         <div className="absolute inset-0 opacity-5">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="hexagons" x="0" y="0" width="50" height="43.4" patternUnits="userSpaceOnUse">
-                <polygon fill="none" stroke="white" strokeWidth="1" points="24.8,22 37.3,29.2 37.3,43.7 24.8,50.9 12.3,43.7 12.3,29.2"/>
+              <pattern
+                id="hexagons"
+                x="0"
+                y="0"
+                width="50"
+                height="43.4"
+                patternUnits="userSpaceOnUse"
+              >
+                <polygon
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="1"
+                  points="24.8,22 37.3,29.2 37.3,43.7 24.8,50.9 12.3,43.7 12.3,29.2"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#hexagons)" />
@@ -249,12 +269,27 @@ const QuizResults = () => {
         <div className="absolute inset-0 opacity-8">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="circuit" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
-                <rect x="20" y="20" width="20" height="20" fill="none" stroke="white" strokeWidth="0.5"/>
-                <circle cx="30" cy="10" r="2" fill="white" opacity="0.3"/>
-                <circle cx="50" cy="30" r="2" fill="white" opacity="0.3"/>
-                <circle cx="30" cy="50" r="2" fill="white" opacity="0.3"/>
-                <circle cx="10" cy="30" r="2" fill="white" opacity="0.3"/>
+              <pattern
+                id="circuit"
+                x="0"
+                y="0"
+                width="60"
+                height="60"
+                patternUnits="userSpaceOnUse"
+              >
+                <rect
+                  x="20"
+                  y="20"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="0.5"
+                />
+                <circle cx="30" cy="10" r="2" fill="white" opacity="0.3" />
+                <circle cx="50" cy="30" r="2" fill="white" opacity="0.3" />
+                <circle cx="30" cy="50" r="2" fill="white" opacity="0.3" />
+                <circle cx="10" cy="30" r="2" fill="white" opacity="0.3" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#circuit)" />
@@ -273,8 +308,20 @@ const QuizResults = () => {
         <div className="absolute inset-0 opacity-5">
           <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <pattern id="diamonds" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
-                <path d="M15,0 L30,15 L15,30 L0,15 Z" fill="none" stroke="white" strokeWidth="0.5"/>
+              <pattern
+                id="diamonds"
+                x="0"
+                y="0"
+                width="30"
+                height="30"
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d="M15,0 L30,15 L15,30 L0,15 Z"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="0.5"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#diamonds)" />
@@ -283,26 +330,38 @@ const QuizResults = () => {
 
         {/* Animated Lines */}
         <div className="absolute top-0 left-1/5 w-px h-full bg-gradient-to-b from-transparent via-white/20 to-transparent animate-pulse"></div>
-        <div className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-gray-300/20 to-transparent animate-pulse" style={{ animationDelay: "1s" }}></div>
-        <div className="absolute left-0 top-1/5 w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent animate-pulse" style={{ animationDelay: "2s" }}></div>
-        <div className="absolute left-0 bottom-1/4 w-full h-px bg-gradient-to-r from-transparent via-gray-400/15 to-transparent animate-pulse" style={{ animationDelay: "3s" }}></div>
+        <div
+          className="absolute top-0 right-1/4 w-px h-full bg-gradient-to-b from-transparent via-gray-300/20 to-transparent animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute left-0 top-1/5 w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+        <div
+          className="absolute left-0 bottom-1/4 w-full h-px bg-gradient-to-r from-transparent via-gray-400/15 to-transparent animate-pulse"
+          style={{ animationDelay: "3s" }}
+        ></div>
 
         {/* Particle System */}
         <div className="absolute top-1/4 left-1/2 w-1 h-1 bg-white opacity-40 rounded-full animate-ping"></div>
-        <div className="absolute top-3/4 left-1/4 w-1 h-1 bg-gray-300 opacity-50 rounded-full animate-ping" style={{ animationDelay: "1s" }}></div>
-        <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-white opacity-60 rounded-full animate-ping" style={{ animationDelay: "2s" }}></div>
+        <div
+          className="absolute top-3/4 left-1/4 w-1 h-1 bg-gray-300 opacity-50 rounded-full animate-ping"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 right-1/4 w-1 h-1 bg-white opacity-60 rounded-full animate-ping"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-4xl relative z-10">        {/* Header */}
+      <div className="container mx-auto px-4 max-w-4xl relative z-10">
+        {" "}
+        {/* Header */}
         <div className="text-center mb-8 animate-fadeIn">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Quiz Results
-          </h1>
-          <p className="text-gray-300">
-            {results.subject} Quiz
-          </p>
+          <h1 className="text-4xl font-bold text-white mb-2">Quiz Results</h1>
+          <p className="text-gray-300">{results.subject} Quiz</p>
         </div>
-
         {/* Score Overview */}
         <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/20 rounded-xl p-8 mb-8 shadow-md animate-fadeIn">
           <div className="text-center">
@@ -315,104 +374,64 @@ const QuizResults = () => {
             {/* Progress Bar */}
             <div className="w-full max-w-md mx-auto mb-6">
               <div className="flex items-center justify-between mb-1">
+                <span className="text-gray-300 text-sm">Progress</span>
                 <span className="text-gray-300 text-sm">
-                  Progress
-                </span>
-                <span className="text-gray-300 text-sm">
-                  {Math.round((results.correctAnswers / results.totalQuestions) * 100)}%
+                  {Math.round(
+                    (results.correctAnswers / results.totalQuestions) * 100
+                  )}
+                  %
                 </span>
               </div>
               <div className="w-full h-4 rounded-full bg-gray-700/50 overflow-hidden">
                 <div
                   className="h-4 rounded-full transition-all duration-500"
                   style={{
-                    width: `${(results.correctAnswers / results.totalQuestions) * 100}%`,
+                    width: `${
+                      (results.correctAnswers / results.totalQuestions) * 100
+                    }%`,
                     background:
-                      (results.correctAnswers / results.totalQuestions) >= 0.7
-                        ? 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)' // green
-                        : 'linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)', // red
+                      results.correctAnswers / results.totalQuestions >= 0.7
+                        ? "linear-gradient(90deg, #22c55e 0%, #16a34a 100%)" // green
+                        : "linear-gradient(90deg, #ef4444 0%, #b91c1c 100%)", // red
                   }}
                 ></div>
               </div>
-            </div>            <div className="text-6xl font-bold mb-2 text-white animate-fadeIn">
+            </div>{" "}
+            <div className="text-6xl font-bold mb-2 text-white animate-fadeIn">
               {results.score}%
             </div>
             <div className="text-xl text-gray-300 mb-6 animate-fadeIn">
               Grade:{" "}
-              <span className="font-bold text-white">
-                {results.grade}
-              </span>
+              <span className="font-bold text-white">{results.grade}</span>
             </div>
-
             <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-500">
                   {results.correctAnswers}
-                </div>                <div className="text-sm text-gray-300">
-                  Correct
-                </div>
+                </div>{" "}
+                <div className="text-sm text-gray-300">Correct</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-500">
                   {results.summary?.questionsIncorrect ||
                     results.totalQuestions - results.correctAnswers}
                 </div>
-                <div className="text-sm text-gray-300">
-                  Incorrect
-                </div>
+                <div className="text-sm text-gray-300">Incorrect</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-white">
                   {results.totalQuestions}
                 </div>
-                <div className="text-sm text-gray-300">
-                  Total
-                </div>
+                <div className="text-sm text-gray-300">Total</div>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Timing Information */}
-        {(results.timeTaken || results.totalTime) && (
-          <div className="bg-gray-900/50 backdrop-blur-xl border border-gray-700/20 rounded-xl p-6 mb-8 shadow-md animate-fadeIn">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center">
-              <svg className="w-6 h-6 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Timing Analysis
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-gray-800/30 rounded-lg">
-                <div className="text-2xl font-bold text-blue-400 mb-1">
-                  {results.timeTaken ? formatTimeSeconds(results.timeTaken) : formatTime(results.totalTime)}
-                </div>
-                <div className="text-sm text-gray-300">Total Time</div>
-              </div>
-              <div className="text-center p-4 bg-gray-800/30 rounded-lg">
-                <div className="text-2xl font-bold text-green-400 mb-1">
-                  {results.timeTaken ? 
-                    formatTimeSeconds(Math.floor(results.timeTaken / results.totalQuestions)) :
-                    formatTime(Math.floor((results.totalTime || 0) / results.totalQuestions))
-                  }
-                </div>
-                <div className="text-sm text-gray-300">Avg per Question</div>
-              </div>
-              <div className="text-center p-4 bg-gray-800/30 rounded-lg">
-                <div className="text-2xl font-bold text-purple-400 mb-1">
-                  {results.timeTaken ? 
-                    `${Math.floor((results.timeTaken / 180) * 100)}%` :
-                    `${Math.floor(((results.totalTime || 0) / 180000) * 100)}%`
-                  }
-                </div>
-                <div className="text-sm text-gray-300">Time Used</div>
-              </div>
-            </div>
-          </div>
-        )}
-
+        {/* Timing Information section has been removed */}
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8 animate-fadeIn">          <button
+        <div className="flex flex-col sm:flex-row gap-4 mb-8 animate-fadeIn">
+          {" "}
+          <button
             onClick={() => setShowDetailedView(!showDetailedView)}
             className="flex-1 py-3 px-6 bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-lg font-semibold hover:from-gray-700 hover:to-gray-900 hover:scale-105 transition-all duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
@@ -430,19 +449,19 @@ const QuizResults = () => {
           >
             New Quiz
           </button>
-        </div>        {/* Detailed Results */}
+        </div>{" "}
+        {/* Detailed Results */}
         {showDetailedView && results.detailedResults && (
           <div className="space-y-6 animate-fadeIn">
             <h2 className="text-2xl font-bold text-white mb-6">
-              Question by Question Review ({results.detailedResults.length} questions)
+              Question by Question Review ({results.detailedResults.length}{" "}
+              questions)
             </h2>
             {results.detailedResults.map((result, index) => (
               <div
                 key={result.questionId}
                 className={`bg-black/5 dark:bg-white/5 border rounded-xl p-6 shadow-md transition-transform duration-300 animate-fadeIn ${
-                  result.isCorrect
-                    ? "border-green-500"
-                    : "border-red-500"
+                  result.isCorrect ? "border-green-500" : "border-red-500"
                 }`}
               >
                 <div className="flex items-start justify-between mb-4">
@@ -451,12 +470,6 @@ const QuizResults = () => {
                       <span className="text-sm font-medium text-black/70 dark:text-white/70 mr-3">
                         Question {index + 1}
                       </span>
-                      {/* Question timing */}
-                      {results.timePerQuestion && results.timePerQuestion[index] && (
-                        <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full mr-3">
-                          {formatTime(results.timePerQuestion[index])}
-                        </span>
-                      )}
                       {result.isCorrect ? (
                         <div className="flex items-center text-green-500">
                           <svg
@@ -497,9 +510,11 @@ const QuizResults = () => {
 
                 <div className="space-y-3">
                   {result.options.map((option, optionIndex) => {
-                    const isUserSelected = optionIndex === result.userSelectedOption;
+                    const isUserSelected =
+                      optionIndex === result.userSelectedOption;
                     const isCorrect = optionIndex === result.correctOption;
-                    let bgColor = "bg-black/10 dark:bg-white/10 border-black/10 dark:border-white/10";
+                    let bgColor =
+                      "bg-black/10 dark:bg-white/10 border-black/10 dark:border-white/10";
                     let textColor = "text-black dark:text-white";
                     if (isCorrect) {
                       bgColor = "bg-green-500 border-green-700";
@@ -514,10 +529,14 @@ const QuizResults = () => {
                         className={`p-3 rounded-lg border ${bgColor} transition-all duration-200 animate-fadeIn`}
                       >
                         <div className="flex items-center">
-                          <span className={`text-sm font-medium mr-3 ${textColor}`}>
+                          <span
+                            className={`text-sm font-medium mr-3 ${textColor}`}
+                          >
                             {String.fromCharCode(65 + optionIndex)}.
                           </span>
-                          <span className={textColor + ' whitespace-pre-line'}>{option}</span>
+                          <span className={textColor + " whitespace-pre-line"}>
+                            {option}
+                          </span>
                           <div className="ml-auto flex items-center space-x-2">
                             {/* Removed 'Correct Answer' and 'Your Answer' badges from red and green boxes for cleaner look */}
                           </div>
