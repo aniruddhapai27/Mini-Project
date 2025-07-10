@@ -295,7 +295,7 @@ const MockInterviewSelection = () => {
           <p className="text-base sm:text-lg text-gray-300 mb-4 sm:mb-6 animate-fadeIn">
             Test your skills with AI-powered interview simulation
           </p>{" "}
-          {/* Gamification Stats */}
+          {/* Gamification Stats
           <div className="flex justify-center items-center space-x-3 sm:space-x-6 mb-6 sm:mb-8">
             <div className="bg-gradient-to-br from-gray-600/10 to-gray-800/10 border border-gray-500/30 rounded-xl p-3 sm:p-4 text-center">
               <div className="text-lg sm:text-2xl mb-1">🏆</div>
@@ -320,7 +320,7 @@ const MockInterviewSelection = () => {
               </div>
               <div className="text-xs text-gray-400">Day Streak</div>
             </div>
-          </div>
+          </div> */}
           {/* Resume Status */}
           <div className="mb-8">
             {hasResume ? (
@@ -487,13 +487,13 @@ const MockInterviewSelection = () => {
                   <p className="text-xs sm:text-sm text-black/70 dark:text-white/70 mb-2 sm:mb-3">
                     {difficulty.description}
                   </p>
-                  <div className="flex items-center justify-center space-x-2">
+                  {/* <div className="flex items-center justify-center space-x-2">
                     <span
                       className={`px-2 py-1 rounded text-white text-xs font-bold ${difficulty.color}`}
                     >
                       {difficulty.xpMultiplier} XP
                     </span>
-                  </div>
+                  </div> */}
                   {/* Only border highlight for selection, no tick icon */}
                 </div>
               </div>

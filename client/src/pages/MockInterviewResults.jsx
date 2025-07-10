@@ -2,10 +2,6 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import {
-  selectLevel,
-  selectTotalXP,
-  selectStreakCount,
-  selectAchievements,
   resetCurrentSession,
   getInterviewFeedback,
   getInterviewSession,
@@ -16,8 +12,6 @@ import {
   selectHasFeedbackForSession,
   clearFeedback,
   clearFeedbackError,
-  selectSessionLoading,
-  selectSessionError,
 } from "../redux/slices/interviewSlice";
 
 const MockInterviewResults = () => {
@@ -27,15 +21,9 @@ const MockInterviewResults = () => {
   const { sessionId: urlSessionId } = useParams(); // Get sessionId from URL params
 
   // Redux selectors
-  const level = useSelector(selectLevel);
-  const totalXP = useSelector(selectTotalXP);
-  const streakCount = useSelector(selectStreakCount);
-  const achievements = useSelector(selectAchievements);
   const feedbackLoading = useSelector(selectFeedbackLoading);
   const feedbackError = useSelector(selectFeedbackError);
   const reduxFeedback = useSelector(selectFeedback);
-  const sessionLoading = useSelector(selectSessionLoading);
-  const sessionError = useSelector(selectSessionError);
 
   // Get data from navigation state or provide defaults
   const {
@@ -56,7 +44,6 @@ const MockInterviewResults = () => {
   const [showDetailedView, setShowDetailedView] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
   const [feedbackFetched, setFeedbackFetched] = useState(false);
-  const [sessionData, setSessionData] = useState(null);
 
   // Get feedback selector for this specific session
   const sessionFeedback = useSelector(selectFeedbackForSession(sessionId));
@@ -159,7 +146,6 @@ const MockInterviewResults = () => {
         .unwrap()
         .then((sessionData) => {
           console.log("Fetched session data:", sessionData);
-          setSessionData(sessionData);
 
           // Set the session data to be used by the component
           if (sessionData) {
@@ -223,20 +209,6 @@ const MockInterviewResults = () => {
     if (score >= 60)
       return "from-orange-500/20 to-yellow-500/20 border-orange-500/40";
     return "from-red-500/20 to-pink-500/20 border-red-500/40";
-  };
-
-  const calculateXPGained = (score, difficulty) => {
-    const baseXP = 10;
-    const difficultyMultiplier = {
-      easy: 1,
-      medium: 1.5,
-      hard: 2,
-    };
-    const scoreMultiplier = score / 100;
-
-    return Math.floor(
-      baseXP * difficultyMultiplier[difficulty] * scoreMultiplier
-    );
   };
 
   // Format domain names for display
@@ -490,7 +462,7 @@ const MockInterviewResults = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+            <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto">
               <div className="text-center p-4 bg-black/5 dark:bg-white/5 rounded-lg">
                 <div className="text-2xl font-bold text-purple-400">
                   {questionCount}
@@ -507,84 +479,9 @@ const MockInterviewResults = () => {
                   Difficulty
                 </div>
               </div>
-
-              <div className="text-center p-4 bg-black/5 dark:bg-white/5 rounded-lg">
-                <div className="text-2xl font-bold text-green-400">
-                  +{calculateXPGained(score, difficulty)}
-                </div>
-                <div className="text-sm text-black/70 dark:text-white/70">
-                  XP Gained
-                </div>
-              </div>
-
-              <div className="text-center p-4 bg-black/5 dark:bg-white/5 rounded-lg">
-                <div className="text-2xl font-bold text-orange-400">
-                  {streakCount}
-                </div>
-                <div className="text-sm text-black/70 dark:text-white/70">
-                  Streak
-                </div>
-              </div>
             </div>
           </div>
         </div>
-        {/* Gamification Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-6 text-center animate-fadeIn">
-            <div className="text-3xl mb-2">🏆</div>
-            <div className="text-xl font-bold text-purple-400">
-              Level {level}
-            </div>
-            <div className="text-sm text-black/70 dark:text-white/70">
-              Current Level
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-6 text-center animate-fadeIn">
-            <div className="text-3xl mb-2">⭐</div>
-            <div className="text-xl font-bold text-cyan-400">{totalXP}</div>
-            <div className="text-sm text-black/70 dark:text-white/70">
-              Total XP
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl p-6 text-center animate-fadeIn">
-            <div className="text-3xl mb-2">🔥</div>
-            <div className="text-xl font-bold text-orange-400">
-              {streakCount}
-            </div>
-            <div className="text-sm text-black/70 dark:text-white/70">
-              Day Streak
-            </div>
-          </div>
-        </div>
-        {/* Recent Achievements */}
-        {achievements.length > 0 && (
-          <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl p-6 mb-8 animate-fadeIn">
-            <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center">
-              <span className="text-2xl mr-2">🏅</span>
-              Recent Achievements
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {achievements.slice(-3).map((achievement) => (
-                <div
-                  key={achievement.id}
-                  className="flex items-center space-x-3 bg-black/5 dark:bg-white/5 rounded-lg p-3"
-                >
-                  <div className="text-2xl">{achievement.icon}</div>
-                  <div>
-                    <div className="font-semibold text-black dark:text-white text-sm">
-                      {achievement.name}
-                    </div>
-                    <div className="text-xs text-black/70 dark:text-white/70">
-                      {achievement.description}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
         {/* Feedback Section */}
         <div className="bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-6 mb-8 animate-fadeIn">
           <h3 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center">
