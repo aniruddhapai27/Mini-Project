@@ -24,6 +24,7 @@ import {
   selectFeedbackLoading,
   selectInterviewEndLoading,
   addUserMessage,
+  addAIMessage,
 } from "../redux/slices/interviewSlice";
 import DotLottieLoader from "../components/DotLottieLoader";
 import VoiceRecorder from "../components/VoiceRecorder";
@@ -73,7 +74,9 @@ const MockInterview = () => {
   const [typewriterText, setTypewriterText] = useState("");
   const [currentTypewriterText, setCurrentTypewriterText] = useState("");
   const [typewriterMessageIndex, setTypewriterMessageIndex] = useState(-1);
+  const [lastProcessedMessageCount, setLastProcessedMessageCount] = useState(0);
   const [isThinking, setIsThinking] = useState(false);
+  const [isInterviewEnding, setIsInterviewEnding] = useState(false);
 
   // Text-to-speech state
   const [currentAudio, setCurrentAudio] = useState(null);
@@ -206,118 +209,18 @@ const MockInterview = () => {
     };
   }, [currentAudio, preloadedAudio]);
 
-  // Handle sending user response
-  const handleSendResponse = useCallback(async () => {
-    if (!userResponse.trim() || aiResponseLoading) return;
-
-    const userMessage = userResponse.trim();
-
-    // Add user message to the conversation immediately
-    dispatch(
-      addUserMessage({
-        message: userMessage,
-        timestamp: new Date().toISOString(),
-      })
-    );
-
-    // Reset user response input
-    dispatch(setUserResponse(""));
-
-    // Set thinking state
-    setIsThinking(true);
-    setTypewriterActive(false);
-    setTypewriterText("");
-
-    // Create message data for the API
-    const messageData = {
-      domain: sessionData.domain,
-      difficulty: sessionData.difficulty,
-      userResponse: userMessage,
-      sessionId: currentSessionId,
+  // Get question limit based on difficulty
+  const getQuestionLimit = useCallback((difficulty) => {
+    const limits = {
+      easy: 7,
+      medium: 10,
+      hard: 15,
     };
-
-    // Now dispatch the API call to get AI's response
-    dispatch(sendInterviewMessage(messageData));
-
-    // Check if we should suggest ending (after 5 exchanges)
-    if (conversation.length >= 10) {
-      // 5 user + 5 AI messages
-      setTimeout(() => {
-        setShowEndModal(true);
-      }, 2000);
-    }
-  }, [
-    userResponse,
-    aiResponseLoading,
-    sessionData,
-    currentSessionId,
-    conversation,
-    dispatch,
-  ]);
-
-  // Handle voice transcript
-  const handleVoiceTranscript = useCallback(
-    (transcriptText) => {
-      if (transcriptText && transcriptText.trim()) {
-        // Set the transcribed text in the input field
-        dispatch(setUserResponse(transcriptText.trim()));
-
-        // Focus the textarea so user can see the text and edit if needed
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-          // Place cursor at the end of the text
-          setTimeout(() => {
-            const textarea = textareaRef.current;
-            if (textarea) {
-              textarea.setSelectionRange(
-                textarea.value.length,
-                textarea.value.length
-              );
-            }
-          }, 0);
-        }
-      }
-    },
-    [dispatch]
-  );
-
-  // Handle voice recording error
-  const handleVoiceError = useCallback((error) => {
-    console.error("Voice recording error:", error);
-    // You could add a toast notification here if needed
+    return limits[difficulty] || 10;
   }, []);
 
-  // Handle starting the interview
-  const handleStartInterview = async () => {
-    dispatch(startInterview());
-
-    setIsThinking(true);
-
-    // Check if we should use existing session ID from URL (if it's not 'new')
-    const shouldUseExistingSession = urlSessionId && urlSessionId !== "new";
-    const sessionIdToUse = shouldUseExistingSession ? urlSessionId : null;
-
-    console.log(
-      `Starting interview with ${
-        shouldUseExistingSession ? "existing" : "new"
-      } session ID: ${sessionIdToUse || "null"}`
-    );
-
-    // For the first question, we don't need to add a welcome message manually
-    // We'll send an initial message to the API to get the first question
-    const initialMessageData = {
-      domain: sessionData.domain,
-      difficulty: sessionData.difficulty,
-      userResponse:
-        "Hello, I'm ready to start the interview. Please begin with your first question.",
-      sessionId: sessionIdToUse, // Use existing session ID or null for a new one
-    };
-
-    dispatch(sendInterviewMessage(initialMessageData));
-  };
-
   // Handle ending interview
-  const handleEndInterview = async () => {
+  const handleEndInterview = useCallback(async () => {
     try {
       console.log("🔚 Ending interview...");
 
@@ -410,6 +313,142 @@ const MockInterview = () => {
         },
       });
     }
+  }, [currentSessionId, navigate, conversation, sessionData, dispatch]);
+
+  // Handle sending user response
+  const handleSendResponse = useCallback(async () => {
+    if (!userResponse.trim() || aiResponseLoading || isInterviewEnding) return;
+
+    const userMessage = userResponse.trim();
+
+    // Add user message to the conversation immediately
+    dispatch(
+      addUserMessage({
+        message: userMessage,
+        timestamp: new Date().toISOString(),
+      })
+    );
+
+    // Reset user response input
+    dispatch(setUserResponse(""));
+
+    // Set thinking state
+    setIsThinking(true);
+    setTypewriterActive(false);
+    setTypewriterText("");
+
+    // Calculate current question number (each question-answer is 2 messages)
+    const currentQuestionNumber = Math.floor(conversation.length / 2) + 1;
+    const questionLimit = getQuestionLimit(sessionData.difficulty);
+
+    // Check if we should automatically end after reaching question limit
+    if (currentQuestionNumber >= questionLimit) {
+      // Mark interview as ending to disable further input
+      setIsInterviewEnding(true);
+
+      // Don't send to server, just add thank you message and end interview
+      setTimeout(() => {
+        console.log(
+          `🏁 Interview completed - reached ${questionLimit} questions limit`
+        );
+
+        // Add a thank you message from AI without server call
+        dispatch(
+          addAIMessage(
+            "Thank you for participating in this interview! You've completed all the questions. I'll now analyze your responses and provide detailed feedback on your performance. Great job!"
+          )
+        );
+
+        // End the interview after a short delay to show the thank you message
+        setTimeout(() => {
+          handleEndInterview();
+        }, 3000); // Give time for the thank you message to be displayed
+      }, 1000); // Short delay to show the user message first
+
+      return; // Exit early, don't send to server
+    }
+
+    // Create message data for the API (only if not at question limit)
+    const messageData = {
+      domain: sessionData.domain,
+      difficulty: sessionData.difficulty,
+      userResponse: userMessage,
+      sessionId: currentSessionId,
+    };
+
+    // Now dispatch the API call to get AI's response
+    dispatch(sendInterviewMessage(messageData));
+  }, [
+    userResponse,
+    aiResponseLoading,
+    isInterviewEnding,
+    sessionData,
+    currentSessionId,
+    conversation,
+    dispatch,
+    getQuestionLimit,
+    handleEndInterview,
+  ]);
+
+  // Handle voice transcript
+  const handleVoiceTranscript = useCallback(
+    (transcriptText) => {
+      if (transcriptText && transcriptText.trim()) {
+        // Set the transcribed text in the input field
+        dispatch(setUserResponse(transcriptText.trim()));
+
+        // Focus the textarea so user can see the text and edit if needed
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          // Place cursor at the end of the text
+          setTimeout(() => {
+            const textarea = textareaRef.current;
+            if (textarea) {
+              textarea.setSelectionRange(
+                textarea.value.length,
+                textarea.value.length
+              );
+            }
+          }, 0);
+        }
+      }
+    },
+    [dispatch]
+  );
+
+  // Handle voice recording error
+  const handleVoiceError = useCallback((error) => {
+    console.error("Voice recording error:", error);
+    // You could add a toast notification here if needed
+  }, []);
+
+  // Handle starting the interview
+  const handleStartInterview = async () => {
+    dispatch(startInterview());
+
+    setIsThinking(true);
+
+    // Check if we should use existing session ID from URL (if it's not 'new')
+    const shouldUseExistingSession = urlSessionId && urlSessionId !== "new";
+    const sessionIdToUse = shouldUseExistingSession ? urlSessionId : null;
+
+    console.log(
+      `Starting interview with ${
+        shouldUseExistingSession ? "existing" : "new"
+      } session ID: ${sessionIdToUse || "null"}`
+    );
+
+    // For the first question, we don't need to add a welcome message manually
+    // We'll send an initial message to the API to get the first question
+    const initialMessageData = {
+      domain: sessionData.domain,
+      difficulty: sessionData.difficulty,
+      userResponse:
+        "Hello, I'm ready to start the interview. Please begin with your first question.",
+      sessionId: sessionIdToUse, // Use existing session ID or null for a new one
+    };
+
+    dispatch(sendInterviewMessage(initialMessageData));
   };
 
   // Scroll to bottom of messages
@@ -440,7 +479,12 @@ const MockInterview = () => {
 
   // Handle keyboard shortcuts - Enter key to send, Shift+Enter for new line
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey && !aiResponseLoading) {
+    if (
+      e.key === "Enter" &&
+      !e.shiftKey &&
+      !aiResponseLoading &&
+      !isInterviewEnding
+    ) {
       e.preventDefault();
       if (userResponse.trim()) {
         handleSendResponse();
@@ -485,43 +529,52 @@ const MockInterview = () => {
     handlePlayTextToSpeech,
   ]);
 
-  // Monitor AI response loading status to implement typewriter effect
+  // Trigger typewriter effect for new AI messages only
   useEffect(() => {
+    // Only process if we're not loading and not thinking (i.e., we have received a response)
     if (!aiResponseLoading && isThinking) {
-      // When AI finishes responding
+      // AI has finished responding
       setIsThinking(false);
+    }
 
-      // Find the latest AI message index (search from the end of the array)
-      const lastAiMessageIndex = [...conversation]
-        .reverse()
-        .findIndex((m) => m.type === "ai" || m.type === "assistant");
+    if (!aiResponseLoading && !isThinking) {
+      // Check if we have more messages than before and the last message is from AI
+      const currentMessageCount = conversation.length;
+      const lastMessage = conversation[currentMessageCount - 1];
 
-      // Convert to the actual index in the original array
-      const actualIndex =
-        lastAiMessageIndex !== -1
-          ? conversation.length - 1 - lastAiMessageIndex
-          : -1;
+      if (
+        currentMessageCount > lastProcessedMessageCount &&
+        lastMessage &&
+        (lastMessage.type === "ai" || lastMessage.type === "assistant")
+      ) {
+        // This is a new AI message, set up typewriter effect
+        const messageContent = lastMessage.message;
+        const actualIndex = currentMessageCount - 1;
 
-      if (actualIndex !== -1 && conversation[actualIndex].message) {
-        const messageContent = conversation[actualIndex].message;
+        if (messageContent) {
+          setTypewriterText(messageContent);
+          setCurrentTypewriterText(""); // Start with empty text
+          setTypewriterMessageIndex(actualIndex); // Track which message gets the typewriter
+          setTypewriterActive(true);
 
-        // Set up typewriter effect for the latest AI message
-        setTypewriterText(messageContent);
-        setCurrentTypewriterText(""); // Start with empty text
-        setTypewriterMessageIndex(actualIndex); // Track which message gets the typewriter
-        setTypewriterActive(true);
-
-        // Preload TTS audio while typewriter effect is running
-        if (ttsSupported && messageContent) {
-          preloadTextToSpeech(messageContent).then((audio) => {
-            if (audio) {
-              setPreloadedAudio(audio);
-              console.log(
-                "🔊 Audio preloaded and ready for typewriter completion"
-              );
-            }
-          });
+          // Preload TTS audio while typewriter effect is running
+          if (ttsSupported && messageContent) {
+            preloadTextToSpeech(messageContent).then((audio) => {
+              if (audio) {
+                setPreloadedAudio(audio);
+                console.log(
+                  "🔊 Audio preloaded and ready for typewriter completion"
+                );
+              }
+            });
+          }
         }
+
+        // Update the processed message count
+        setLastProcessedMessageCount(currentMessageCount);
+      } else if (currentMessageCount !== lastProcessedMessageCount) {
+        // Update count for non-AI messages too (user messages)
+        setLastProcessedMessageCount(currentMessageCount);
       }
     }
   }, [
@@ -530,6 +583,7 @@ const MockInterview = () => {
     isThinking,
     ttsSupported,
     preloadTextToSpeech,
+    lastProcessedMessageCount,
   ]);
 
   // Update URL when sessionId changes
@@ -554,6 +608,7 @@ const MockInterview = () => {
   useEffect(() => {
     return () => {
       dispatch(resetInterview());
+      setIsInterviewEnding(false);
     };
   }, [dispatch]);
 
@@ -678,7 +733,8 @@ const MockInterview = () => {
                   </span>
                   {conversation.length > 0 && (
                     <span className="ml-2">
-                      • Q{Math.floor(conversation.length / 2) + 1}
+                      • Q{Math.floor(conversation.length / 2) + 1}/
+                      {getQuestionLimit(sessionData.difficulty)}
                     </span>
                   )}
                 </p>
@@ -691,7 +747,8 @@ const MockInterview = () => {
               <div className="text-center">
                 <div className="text-xs sm:text-sm text-gray-400">Progress</div>
                 <div className="text-white text-sm sm:text-lg font-bold">
-                  {Math.floor(conversation.length / 2)}/5
+                  {Math.floor(conversation.length / 2)}/
+                  {getQuestionLimit(sessionData.difficulty)}
                 </div>
               </div>
             )}
@@ -752,6 +809,11 @@ const MockInterview = () => {
                       {sessionData.difficulty}
                     </span>{" "}
                     level.
+                    <br />
+                    <span className="text-yellow-400 font-medium">
+                      You'll answer {getQuestionLimit(sessionData.difficulty)}{" "}
+                      questions for {sessionData.difficulty} level
+                    </span>
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-10">
@@ -950,11 +1012,15 @@ const MockInterview = () => {
                 value={userResponse}
                 onChange={(e) => dispatch(setUserResponse(e.target.value))}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your response here or use voice recording..."
+                placeholder={
+                  isInterviewEnding
+                    ? "Interview is ending... Please wait for results."
+                    : "Type your response here or use voice recording..."
+                }
                 className="w-full p-3 pr-20 sm:p-4 sm:pr-24 bg-gray-800/70 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none text-sm sm:text-base"
                 rows={1}
                 style={{ minHeight: "44px" }}
-                disabled={aiResponseLoading}
+                disabled={aiResponseLoading || isInterviewEnding}
               />
 
               {/* Voice Recorder Button */}
@@ -962,7 +1028,7 @@ const MockInterview = () => {
                 <VoiceRecorder
                   onTranscript={handleVoiceTranscript}
                   onError={handleVoiceError}
-                  disabled={aiResponseLoading}
+                  disabled={aiResponseLoading || isInterviewEnding}
                   size="w-7 h-7 sm:w-8 sm:h-8"
                   className="bg-gray-600 hover:bg-gray-700"
                 />
@@ -971,7 +1037,9 @@ const MockInterview = () => {
               {/* Send Button */}
               <button
                 onClick={handleSendResponse}
-                disabled={!userResponse.trim() || aiResponseLoading}
+                disabled={
+                  !userResponse.trim() || aiResponseLoading || isInterviewEnding
+                }
                 className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-full hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
               >
                 {aiResponseLoading ? (
