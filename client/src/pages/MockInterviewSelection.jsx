@@ -59,30 +59,40 @@ const MockInterviewSelection = () => {
     },
   ];
 
+  // Get question limit based on difficulty (same as MockInterview)
+  const getQuestionLimit = (difficulty) => {
+    const limits = {
+      easy: 7,
+      medium: 10,
+      hard: 15,
+    };
+    return limits[difficulty] || 10;
+  };
+
   const difficulties = [
     {
       id: "easy",
       name: "Easy",
       description: "Perfect for beginners",
       icon: "🌱",
-      xpMultiplier: "1x",
-      color: "bg-green-500",
+      questionCount: getQuestionLimit("easy"),
+      questionBoxColor: "bg-green-100 text-green-800 border-green-300",
     },
     {
       id: "medium",
       name: "Medium",
       description: "Intermediate level challenge",
       icon: "🔥",
-      xpMultiplier: "1.5x",
-      color: "bg-yellow-500",
+      questionCount: getQuestionLimit("medium"),
+      questionBoxColor: "bg-yellow-100 text-yellow-800 border-yellow-300",
     },
     {
       id: "hard",
       name: "Hard",
       description: "Expert level challenge",
       icon: "⚡",
-      xpMultiplier: "2x",
-      color: "bg-red-500",
+      questionCount: getQuestionLimit("hard"),
+      questionBoxColor: "bg-red-100 text-red-800 border-red-300",
     },
   ];
   const handleStartInterview = async () => {
@@ -487,13 +497,13 @@ const MockInterviewSelection = () => {
                   <p className="text-xs sm:text-sm text-black/70 dark:text-white/70 mb-2 sm:mb-3">
                     {difficulty.description}
                   </p>
-                  {/* <div className="flex items-center justify-center space-x-2">
+                  <div className="flex items-center justify-center">
                     <span
-                      className={`px-2 py-1 rounded text-white text-xs font-bold ${difficulty.color}`}
+                      className={`px-2 py-1 rounded-full text-xs font-bold border ${difficulty.questionBoxColor}`}
                     >
-                      {difficulty.xpMultiplier} XP
+                      {difficulty.questionCount} Questions
                     </span>
-                  </div> */}
+                  </div>
                   {/* Only border highlight for selection, no tick icon */}
                 </div>
               </div>
