@@ -64,7 +64,7 @@ const Dashboard = () => {
   // Fetch dynamic data on component mount
   useEffect(() => {
     dispatch(getInterviewStats());
-    dispatch(getRecentInterviews(5));
+    dispatch(getRecentInterviews(4));
     fetchAssistantStats();
     fetchRecentSessions();
   }, [dispatch]);
@@ -410,7 +410,7 @@ const Dashboard = () => {
                   <button
                     onClick={() => {
                       dispatch(getInterviewStats());
-                      dispatch(getRecentInterviews(5));
+                      dispatch(getRecentInterviews(4));
                     }}
                     className="text-gray-400 hover:text-cyan-400 transition-colors"
                     title="Refresh data"
@@ -611,7 +611,10 @@ const Dashboard = () => {
                   {recentInterviews.map((session) => (
                     <div
                       key={session._id}
-                      className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg"
+                      onClick={() =>
+                        navigate(`/interview-history/${session._id}`)
+                      }
+                      className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg cursor-pointer hover:bg-gray-700/50 transition-all duration-200"
                     >
                       <div>
                         <p className="text-white text-sm font-medium">
@@ -625,15 +628,21 @@ const Dashboard = () => {
                       <div className="text-right">
                         <p
                           className={`text-sm font-semibold ${
-                            session.score >= 90
+                            (session.feedBack?.overall_score ||
+                              session.score ||
+                              0) >= 80
                               ? "text-green-400"
-                              : session.score >= 80
+                              : (session.feedBack?.overall_score ||
+                                  session.score ||
+                                  0) >= 60
                               ? "text-yellow-400"
                               : "text-red-400"
                           }`}
                         >
-                          {session.score
-                            ? `${Math.round(session.score)}%`
+                          {session.feedBack?.overall_score || session.score
+                            ? `${Math.round(
+                                session.feedBack?.overall_score || session.score
+                              )}%`
                             : "N/A"}
                         </p>
                       </div>
@@ -652,10 +661,10 @@ const Dashboard = () => {
               )}
 
               <Link
-                to="/profile"
+                to="/interview-history"
                 className="w-full mt-4 py-2 px-4 text-cyan-400 text-sm hover:text-cyan-300 transition-colors duration-300 block text-center"
               >
-                View All Sessions →
+                View All Interview Sessions →
               </Link>
             </div>
           </div>

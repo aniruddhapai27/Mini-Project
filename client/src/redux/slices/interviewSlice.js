@@ -751,7 +751,7 @@ const interviewSlice = createSlice({
       })
       .addCase(getRecentInterviews.fulfilled, (state, action) => {
         state.recentLoading = false;
-        state.recentInterviews = action.payload;
+        state.recentInterviews = action.payload.interviews || action.payload;
       })
       .addCase(getRecentInterviews.rejected, (state, action) => {
         state.recentLoading = false;

@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const QuizHistory = require("../models/quizHistoryModel");
+const Interview = require("../models/interviewModel");
 const { catchAsync } = require("../utils/catchAsync");
 const cloudinary = require("../config/cloudinaryConfig");
 
@@ -43,6 +44,13 @@ exports.getStreakStats = async (req, res) => {
     const activeDates = quizDates.map((item) => item.dateString);
     const streakResults = calculateStreaks(activeDates);
 
+    // Get recent interview sessions (last 4)
+    const recentInterviews = await Interview.find({ user: req.user._id })
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .select("domain difficulty score createdAt feedBack")
+      .lean();
+
     // Update user's streak data in database
     await User.findByIdAndUpdate(req.user._id, {
       currentStreak: streakResults.currentStreak,
@@ -57,6 +65,7 @@ exports.getStreakStats = async (req, res) => {
         maxStreak: Math.max(user.maxStreak || 0, streakResults.maxStreak),
         totalActiveDays: activeDates.length,
         lastActivity: streakResults.lastActivity,
+        recentInterviews: recentInterviews,
       },
     });
   } catch (error) {

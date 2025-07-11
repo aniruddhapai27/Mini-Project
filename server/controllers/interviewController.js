@@ -283,11 +283,14 @@ exports.getRecentInterviews = catchAsync(async (req, res) => {
   const interviews = await Interview.find({ user: userId })
     .sort({ createdAt: -1 })
     .limit(parseInt(limit))
-    .select("domain difficulty score createdAt");
+    .select("domain difficulty score createdAt feedBack");
 
   res.status(200).json({
     success: true,
-    data: { interviews },
+    data: {
+      interviews: interviews || [],
+      count: interviews.length,
+    },
   });
 });
 
@@ -898,67 +901,88 @@ exports.getInterviewFeedback = catchAsync(async (req, res) => {
     const domainFallbacks = {
       hr: {
         feedback: {
-          technical_knowledge: "HR interviews focus on behavioral competencies rather than technical skills",
-          communication_skills: "Communication appeared clear during the behavioral interview",
-          confidence: "Showed appropriate confidence level for HR interview setting",
-          problem_solving: "Demonstrated problem-solving through behavioral examples",
+          technical_knowledge:
+            "HR interviews focus on behavioral competencies rather than technical skills",
+          communication_skills:
+            "Communication appeared clear during the behavioral interview",
+          confidence:
+            "Showed appropriate confidence level for HR interview setting",
+          problem_solving:
+            "Demonstrated problem-solving through behavioral examples",
           suggestions: {
-            technical_knowledge: "Continue developing leadership and people management skills",
-            communication_skills: "Practice the STAR method for behavioral questions",
+            technical_knowledge:
+              "Continue developing leadership and people management skills",
+            communication_skills:
+              "Practice the STAR method for behavioral questions",
             confidence: "Prepare specific examples from your work experience",
-            problem_solving: "Think of more challenging workplace scenarios to discuss",
+            problem_solving:
+              "Think of more challenging workplace scenarios to discuss",
           },
         },
         overall_score: 72,
       },
       dataScience: {
         feedback: {
-          technical_knowledge: "Showed understanding of data science concepts during discussion",
+          technical_knowledge:
+            "Showed understanding of data science concepts during discussion",
           communication_skills: "Explained technical concepts reasonably well",
           confidence: "Demonstrated confidence in data science domain",
           problem_solving: "Applied analytical thinking to interview questions",
           suggestions: {
-            technical_knowledge: "Review advanced machine learning algorithms and statistics",
-            communication_skills: "Practice explaining complex data insights to non-technical audiences",
-            confidence: "Build more hands-on experience with real-world datasets",
-            problem_solving: "Work on end-to-end data science project workflows",
+            technical_knowledge:
+              "Review advanced machine learning algorithms and statistics",
+            communication_skills:
+              "Practice explaining complex data insights to non-technical audiences",
+            confidence:
+              "Build more hands-on experience with real-world datasets",
+            problem_solving:
+              "Work on end-to-end data science project workflows",
           },
         },
         overall_score: 75,
       },
       webdev: {
         feedback: {
-          technical_knowledge: "Displayed solid understanding of web development technologies",
+          technical_knowledge:
+            "Displayed solid understanding of web development technologies",
           communication_skills: "Communicated technical concepts effectively",
           confidence: "Showed confidence in web development skills",
           problem_solving: "Approached development challenges systematically",
           suggestions: {
-            technical_knowledge: "Stay updated with latest frameworks and best practices",
-            communication_skills: "Practice explaining architecture decisions to stakeholders",
+            technical_knowledge:
+              "Stay updated with latest frameworks and best practices",
+            communication_skills:
+              "Practice explaining architecture decisions to stakeholders",
             confidence: "Build more complex full-stack applications",
-            problem_solving: "Focus on performance optimization and scalability challenges",
+            problem_solving:
+              "Focus on performance optimization and scalability challenges",
           },
         },
         overall_score: 73,
       },
       fullTechnical: {
         feedback: {
-          technical_knowledge: "Demonstrated broad technical knowledge across multiple domains",
+          technical_knowledge:
+            "Demonstrated broad technical knowledge across multiple domains",
           communication_skills: "Explained technical solutions clearly",
           confidence: "Showed strong technical confidence",
           problem_solving: "Applied systematic approach to technical problems",
           suggestions: {
-            technical_knowledge: "Deepen knowledge in system design and algorithms",
-            communication_skills: "Practice whiteboarding and technical presentations",
+            technical_knowledge:
+              "Deepen knowledge in system design and algorithms",
+            communication_skills:
+              "Practice whiteboarding and technical presentations",
             confidence: "Take on more challenging technical projects",
-            problem_solving: "Focus on optimization and large-scale system challenges",
+            problem_solving:
+              "Focus on optimization and large-scale system challenges",
           },
         },
         overall_score: 74,
       },
     };
 
-    const fallbackFeedback = domainFallbacks[interview.domain] || domainFallbacks.fullTechnical;
+    const fallbackFeedback =
+      domainFallbacks[interview.domain] || domainFallbacks.fullTechnical;
 
     res.status(500).json({
       success: false,

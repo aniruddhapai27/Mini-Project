@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import {
   updateProfile,
@@ -8,6 +9,7 @@ import {
   getMe,
   getStreakStats,
 } from "../redux/slices/authSlice";
+import { getRecentInterviews } from "../redux/slices/interviewSlice";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import DotLottieLoader from "../components/DotLottieLoader";
 import QuizPerformanceGraph from "../components/QuizPerformanceGraph";
@@ -15,7 +17,11 @@ import GitHubStyleStreakCalendar from "../components/GitHubStyleStreakCalendar";
 
 const Profile = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user, loading, error, success } = useSelector((state) => state.auth);
+  const { recentInterviews, recentLoading, recentError } = useSelector(
+    (state) => state.interview
+  );
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   // Effect to fetch user data if not available
@@ -28,6 +34,7 @@ const Profile = () => {
   // Fetch streak stats when component mounts
   useEffect(() => {
     dispatch(getStreakStats());
+    dispatch(getRecentInterviews(4)); // Fetch recent 4 interview sessions
   }, [dispatch]);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -180,6 +187,29 @@ const Profile = () => {
     if (user?.resume) {
       window.open(user.resume, "_blank");
     }
+  };
+
+  // Helper function to format domain names
+  const formatDomainName = (domain) => {
+    const domainMap = {
+      hr: "HR Interview",
+      dataScience: "Data Science",
+      webdev: "Web Development",
+      fullTechnical: "Technical Interview",
+      technical: "Technical Interview",
+      behavioral: "Behavioral Interview",
+      systemDesign: "System Design",
+    };
+    return (
+      domainMap[domain] ||
+      domain?.charAt(0).toUpperCase() + domain?.slice(1) ||
+      "Interview"
+    );
+  };
+
+  // Handle navigation to interview history
+  const handleInterviewClick = (interviewId) => {
+    navigate(`/interview-history/${interviewId}`);
   };
   if (!user || loading.me) {
     return (
@@ -720,41 +750,106 @@ const Profile = () => {
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  Recent Sessions
+                  Current Interview Sessions
                 </h3>
                 <div className="space-y-3">
-                  {stats.recentPerformances.map((performance, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg"
-                    >
-                      <div>
-                        <p className="text-white text-sm font-medium">
-                          {performance.session}
-                          <span className="ml-2 px-2 py-0.5 bg-gray-600 rounded-full text-gray-300 text-xs">
-                            {performance.level}
-                          </span>
-                        </p>
-                        <p className="text-gray-400 text-xs">
-                          {performance.date}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={`text-sm font-semibold ${
-                            performance.score >= 90
-                              ? "text-green-400"
-                              : performance.score >= 80
-                              ? "text-yellow-400"
-                              : "text-red-400"
-                          }`}
-                        >
-                          {performance.score}%
-                        </p>
-                      </div>
+                  {recentLoading ? (
+                    <div className="flex justify-center py-4">
+                      <DotLottieLoader
+                        size="w-6 h-6"
+                        text="Loading sessions..."
+                      />
                     </div>
-                  ))}
+                  ) : recentError ? (
+                    <div className="text-center py-6">
+                      <p className="text-red-400 text-sm mb-2">
+                        Error loading recent sessions
+                      </p>
+                      <button
+                        onClick={() => dispatch(getRecentInterviews(4))}
+                        className="text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+                      >
+                        Try Again →
+                      </button>
+                    </div>
+                  ) : recentInterviews && recentInterviews.length > 0 ? (
+                    recentInterviews.map((interview) => (
+                      <div
+                        key={interview._id}
+                        onClick={() => handleInterviewClick(interview._id)}
+                        className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg cursor-pointer hover:bg-gray-700/50 transition-all duration-200"
+                      >
+                        <div>
+                          <p className="text-white text-sm font-medium">
+                            {formatDomainName(interview.domain)}
+                            <span className="ml-2 px-2 py-0.5 bg-gray-600 rounded-full text-gray-300 text-xs capitalize">
+                              {interview.difficulty}
+                            </span>
+                          </p>
+                          <p className="text-gray-400 text-xs">
+                            {new Date(interview.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p
+                            className={`text-sm font-semibold ${
+                              (interview.feedBack?.overall_score ||
+                                interview.score ||
+                                0) >= 80
+                                ? "text-green-400"
+                                : (interview.feedBack?.overall_score ||
+                                    interview.score ||
+                                    0) >= 60
+                                ? "text-yellow-400"
+                                : "text-red-400"
+                            }`}
+                          >
+                            {interview.feedBack?.overall_score ||
+                              interview.score ||
+                              0}
+                            %
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6">
+                      <p className="text-gray-400 text-sm">
+                        No recent interviews yet
+                      </p>
+                      <button
+                        onClick={() => navigate("/mock-interview-selection")}
+                        className="mt-2 text-cyan-400 hover:text-cyan-300 text-xs transition-colors"
+                      >
+                        Start your first interview →
+                      </button>
+                    </div>
+                  )}
                 </div>
+                {/* View All Sessions Link */}
+                {recentInterviews && recentInterviews.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-700/50">
+                    <button
+                      onClick={() => navigate("/interview-history")}
+                      className="w-full text-cyan-400 hover:text-cyan-300 text-sm transition-colors duration-300 flex items-center justify-center"
+                    >
+                      View All Interview Sessions
+                      <svg
+                        className="w-4 h-4 ml-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                )}
               </div>
               {/* User Insights */}
               <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-5">
