@@ -349,7 +349,7 @@ const Profile = () => {
 
       {/* Content with backdrop filter */}
       <div className="relative z-10 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-white drop-shadow-lg">
               Profile
@@ -357,24 +357,24 @@ const Profile = () => {
           </div>
 
           {/* Main Profile Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Left Column: Profile Info */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            {/* Left Column: Profile Info - Fixed and Sticky */}
             <div className="lg:col-span-1">
-              <div className="bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-4 shadow-xl relative overflow-hidden h-full">
+              <div className=" top-6 bg-gray-800/50 backdrop-blur-xl border-2 border-cyan-500/30 rounded-2xl p-6 shadow-xl overflow-hidden w-full h-fit z-20 transition-all duration-300">
                 {/* Animated background elements - smaller size */}
-                <div className="absolute top-0 left-0 w-full h-full">
-                  <div className="absolute top-3 left-3 w-8 h-8 bg-cyan-500/10 rounded-full blur-xl animate-pulse"></div>
+                <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                  <div className="absolute top-4 left-4 w-12 h-12 bg-cyan-500/10 rounded-full blur-xl animate-pulse"></div>
                   <div
-                    className="absolute bottom-3 right-3 w-10 h-10 bg-purple-500/10 rounded-full blur-xl animate-pulse"
+                    className="absolute bottom-4 right-4 w-16 h-16 bg-purple-500/10 rounded-full blur-xl animate-pulse"
                     style={{ animationDelay: "1s" }}
                   ></div>
                 </div>
 
                 <div className="relative z-10">
                   {/* Profile Picture and Info Section */}
-                  <div className="flex flex-col items-center mb-4">
-                    <div className="relative group mb-3">
-                      <div className="w-20 h-20 relative">
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="relative group mb-4">
+                      <div className="w-28 h-28 relative">
                         {/* Neon border */}
                         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full p-0.5 animate-spin-slow">
                           <div className="w-full h-full bg-gray-900 rounded-full"></div>
@@ -445,12 +445,12 @@ const Profile = () => {
                           placeholder="Enter your name"
                         />
                       ) : (
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-2">
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent mb-3">
                           {user.name}
                         </h2>
                       )}
 
-                      <p className="text-md text-gray-300 mb-3 flex items-center justify-center">
+                      <p className="text-md text-gray-300 mb-4 flex items-center justify-center">
                         <svg
                           className="w-4 h-4 mr-2 text-cyan-500"
                           fill="none"
@@ -478,11 +478,11 @@ const Profile = () => {
                       </div>
                     </div>{" "}
                     {/* Resume Section - Compact */}
-                    <div className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 border border-cyan-500/30 rounded-xl p-2 mb-3 w-full">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-xs font-semibold text-white flex items-center">
+                    <div className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 border border-cyan-500/30 rounded-xl p-4 mb-5 w-full">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-semibold text-white flex items-center">
                           <svg
-                            className="w-3 h-3 mr-1 text-cyan-500"
+                            className="w-4 h-4 mr-2 text-cyan-500"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -499,7 +499,7 @@ const Profile = () => {
                         {user.resume && !isEditing && (
                           <button
                             onClick={openResumeInNewTab}
-                            className="px-2 py-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-300 text-[10px] font-medium"
+                            className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-lg hover:from-cyan-600 hover:to-purple-600 transition-all duration-300 text-xs font-medium"
                           >
                             View
                           </button>
@@ -507,25 +507,25 @@ const Profile = () => {
                       </div>
 
                       {isEditing ? (
-                        <div className="border-2 border-dashed border-cyan-500/30 rounded-lg p-2 text-center hover:border-cyan-500/60 transition-all duration-300">
+                        <div className="border-2 border-dashed border-cyan-500/30 rounded-lg p-3 text-center hover:border-cyan-500/60 transition-all duration-300">
                           <input
                             type="file"
                             name="resume"
                             accept=".pdf"
                             onChange={handleInputChange}
-                            className="w-full text-gray-300 text-xs file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gradient-to-r file:from-cyan-500 file:to-purple-500 file:text-white hover:file:from-cyan-600 hover:file:to-purple-600 transition-all duration-300"
+                            className="w-full text-gray-300 text-sm file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-gradient-to-r file:from-cyan-500 file:to-purple-500 file:text-white hover:file:from-cyan-600 hover:file:to-purple-600 transition-all duration-300"
                           />
-                          <p className="mt-1 text-xs text-gray-400">
+                          <p className="mt-2 text-sm text-gray-400">
                             Upload a PDF resume
                           </p>
                         </div>
                       ) : (
                         <div className="flex items-center">
                           {user.resume ? (
-                            <div className="flex items-center text-gray-300 text-xs">
-                              <div className="w-5 h-5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mr-2">
+                            <div className="flex items-center text-gray-300 text-sm">
+                              <div className="w-6 h-6 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
                                 <svg
-                                  className="w-3 h-3 text-white"
+                                  className="w-4 h-4 text-white"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -541,10 +541,10 @@ const Profile = () => {
                               <span>Resume uploaded</span>
                             </div>
                           ) : (
-                            <div className="flex items-center text-gray-400 text-xs">
-                              <div className="w-5 h-5 bg-gray-700 rounded-full flex items-center justify-center mr-2">
+                            <div className="flex items-center text-gray-400 text-sm">
+                              <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center mr-3">
                                 <svg
-                                  className="w-3 h-3 text-gray-400"
+                                  className="w-4 h-4 text-gray-400"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -564,21 +564,21 @@ const Profile = () => {
                       )}
                     </div>{" "}
                     {/* Action Buttons */}
-                    <div className="flex flex-col gap-2 w-full">
-                      <div className="flex justify-center gap-2 w-full">
+                    <div className="flex flex-col gap-3 w-full">
+                      <div className="flex justify-center gap-3 w-full">
                         {isEditing ? (
                           <>
                             <button
                               onClick={handleSave}
                               disabled={loading.updateProfile}
-                              className="px-3 py-1 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-cyan-600 transition-all duration-300 disabled:opacity-50 shadow-lg text-[10px] flex-1"
+                              className="px-4 py-2 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-medium rounded-lg hover:from-green-600 hover:to-cyan-600 transition-all duration-300 disabled:opacity-50 shadow-lg text-sm flex-1"
                             >
                               {loading.updateProfile ? (
                                 <DotLottieLoader
-                                  size="w-3 h-3"
+                                  size="w-4 h-4"
                                   text="Saving..."
                                   layout="horizontal"
-                                  textSize="text-xs"
+                                  textSize="text-sm"
                                   textColor="text-white"
                                 />
                               ) : (
@@ -588,7 +588,7 @@ const Profile = () => {
                             <button
                               onClick={handleCancel}
                               disabled={loading.updateProfile}
-                              className="px-3 py-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-medium rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-300 disabled:opacity-50 shadow-lg text-[10px] flex-1"
+                              className="px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-medium rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-300 disabled:opacity-50 shadow-lg text-sm flex-1"
                             >
                               Cancel
                             </button>
@@ -596,7 +596,7 @@ const Profile = () => {
                         ) : (
                           <button
                             onClick={() => setIsEditing(true)}
-                            className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg text-[10px] w-full"
+                            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg text-sm w-full"
                           >
                             ✏️ Edit Profile
                           </button>
@@ -607,7 +607,7 @@ const Profile = () => {
                       {!isEditing && (
                         <button
                           onClick={() => setIsPasswordModalOpen(true)}
-                          className="px-3 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg text-[10px] w-full flex items-center justify-center"
+                          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg text-sm w-full flex items-center justify-center"
                         >
                           🔒 Change Password
                         </button>
@@ -851,7 +851,7 @@ const Profile = () => {
                   </div>
                 )}
               </div>
-              {/* User Insights */}
+              {/* User Insights
               <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-xl p-5">
                 <h3 className="text-sm font-semibold text-white mb-2 flex items-center">
                   <svg
@@ -888,7 +888,7 @@ const Profile = () => {
                   </span>{" "}
                   to improve your interview skills!
                 </p>{" "}
-              </div>{" "}
+              </div>{" "} */}
             </div>{" "}
           </div>
         </div>
