@@ -128,11 +128,26 @@ export const updateStreak = createAsyncThunk(
   "auth/updateStreak",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await api.patch("/api/v1/users/update-streak");
+      const res = await api.patch("/api/v1/user/update-streak");
       return res.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to update streak"
+      );
+    }
+  }
+);
+
+// Add getStreakStats thunk to fetch comprehensive streak data
+export const getStreakStats = createAsyncThunk(
+  "auth/getStreakStats",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await api.get("/api/v1/user/streak-stats");
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch streak stats"
       );
     }
   }
@@ -153,6 +168,7 @@ const authSlice = createSlice({
       updatePassword: false,
       updateProfile: false,
       updateStreak: false,
+      getStreakStats: false,
     },
     error: {
       me: null,
@@ -164,6 +180,7 @@ const authSlice = createSlice({
       updatePassword: null,
       updateProfile: null,
       updateStreak: null,
+      getStreakStats: null,
     },
     success: {
       forgotPassword: false,
@@ -379,13 +396,34 @@ const authSlice = createSlice({
         if (state.user) {
           state.user.currentStreak = action.payload.currentStreak;
           state.user.maxStreak = action.payload.maxStreak;
-          state.user.lastActivity = action.payload.lastActivity || new Date().toISOString();
+          state.user.lastActivity =
+            action.payload.lastActivity || new Date().toISOString();
         }
         state.error.updateStreak = null;
       })
       .addCase(updateStreak.rejected, (state, action) => {
         state.loading.updateStreak = false;
         state.error.updateStreak = action.payload;
+      })
+
+      // Get Streak Stats
+      .addCase(getStreakStats.pending, (state) => {
+        state.loading.getStreakStats = true;
+        state.error.getStreakStats = null;
+      })
+      .addCase(getStreakStats.fulfilled, (state, action) => {
+        state.loading.getStreakStats = false;
+        if (state.user) {
+          state.user.currentStreak = action.payload.data.currentStreak;
+          state.user.maxStreak = action.payload.data.maxStreak;
+          state.user.totalActiveDays = action.payload.data.totalActiveDays;
+          state.user.lastActivity = action.payload.data.lastActivity;
+        }
+        state.error.getStreakStats = null;
+      })
+      .addCase(getStreakStats.rejected, (state, action) => {
+        state.loading.getStreakStats = false;
+        state.error.getStreakStats = action.payload;
       });
   },
 });
@@ -397,5 +435,6 @@ export const selectAuthLoading = (state) => state.auth.loading;
 export const selectAuthError = (state) => state.auth.error;
 export const selectAuthSuccess = (state) => state.auth.success;
 
-export const { reset, updateUser, clearErrors, clearSuccess } = authSlice.actions;
+export const { reset, updateUser, clearErrors, clearSuccess } =
+  authSlice.actions;
 export default authSlice.reducer;

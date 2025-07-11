@@ -6,6 +6,7 @@ import {
   clearSuccess,
   clearErrors,
   getMe,
+  getStreakStats,
 } from "../redux/slices/authSlice";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import DotLottieLoader from "../components/DotLottieLoader";
@@ -24,6 +25,11 @@ const Profile = () => {
     }
   }, [dispatch, user, loading.me]);
 
+  // Fetch streak stats when component mounts
+  useEffect(() => {
+    dispatch(getStreakStats());
+  }, [dispatch]);
+
   const [isEditing, setIsEditing] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
   const [formData, setFormData] = useState({
@@ -32,12 +38,13 @@ const Profile = () => {
     resume: null,
   });
 
-  // Sample stats data (would come from the backend in a real app)
-  const [stats] = useState({
+  // Dynamic stats state
+  const [stats, setStats] = useState({
     averageScore: 85,
     totalSessions: 12,
     currentStreak: user?.currentStreak || 0,
     maxStreak: user?.maxStreak || 0,
+    totalActiveDays: user?.totalActiveDays || 0,
     lastSessionDate: "2025-06-01",
     lastActivity: user?.lastActivity || null,
     badges: ["Fast Learner", "Consistent", "Top Performer"],
@@ -74,6 +81,19 @@ const Profile = () => {
       },
     ],
   });
+
+  // Update stats when user data changes
+  useEffect(() => {
+    if (user) {
+      setStats((prevStats) => ({
+        ...prevStats,
+        currentStreak: user.currentStreak || 0,
+        maxStreak: user.maxStreak || 0,
+        totalActiveDays: user.totalActiveDays || 0,
+        lastActivity: user.lastActivity || null,
+      }));
+    }
+  }, [user]);
 
   // Initialize form data when user data loads
   useEffect(() => {
@@ -578,23 +598,35 @@ const Profile = () => {
                 <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-xl p-4 text-center">
                   <div className="text-2xl mb-2">🔥</div>
                   <div className="text-xl font-bold text-cyan-400">
-                    {user?.currentStreak || 0}
+                    {loading.getStreakStats ? (
+                      <DotLottieLoader size="w-6 h-6" />
+                    ) : (
+                      stats.currentStreak
+                    )}
                   </div>
                   <div className="text-gray-400 text-xs">Current Streak</div>
+                </div>
+                <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-xl p-4 text-center">
+                  <div className="text-2xl mb-2">📅</div>
+                  <div className="text-xl font-bold text-orange-400">
+                    {loading.getStreakStats ? (
+                      <DotLottieLoader size="w-6 h-6" />
+                    ) : (
+                      stats.totalActiveDays
+                    )}
+                  </div>
+                  <div className="text-gray-400 text-xs">Total Active Days</div>
                 </div>
                 <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-4 text-center">
                   <div className="text-2xl mb-2">🏆</div>
                   <div className="text-xl font-bold text-purple-400">
-                    {stats.totalSessions}
+                    {loading.getStreakStats ? (
+                      <DotLottieLoader size="w-6 h-6" />
+                    ) : (
+                      stats.maxStreak
+                    )}
                   </div>
-                  <div className="text-gray-400 text-xs">Total Sessions</div>
-                </div>
-                <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-4 text-center">
-                  <div className="text-2xl mb-2">⭐</div>
-                  <div className="text-xl font-bold text-green-400">
-                    {stats.averageScore}%
-                  </div>
-                  <div className="text-gray-400 text-xs">Average Score</div>
+                  <div className="text-gray-400 text-xs">Max Streak</div>
                 </div>
               </div>
               {/* Performance Graph */}

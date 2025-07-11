@@ -9,6 +9,31 @@ const api = axios.create({
   },
 });
 
+// User API functions
+export const userApi = {
+  // Get streak statistics
+  getStreakStats: async () => {
+    try {
+      const response = await api.get("/api/v1/user/streak-stats");
+      return response.data;
+    } catch (error) {
+      throw (
+        error.response?.data?.message || "Failed to fetch streak statistics"
+      );
+    }
+  },
+
+  // Update streak
+  updateStreak: async () => {
+    try {
+      const response = await api.patch("/api/v1/user/update-streak");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Failed to update streak";
+    }
+  },
+};
+
 // Resume API functions
 export const resumeApi = {
   // Upload resume
