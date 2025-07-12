@@ -15,6 +15,10 @@ from models.prompts import (
     data_science_resume_interviewer_prompt,
     webdev_resume_interviewer_prompt,
     full_technical_resume_interviewer_prompt,
+    hr_general_interviewer_prompt,
+    data_science_general_interviewer_prompt,
+    webdev_general_interviewer_prompt,
+    full_technical_general_interviewer_prompt,
     hr_feedback_prompt,
     data_science_feedback_prompt,
     webdev_feedback_prompt,
@@ -285,4 +289,73 @@ async def resume_based_interviewer(resume_content: str, domain: str, difficulty:
         }
         
         fallback_response = fallback_responses.get(domain, "Thank you for sharing that. Can you elaborate more on your experience?")
+        return fallback_response
+
+async def general_interviewer(username: str, domain: str, difficulty: str, history: str):
+    """
+    Conduct general interviews without resume for candidates who choose not to upload a resume.
+    Uses domain-specific prompts that include the candidate's username for personalization.
+    """
+    try:
+        # Validate inputs
+        if not username or not username.strip():
+            username = "candidate"
+            
+        if not domain:
+            domain = "general"
+            
+        if not difficulty:
+            difficulty = "medium"
+            
+        if not history:
+            history = ""
+        
+        # Select the appropriate prompt based on domain for general interviews
+        general_domain_prompts = {
+            "hr": hr_general_interviewer_prompt,
+            "dataScience": data_science_general_interviewer_prompt,
+            "webdev": webdev_general_interviewer_prompt,
+            "fullTechnical": full_technical_general_interviewer_prompt
+        }
+        
+        # Get the domain-specific prompt for general interviews
+        selected_prompt = general_domain_prompts.get(domain, hr_general_interviewer_prompt)
+        
+        response = interviewer.chat.completions.create(
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            messages=[
+                {"role": "system", "content": f"You are a professional {domain} interviewer conducting a general interview. The candidate has chosen not to provide a resume, so focus on general {domain} domain questions while using their name to personalize the conversation."},
+                {"role": "user", "content": selected_prompt.format(
+                    username=username,
+                    difficulty=difficulty,
+                    history=history
+                )}
+            ],
+            temperature=0.7,
+            max_tokens=1024
+        )
+        
+        ai_response = response.choices[0].message.content.strip()
+        
+        # Ensure we have a valid response
+        if not ai_response:
+            ai_response = f"Hello {username}! Thank you for joining this {domain} interview. Let's start with a question about your experience in this field."
+            
+        return ai_response
+        
+    except Exception as e:
+        error_details = traceback.format_exc()
+        print(f"Error generating general interview question: {str(e)}\\n{error_details}")
+        if isinstance(e, HTTPException):
+            raise
+        
+        # Provide fallback response based on domain
+        fallback_responses = {
+            "hr": f"Hello {username}! Let's start with a behavioral question. Can you tell me about a time when you had to work with a challenging team member?",
+            "dataScience": f"Hello {username}! Let's begin with a data science question. Can you explain the difference between supervised and unsupervised learning?", 
+            "webdev": f"Hello {username}! Let's start with a web development question. Can you explain the difference between frontend and backend development?",
+            "fullTechnical": f"Hello {username}! Let's begin with a technical question. Can you explain what an algorithm is and give an example?"
+        }
+        
+        fallback_response = fallback_responses.get(domain, f"Hello {username}! Thank you for joining this interview. Can you tell me about your interest in the {domain} field?")
         return fallback_response

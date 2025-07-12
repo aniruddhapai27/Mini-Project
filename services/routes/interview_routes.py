@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form, Request, Depends
 from models.response_model import voiceTranscript, InterviewResponse, FeedBackResponse
-from controllers.interview_controller import transcript, text_to_speech_controller, get_interview_feedback, resume_based_interviewer
+from controllers.interview_controller import transcript, text_to_speech_controller, get_interview_feedback, resume_based_interviewer, general_interviewer
 from models.request_models import TextToSpeechRequest, FeedbackRequest
 from utils.auth_middleware import require_auth_dep
 from database.db_config import get_database
@@ -160,3 +160,93 @@ async def resume_based_interview(
         import traceback
         print(f"📊 Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error processing resume-based interview: {str(e)}")
+
+@interview_router.post("/general", response_model=InterviewResponse)
+async def general_interview(
+    domain: str = Form(...),
+    difficulty: str = Form(...),
+    user_response: str = Form(...),
+    session: str = Form(None),
+    current_user: dict = Depends(require_auth_dep)
+):
+    """
+    General interview endpoint for candidates who choose not to upload a resume.
+    Conducts domain-specific interviews using the candidate's username for personalization.
+    """
+    try:
+        # Validate inputs
+        if domain not in ['hr', 'dataScience', 'webdev', 'fullTechnical']:
+            raise HTTPException(status_code=400, detail="Domain must be 'hr', 'dataScience', 'webdev', or 'fullTechnical'.")
+        
+        if difficulty not in ['easy', 'medium', 'hard']:
+            raise HTTPException(status_code=400, detail="Difficulty must be 'easy', 'medium', or 'hard'.")
+        
+        if not user_response.strip():
+            raise HTTPException(status_code=400, detail="User response cannot be empty.")
+        
+        # Use authenticated user ID and get username
+        user_id = current_user["_id"]
+        username = current_user.get("name", "candidate")
+        
+        if isinstance(user_id, str):
+            user_id = ObjectId(user_id)
+        
+        # Get or create session
+        db = await get_database()
+        collection = db['interviews']
+        
+        if session:
+            # Check if session is a valid ObjectId
+            try:
+                session_object_id = ObjectId(session)
+                session_doc = await collection.find_one({"_id": session_object_id})
+                if not session_doc:
+                    raise HTTPException(status_code=404, detail="Interview session not found.")
+            except Exception as e:
+                # Session is not a valid ObjectId (likely a fallback session)
+                session_doc = await collection.find_one({"sessionId": session})
+                if not session_doc:
+                    session_doc = None
+            
+            # Build conversation history from Node.js QnA structure
+            history = ""
+            if session_doc and "QnA" in session_doc:
+                for idx, qna in enumerate(session_doc["QnA"]):
+                    # Skip the first exchange which is the initial greeting
+                    user_msg = qna.get('user', '').strip()
+                    if (idx == 0 and (user_msg == "Hello, I am ready to start the interview." or 
+                                     user_msg == "Hello, I'm ready to start the interview. Please begin with your first question.")):
+                        continue
+                    
+                    interviewer_msg = qna.get('bot', '')
+                    candidate_msg = qna.get('user', '')
+                    if interviewer_msg and candidate_msg:
+                        history += f"Interviewer: {interviewer_msg}\\n\\nCandidate: {candidate_msg}\\n\\n"
+            
+            # Add current user response only if it's not the initial greeting
+            if (user_response.strip() != "Hello, I am ready to start the interview." and
+                user_response.strip() != "Hello, I'm ready to start the interview. Please begin with your first question."):
+                history += f"Candidate: {user_response}\\n"
+        else:
+            # For new interviews, only add the current response if it's not the initial greeting
+            if (user_response.strip() != "Hello, I am ready to start the interview." and
+                user_response.strip() != "Hello, I'm ready to start the interview. Please begin with your first question."):
+                history = f"Candidate: {user_response}\\n"
+            else:
+                history = ""
+        
+        # Generate next question using general interviewer (without resume)
+        ai_response = await general_interviewer(username, domain, difficulty, history)
+        
+        return InterviewResponse(
+            ai=ai_response,
+            session_id=session
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error in general interview: {str(e)}")
+        import traceback
+        print(f"📊 Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error processing general interview: {str(e)}")

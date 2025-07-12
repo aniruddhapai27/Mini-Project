@@ -328,12 +328,16 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
   }
 
   try {
-    // Get user's stored resume
-    const user = await User.findById(userId).select("resume");
-    let resumeBuffer = null;
-    let resumeFilename = "no_resume.txt";
+    // Get user information including name and resume
+    const user = await User.findById(userId).select("resume name");
+    let aiResponse, pythonSessionId;
 
+    // Check if this is a resume-based or general interview
     if (useResume && user && user.resume) {
+      // Resume-based interview path
+      let resumeBuffer = null;
+      let resumeFilename = "no_resume.txt";
+
       try {
         // Download resume from Cloudinary
         const response = await axios.get(user.resume, {
@@ -348,90 +352,172 @@ exports.createResumeBasedInterview = catchAsync(async (req, res) => {
           downloadError.message
         );
       }
-    }
 
-    let aiResponse, pythonSessionId;
+      try {
+        const FormData = require("form-data");
 
-    try {
-      const FormData = require("form-data");
+        // Create FormData to send to Python service for resume-based interview
+        const formData = new FormData();
 
-      // Create FormData to send to Python service
-      const formData = new FormData();
-
-      if (resumeBuffer) {
-        formData.append("file", resumeBuffer, {
-          filename: resumeFilename,
-          contentType: resumeFilename.endsWith(".pdf")
-            ? "application/pdf"
-            : "text/plain",
-        });
-      } else {
-        // Create a default message if no resume is available
-        const defaultBuffer = Buffer.from(
-          "No resume provided. Please conduct a general interview based on the selected domain and difficulty level.",
-          "utf8"
-        );
-        formData.append("file", defaultBuffer, {
-          filename: "default_message.txt",
-          contentType: "text/plain",
-        });
-      }
-
-      formData.append("domain", domain);
-      formData.append("difficulty", difficulty);
-      formData.append(
-        "user_response",
-        "Hello, I am ready to start the interview."
-      );
-
-      // Add auth cookie
-      const token = req.cookies.jwt;
-
-      if (!token) {
-        console.log("No JWT token found, using fallback approach");
-        throw new Error("No authentication token available");
-      }
-
-      // Call Python service
-      const response = await pythonAPI.post(
-        "/api/v1/interview/resume-based",
-        formData,
-        {
-          headers: {
-            ...formData.getHeaders(),
-            Cookie: `jwt=${token}`,
-          },
-          timeout: 30000, // 30 second timeout
+        if (resumeBuffer) {
+          formData.append("file", resumeBuffer, {
+            filename: resumeFilename,
+            contentType: resumeFilename.endsWith(".pdf")
+              ? "application/pdf"
+              : "text/plain",
+          });
+        } else {
+          // Create a default message if no resume is available
+          const defaultBuffer = Buffer.from(
+            "No resume provided. Please conduct a general interview based on the selected domain and difficulty level.",
+            "utf8"
+          );
+          formData.append("file", defaultBuffer, {
+            filename: "default_message.txt",
+            contentType: "text/plain",
+          });
         }
-      );
 
-      aiResponse = response.data.ai;
-      pythonSessionId =
-        response.data.session_id ||
-        `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    } catch (pythonError) {
-      console.log(
-        "Python service unavailable, using fallback:",
-        pythonError.message
-      );
+        formData.append("domain", domain);
+        formData.append("difficulty", difficulty);
+        formData.append(
+          "user_response",
+          "Hello, I am ready to start the interview."
+        );
 
-      // Enhanced domain-specific fallback responses
-      const domainQuestions = {
-        hr: "Hello! I'm excited to conduct this HR interview with you. Looking at your background, let's start by telling me about yourself and what interests you about this role?",
-        dataScience:
-          "Welcome to your data science interview! I'd like to begin by understanding your background. Can you tell me about your experience with data analysis and machine learning?",
-        webdev:
-          "Great to meet you! For this web development interview, let's start with your experience. Can you walk me through your journey as a web developer and your favorite technologies?",
-        fullTechnical:
-          "Welcome to your technical interview! I'll be asking you questions across multiple technical domains. Let's begin - can you introduce yourself and your technical background?",
-      };
+        // Add auth cookie
+        const token = req.cookies.jwt;
 
-      aiResponse =
-        domainQuestions[domain] ||
-        "Hello! Welcome to your interview. Please tell me about yourself and your background.";
-      pythonSessionId = `fallback_${Date.now()}_${Math.random()
-        .toString(36)
-        .substr(2, 9)}`;
+        if (!token) {
+          console.log("No JWT token found, using fallback approach");
+          throw new Error("No authentication token available");
+        }
+
+        // Call Python service for resume-based interview
+        const response = await pythonAPI.post(
+          "/api/v1/interview/resume-based",
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+              Cookie: `jwt=${token}`,
+            },
+            timeout: 30000, // 30 second timeout
+          }
+        );
+
+        aiResponse = response.data.ai;
+        pythonSessionId =
+          response.data.session_id ||
+          `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      } catch (pythonError) {
+        console.log(
+          "Python service unavailable for resume-based interview, using fallback"
+        );
+        console.log("Python error details:", pythonError.message);
+
+        // Enhanced fallback responses for resume-based interviews
+        const domainResponses = {
+          hr: [
+            "Hello! I've reviewed your resume and I'm excited to learn more about your experience. Can you start by telling me about a challenging project you've worked on recently?",
+            "Welcome! Based on your background, I'd like to understand your approach to teamwork. Can you describe a situation where you had to collaborate with a difficult colleague?",
+            "Hi there! I see some interesting experiences on your resume. Tell me about a time when you had to handle a stressful situation at work."
+          ],
+          dataScience: [
+            "Hello! I've looked at your resume and I'm interested in your data science journey. Can you walk me through a data analysis project you've worked on?",
+            "Welcome! Based on your background, I'd like to hear about your experience with machine learning. Can you describe a model you've built?",
+            "Hi! I see you have some technical experience. Tell me about a time when you had to clean and preprocess messy data."
+          ],
+          webdev: [
+            "Hello! I've reviewed your resume and I'm curious about your development experience. Can you tell me about a web application you've built?",
+            "Welcome! Based on your background, I'd like to understand your technical stack. What technologies have you worked with recently?",
+            "Hi! I see some interesting projects on your resume. Can you describe a challenging technical problem you've solved?"
+          ],
+          fullTechnical: [
+            "Hello! I've reviewed your technical background and I'm impressed. Can you tell me about a complex algorithm or system you've implemented?",
+            "Welcome! Based on your experience, I'd like to discuss system design. Can you walk me through how you'd approach building a scalable application?",
+            "Hi! I see you have solid technical experience. Tell me about a time when you had to optimize code for better performance."
+          ],
+        };
+
+        const responses = domainResponses[domain] || domainResponses["hr"];
+        aiResponse = responses[Math.floor(Math.random() * responses.length)];
+        pythonSessionId = `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      }
+    } else {
+      // General interview path (without resume)
+      try {
+        const FormData = require("form-data");
+
+        // Create FormData to send to Python service for general interview
+        const formData = new FormData();
+        formData.append("domain", domain);
+        formData.append("difficulty", difficulty);
+        formData.append(
+          "user_response",
+          "Hello, I am ready to start the interview."
+        );
+
+        // Add auth cookie
+        const token = req.cookies.jwt;
+
+        if (!token) {
+          console.log("No JWT token found, using fallback approach");
+          throw new Error("No authentication token available");
+        }
+
+        // Call Python service for general interview
+        const response = await pythonAPI.post(
+          "/api/v1/interview/general",
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+              Cookie: `jwt=${token}`,
+            },
+            timeout: 30000, // 30 second timeout
+          }
+        );
+
+        aiResponse = response.data.ai;
+        pythonSessionId =
+          response.data.session_id ||
+          `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      } catch (pythonError) {
+        console.log(
+          "Python service unavailable for general interview, using fallback"
+        );
+        console.log("Python error details:", pythonError.message);
+
+        // Enhanced fallback responses for general interviews (include username)
+        const userName = user?.name || "candidate";
+        const domainResponses = {
+          hr: [
+            `Hello ${userName}! Welcome to this HR interview. Can you start by telling me about a time when you demonstrated leadership skills?`,
+            `Hi ${userName}! Let's begin with a behavioral question. Can you describe a challenging situation you've faced and how you handled it?`,
+            `Welcome ${userName}! Tell me about your approach to working in a team environment.`
+          ],
+          dataScience: [
+            `Hello ${userName}! Welcome to this data science interview. Can you explain the difference between supervised and unsupervised learning?`,
+            `Hi ${userName}! Let's start with the basics. Can you describe what a p-value represents in statistical testing?`,
+            `Welcome ${userName}! Tell me about your understanding of the data science workflow from data collection to model deployment.`
+          ],
+          webdev: [
+            `Hello ${userName}! Welcome to this web development interview. Can you explain the difference between frontend and backend development?`,
+            `Hi ${userName}! Let's start with some fundamentals. Can you describe what happens when a user types a URL in their browser?`,
+            `Welcome ${userName}! Tell me about your understanding of responsive web design and why it's important.`
+          ],
+          fullTechnical: [
+            `Hello ${userName}! Welcome to this technical interview. Can you explain what Big O notation is and why it's important?`,
+            `Hi ${userName}! Let's start with some computer science fundamentals. Can you describe the difference between a stack and a queue?`,
+            `Welcome ${userName}! Tell me about your understanding of object-oriented programming principles.`
+          ],
+        };
+
+        const responses = domainResponses[domain] || domainResponses["hr"];
+        aiResponse = responses[Math.floor(Math.random() * responses.length)];
+        pythonSessionId = `fallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      }
     }
 
     // Create interview session in MongoDB with initial AI response
@@ -685,6 +771,13 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
   try {
     let aiResponse;
 
+    // Get user information for fallback responses
+    const user = await User.findById(userId).select("name");
+    const userName = user?.name || "candidate";
+
+    // Determine if this is a resume-based or general interview
+    const isResumeBased = interview.resumeUsed !== null;
+
     // Try to use Python service first
     try {
       const FormData = require("form-data");
@@ -699,19 +792,26 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
         formData.append("session", interview.sessionId);
       }
 
-      // Dummy file (required by endpoint)
-      const dummyBuffer = Buffer.from("continuing interview", "utf8");
-      formData.append("file", dummyBuffer, {
-        filename: "continue.txt",
-        contentType: "text/plain",
-      });
+      // For resume-based interviews, add dummy file (required by endpoint)
+      // For general interviews, no file is needed
+      if (isResumeBased) {
+        const dummyBuffer = Buffer.from("continuing interview", "utf8");
+        formData.append("file", dummyBuffer, {
+          filename: "continue.txt",
+          contentType: "text/plain",
+        });
+      }
 
       // Add auth cookie
       const token = req.cookies.jwt;
 
-      // Call Python service with timeout
+      // Call appropriate Python service endpoint
+      const endpoint = isResumeBased 
+        ? "/api/v1/interview/resume-based" 
+        : "/api/v1/interview/general";
+        
       const response = await pythonAPI.post(
-        "/api/v1/interview/resume-based",
+        endpoint,
         formData,
         {
           headers: {
@@ -726,25 +826,77 @@ exports.continueInterviewSession = catchAsync(async (req, res) => {
         response.data?.ai ||
         "Thank you for your response. Can you tell me more about that?";
     } catch (pythonError) {
-      console.log(
-        "Python service unavailable for continuation, using fallback"
-      );
+      console.log("Python service unavailable, using fallback responses");
 
-      // Fallback responses when Python service is unavailable
-      const fallbackResponses = [
-        "That's interesting! Can you elaborate on that point and provide a specific example?",
-        "Thank you for sharing that. How would you handle a challenging situation in this area?",
-        "Good insight! What do you think are the key skills needed to excel in this domain?",
-        "I see. Can you walk me through your thought process when approaching such problems?",
-        "That's a solid approach. What would you do differently if you had to optimize this further?",
-        "Excellent! How do you stay updated with the latest trends in this field?",
-        "Thank you for that detailed explanation. What challenges have you faced in similar scenarios?",
-        "Interesting perspective! Can you share an example from your experience?",
-        "Good point! How do you ensure quality in your work?",
-        "That's valuable insight! What lessons have you learned from past projects?",
-      ]; // Use a different response based on conversation length
-      const responseIndex = interview.QnA.length % fallbackResponses.length;
-      aiResponse = fallbackResponses[responseIndex];
+      // Enhanced fallback responses based on domain, conversation context, and interview type
+      const resumeBasedResponses = {
+        hr: [
+          "That's a great example from your experience! Can you tell me about a time when you had to work with a difficult team member?",
+          "Interesting perspective based on your background! How do you handle stress and tight deadlines?",
+          "Good insight! Looking at your experience, what motivates you in your professional career?",
+          "Thank you for sharing that. Based on your resume, can you describe your leadership style?",
+          "Excellent! How do you handle constructive criticism in your work?",
+          "That's valuable experience! What are your long-term career goals?",
+          "Great answer! How do you prioritize tasks when everything seems urgent?",
+        ],
+        dataScience: [
+          "Excellent technical insight! Can you walk me through a challenging data analysis project from your experience?",
+          "That's a solid approach! How do you handle missing or dirty data in your projects?",
+          "Good explanation! What's your experience with machine learning algorithms in practice?",
+          "Interesting! Can you explain your process for feature selection in real projects?",
+          "Great understanding! How do you validate your models based on your experience?",
+          "That's insightful! What tools do you prefer for data visualization in your work?",
+          "Excellent! How do you communicate technical findings to non-technical stakeholders?",
+        ],
+        webdev: [
+          "That's a great approach! Can you explain your preferred development workflow from your projects?",
+          "Excellent! How do you ensure your applications are secure in your work?",
+          "Good thinking! What's your experience with version control systems in team projects?",
+          "Can you describe your debugging process when you encounter issues in your applications?",
+          "How do you stay updated with the latest web development trends for your projects?",
+          "What's your approach to writing clean, maintainable code based on your experience?",
+          "Can you explain how you've implemented responsive design in your projects?",
+        ],
+        fullTechnical: [
+          "Excellent technical insight! Can you explain your approach to system design from your experience?",
+          "That's a solid answer! How do you approach debugging complex technical issues in your projects?",
+          "Good explanation! What's your experience with database optimization in practice?",
+          "Can you walk me through your code review process from your work experience?",
+          "How do you ensure scalability in your applications based on your projects?",
+          "What's your approach to testing and quality assurance in your development process?",
+          "Can you explain how you handle security considerations in your projects?",
+        ],
+      };
+
+      const generalResponses = {
+        hr: [
+          `Hello ${userName}! Welcome to this HR interview. Can you start by telling me about a time when you demonstrated leadership skills?`,
+          `Hi ${userName}! Let's begin with a behavioral question. Can you describe a challenging situation you've faced and how you handled it?`,
+          `Welcome ${userName}! Tell me about your approach to working in a team environment.`
+        ],
+        dataScience: [
+          `Hello ${userName}! Welcome to this data science interview. Can you explain the difference between supervised and unsupervised learning?`,
+          `Hi ${userName}! Let's start with the basics. Can you describe what a p-value represents in statistical testing?`,
+          `Welcome ${userName}! Tell me about your understanding of the data science workflow from data collection to model deployment.`
+        ],
+        webdev: [
+          `Hello ${userName}! Welcome to this web development interview. Can you explain the difference between frontend and backend development?`,
+          `Hi ${userName}! Let's start with some fundamentals. Can you describe what happens when a user types a URL in their browser?`,
+          `Welcome ${userName}! Tell me about your understanding of responsive web design and why it's important.`
+        ],
+        fullTechnical: [
+          `Hello ${userName}! Welcome to this technical interview. Can you explain what Big O notation is and why it's important?`,
+          `Hi ${userName}! Let's start with some computer science fundamentals. Can you describe the difference between a stack and a queue?`,
+          `Welcome ${userName}! Tell me about your understanding of object-oriented programming principles.`
+        ],
+      };
+
+      const responses = isResumeBased 
+        ? (resumeBasedResponses[interview.domain] || resumeBasedResponses.fullTechnical)
+        : (generalResponses[interview.domain] || generalResponses.fullTechnical);
+        
+      const responseIndex = interview.QnA.length % responses.length;
+      aiResponse = responses[responseIndex];
     }
 
     // Update interview session with new Q&A
