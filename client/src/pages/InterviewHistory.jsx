@@ -36,6 +36,11 @@ const InterviewHistory = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Start closed on mobile
   const [activeTab, setActiveTab] = useState("chat"); // New tab state
   const [sessionLoading, setSessionLoading] = useState(false); // Loading state for session data
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    sessionId: null,
+    sessionTitle: null,
+  }); // Delete confirmation modal state
 
   // Handle responsive sidebar behavior
   useEffect(() => {
@@ -93,10 +98,22 @@ const InterviewHistory = () => {
 
         // Convert QnA to conversation format
         if (sessionResult.QnA && sessionResult.QnA.length > 0) {
-          const formattedConversation = sessionResult.QnA.flatMap((item) => [
-            { type: "ai", message: item.bot, timestamp: item.createdAt },
-            { type: "user", message: item.user, timestamp: item.createdAt },
-          ]);
+          const formattedConversation = sessionResult.QnA.flatMap((item) => {
+            const messages = [
+              { type: "ai", message: item.bot, timestamp: item.createdAt },
+            ];
+
+            // Only add user message if it's not empty
+            if (item.user && item.user.trim() !== "") {
+              messages.push({
+                type: "user",
+                message: item.user,
+                timestamp: item.createdAt,
+              });
+            }
+
+            return messages;
+          });
           setConversation(formattedConversation);
         }
 
@@ -166,6 +183,20 @@ const InterviewHistory = () => {
     }
   }, [conversation]);
 
+  // Handle escape key for modal
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && deleteModal.isOpen) {
+        closeDeleteConfirmation();
+      }
+    };
+
+    if (deleteModal.isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [deleteModal.isOpen]);
+
   // Enhanced pagination handler
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages && page !== currentPage && !loading) {
@@ -226,6 +257,24 @@ const InterviewHistory = () => {
           // Just stay on the history page without any session selected
         }
       }
+    }
+  };
+
+  // Show delete confirmation modal
+  const showDeleteConfirmation = (sessionId, sessionTitle) => {
+    setDeleteModal({ isOpen: true, sessionId, sessionTitle });
+  };
+
+  // Close delete confirmation modal
+  const closeDeleteConfirmation = () => {
+    setDeleteModal({ isOpen: false, sessionId: null, sessionTitle: null });
+  };
+
+  // Confirm deletion
+  const confirmDelete = async () => {
+    if (deleteModal.sessionId) {
+      await handleDeleteSession(deleteModal.sessionId);
+      closeDeleteConfirmation();
     }
   };
 
@@ -1205,7 +1254,11 @@ const InterviewHistory = () => {
                               title="Delete interview session"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteSession(interview._id);
+                                showDeleteConfirmation(
+                                  interview._id,
+                                  interview.title ||
+                                    `${interview.type} Interview`
+                                );
                               }}
                               disabled={deletingSessionId === interview._id}
                             >
@@ -1547,6 +1600,79 @@ const InterviewHistory = () => {
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={closeDeleteConfirmation}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-gray-800 rounded-lg border border-gray-700 max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-red-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-white">
+                Confirm Deletion
+              </h3>
+            </div>
+
+            <p className="text-gray-300 mb-6">
+              Are you sure you want to delete "
+              <span className="font-medium text-white">
+                {deleteModal.sessionTitle}
+              </span>
+              "? This action cannot be undone and all conversation data and
+              feedback will be permanently lost.
+            </p>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={closeDeleteConfirmation}
+                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors"
+                disabled={deletingSessionId === deleteModal.sessionId}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center"
+                disabled={deletingSessionId === deleteModal.sessionId}
+              >
+                {deletingSessionId === deleteModal.sessionId ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Deleting...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <FaTrash size={14} />
+                    <span>Delete</span>
+                  </div>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 };
