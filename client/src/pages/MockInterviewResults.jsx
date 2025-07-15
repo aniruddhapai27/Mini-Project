@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   resetCurrentSession,
   getInterviewFeedback,
@@ -28,17 +28,70 @@ const MockInterviewResults = () => {
   // Get data from navigation state or provide defaults
   const {
     sessionId: stateSessionId = null,
-    conversation = [],
-    domain = "hr",
-    difficulty = "medium",
-    score = 75,
+    conversation: stateConversation = [],
     feedback: initialFeedback = null,
     error = null,
-    questionCount = conversation.length,
   } = location.state || {};
 
   // Use URL sessionId if available, otherwise use the one from state
   const sessionId = urlSessionId || stateSessionId;
+
+  // Local state for session data when fetched from API
+  const [fetchedSessionData, setFetchedSessionData] = useState(null);
+
+  // Get domain and difficulty from either state or fetched session data
+  const domain =
+    stateConversation.length > 0
+      ? location.state?.domain || "hr"
+      : fetchedSessionData?.domain || "hr";
+
+  const difficulty =
+    stateConversation.length > 0
+      ? location.state?.difficulty || "medium"
+      : fetchedSessionData?.difficulty || "medium";
+
+  const score = location.state?.score || fetchedSessionData?.score || 75;
+
+  // Determine conversation data - either from state or fetched session
+  const conversation = useMemo(() => {
+    if (stateConversation && stateConversation.length > 0) {
+      return stateConversation;
+    }
+
+    if (
+      fetchedSessionData &&
+      fetchedSessionData.QnA &&
+      fetchedSessionData.QnA.length > 0
+    ) {
+      // Convert QnA format to conversation format
+      const convertedConversation = [];
+      fetchedSessionData.QnA.forEach((qna) => {
+        if (qna.bot) {
+          convertedConversation.push({
+            type: "ai",
+            message: qna.bot,
+            timestamp: qna.createdAt,
+            question: qna.bot, // For backward compatibility
+            bot: qna.bot,
+          });
+        }
+        if (qna.user) {
+          convertedConversation.push({
+            type: "user",
+            message: qna.user,
+            timestamp: qna.createdAt,
+            answer: qna.user, // For backward compatibility
+            user: qna.user,
+          });
+        }
+      });
+      return convertedConversation;
+    }
+
+    return [];
+  }, [stateConversation, fetchedSessionData]);
+
+  const questionCount = Math.ceil(conversation.length / 2); // Each Q&A pair counts as one question
 
   // Local state for UI management
   const [showDetailedView, setShowDetailedView] = useState(false);
@@ -59,6 +112,9 @@ const MockInterviewResults = () => {
     console.log("🎯 MockInterviewResults - Component State:");
     console.log("- sessionId:", sessionId);
     console.log("- conversation length:", conversation.length);
+    console.log("- conversation data:", conversation);
+    console.log("- stateConversation length:", stateConversation.length);
+    console.log("- fetchedSessionData:", fetchedSessionData);
     console.log("- initialFeedback:", initialFeedback);
     console.log("- sessionFeedback (from Redux cache):", sessionFeedback);
     console.log("- reduxFeedback (current):", reduxFeedback);
@@ -68,9 +124,13 @@ const MockInterviewResults = () => {
     console.log("- feedbackError:", feedbackError);
     console.log("- error:", error);
     console.log("- score:", score);
+    console.log("- domain:", domain);
+    console.log("- difficulty:", difficulty);
   }, [
     sessionId,
-    conversation.length,
+    conversation,
+    stateConversation,
+    fetchedSessionData,
     initialFeedback,
     sessionFeedback,
     reduxFeedback,
@@ -80,6 +140,8 @@ const MockInterviewResults = () => {
     feedbackError,
     error,
     score,
+    domain,
+    difficulty,
   ]);
 
   // Fetch feedback if needed
@@ -146,6 +208,9 @@ const MockInterviewResults = () => {
         .unwrap()
         .then((sessionData) => {
           console.log("Fetched session data:", sessionData);
+
+          // Store the fetched session data for conversation construction
+          setFetchedSessionData(sessionData);
 
           // Set the session data to be used by the component
           if (sessionData) {
@@ -264,7 +329,9 @@ const MockInterviewResults = () => {
             />
           </svg>
           <p className="text-black dark:text-white mb-4">
-            No interview results found
+            {sessionId
+              ? "Loading interview data..."
+              : "No interview results found"}
           </p>
           <button
             onClick={handleNewInterview}
@@ -844,37 +911,55 @@ const MockInterviewResults = () => {
 
           {showDetailedView && (
             <div className="mt-4 space-y-4 animate-fadeIn">
-              {" "}
               <h3 className="text-lg font-semibold text-black dark:text-white mb-4">
                 Complete Interview Transcript
               </h3>
-              {conversation?.map((item, index) => (
-                <div key={index} className="space-y-3">
-                  {/* AI Question */}
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      AI
-                    </div>
-                    <div className="flex-1 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-4">
-                      <p className="text-black dark:text-white text-sm leading-relaxed">
-                        {item.question || item.bot}
-                      </p>
-                    </div>
-                  </div>
+              <div className="space-y-3">
+                {conversation?.map((item, index) => {
+                  // Handle different conversation formats
+                  const isAIMessage =
+                    item.type === "ai" || item.bot || item.question;
+                  const isUserMessage =
+                    item.type === "user" || item.user || item.answer;
 
-                  {/* User Response */}
-                  <div className="flex items-start space-x-3 flex-row-reverse">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                      YOU
-                    </div>
-                    <div className="flex-1 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg p-4">
-                      <p className="text-black dark:text-white text-sm leading-relaxed">
-                        {item.answer || item.user}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  if (isAIMessage) {
+                    return (
+                      <div
+                        key={`ai-${index}`}
+                        className="flex items-start space-x-3"
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          AI
+                        </div>
+                        <div className="flex-1 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-4">
+                          <p className="text-black dark:text-white text-sm leading-relaxed">
+                            {item.message || item.question || item.bot}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  } else if (isUserMessage) {
+                    return (
+                      <div
+                        key={`user-${index}`}
+                        className="flex items-start space-x-3 flex-row-reverse"
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                          YOU
+                        </div>
+                        <div className="flex-1 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg p-4">
+                          <p className="text-black dark:text-white text-sm leading-relaxed">
+                            {item.message || item.answer || item.user}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // If neither, skip this item
+                  return null;
+                })}
+              </div>
             </div>
           )}
         </div>
